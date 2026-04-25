@@ -41,12 +41,17 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
 
   const answerMap = new Map(existingAnswers.map((a) => [a.questionId, a.userAnswer]));
 
-  const longAudioUrl = audioKeys.listeningLong
-    ? `/exams/${examId}/audio/${encodeURIComponent(audioKeys.listeningLong)}`
-    : null;
-  const shortAudioUrl = audioKeys.listeningShort
-    ? `/exams/${examId}/audio/${encodeURIComponent(audioKeys.listeningShort)}`
-    : null;
+  function toAudioUrls(keys: string | string[] | undefined): { url: string; label: string }[] {
+    if (!keys) return [];
+    const arr = Array.isArray(keys) ? keys : [keys];
+    return arr.map((k, i) => ({
+      url: `/exams/${examId}/audio/${encodeURIComponent(k)}`,
+      label: arr.length > 1 ? `Part ${i + 1}` : '',
+    }));
+  }
+
+  const longAudioUrls = toAudioUrls(audioKeys.listeningLong);
+  const shortAudioUrls = toAudioUrls(audioKeys.listeningShort);
 
   return c.html(
     <Layout title="Listening — DALF C1" user={user}>
@@ -56,11 +61,14 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
       <form method="POST" action={`/exams/${examId}/listening/save?attempt=${attempt.id}`}>
         <div class="card">
           <h2>Exercise 1 — Long Document</h2>
-          {longAudioUrl && (
-            <audio controls preload="none" data-max-plays="2">
-              <source src={longAudioUrl} type="audio/mpeg" />
-            </audio>
-          )}
+          {longAudioUrls.map((a) => (
+            <div style="margin-bottom:0.5rem;">
+              {a.label && <span style="color:var(--muted);font-size:0.85rem;">{a.label}</span>}
+              <audio controls preload="none" data-max-plays={a.label ? undefined : '2'}>
+                <source src={a.url} type="audio/mpeg" />
+              </audio>
+            </div>
+          ))}
           {content.listening.longDocument.questions.map((q: any) => (
             <div class="form-group" style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
               <label>
@@ -95,11 +103,14 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
         <div class="card">
           <h2>Exercise 2 — Short Documents</h2>
           <p style="color:var(--muted);">Each document is played once only.</p>
-          {shortAudioUrl && (
-            <audio controls preload="none">
-              <source src={shortAudioUrl} type="audio/mpeg" />
-            </audio>
-          )}
+          {shortAudioUrls.map((a) => (
+            <div style="margin-bottom:0.5rem;">
+              {a.label && <span style="color:var(--muted);font-size:0.85rem;">{a.label}</span>}
+              <audio controls preload="none">
+                <source src={a.url} type="audio/mpeg" />
+              </audio>
+            </div>
+          ))}
           {content.listening.shortDocuments.map((doc: any, idx: number) => (
             <div style="margin-bottom:1.5rem;">
               <h3>Document {idx + 1}</h3>

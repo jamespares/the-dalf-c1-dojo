@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '../db';
 import { exams } from '../db/schema';
 import { adminMiddleware } from '../auth';
-import { chatCompletion, generateTTS } from '../ai';
+import { chatCompletion, generateTTS, splitTextForTTS } from '../ai';
 import { uploadAudio, audioKey } from '../storage';
 import {
   LISTENING_SYSTEM_PROMPT,
@@ -100,29 +100,32 @@ admin.post('/admin/generate', adminMiddleware(), async (c) => {
       .returning();
 
     // Generate TTS audio for listening
-    const audioKeys: Record<string, string> = {};
-    try {
-      const longAudio = await generateTTS(c, content.listening.longDocument.transcript, 'alloy');
-      audioKeys.listeningLong = await uploadAudio(
-        c,
-        audioKey(exam.id, 'listening', 'long.mp3'),
-        longAudio
-      );
-    } catch (e) {
-      console.error('Failed to generate long audio:', e);
-    }
+    const audioKeys: Record<string, string | string[]> = {};
 
-    try {
-      const shortTexts = content.listening.shortDocuments.map((d: any) => d.transcript).join('\n\n---\n\n');
-      const shortAudio = await generateTTS(c, shortTexts, 'alloy');
-      audioKeys.listeningShort = await uploadAudio(
-        c,
-        audioKey(exam.id, 'listening', 'short.mp3'),
-        shortAudio
-      );
-    } catch (e) {
-      console.error('Failed to generate short audio:', e);
-    }
+    // Long document audio (chunked if needed)
+    const longChunks = splitTextForTTS(content.listening.longDocument.transcript);
+    const longBuffers = await Promise.all(
+      longChunks.map((chunk) => generateTTS(c, chunk, 'alloy'))
+    );
+    const longKeys = await Promise.all(
+      longBuffers.map((buf, i) =>
+        uploadAudio(c, audioKey(exam.id, 'listening', `long-${i + 1}.mp3`), buf)
+      )
+    );
+    audioKeys.listeningLong = longKeys.length === 1 ? longKeys[0] : longKeys;
+
+    // Short documents audio (chunked if needed)
+    const shortTexts = content.listening.shortDocuments.map((d: any) => d.transcript).join('\n\n---\n\n');
+    const shortChunks = splitTextForTTS(shortTexts);
+    const shortBuffers = await Promise.all(
+      shortChunks.map((chunk) => generateTTS(c, chunk, 'alloy'))
+    );
+    const shortKeys = await Promise.all(
+      shortBuffers.map((buf, i) =>
+        uploadAudio(c, audioKey(exam.id, 'listening', `short-${i + 1}.mp3`), buf)
+      )
+    );
+    audioKeys.listeningShort = shortKeys.length === 1 ? shortKeys[0] : shortKeys;
 
     await db
       .update(exams)

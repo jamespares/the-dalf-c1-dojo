@@ -48,6 +48,49 @@ export async function chatCompletion(
   return data.choices[0]?.message?.content ?? '';
 }
 
+export function splitTextForTTS(text: string, maxChars = 3500): string[] {
+  const chunks: string[] = [];
+  const paragraphs = text.split(/\n\n+/);
+  let current = '';
+
+  for (const para of paragraphs) {
+    if ((current + '\n\n' + para).length > maxChars && current.length > 0) {
+      chunks.push(current.trim());
+      current = para;
+    } else {
+      current = current ? current + '\n\n' + para : para;
+    }
+  }
+
+  if (current.trim().length > 0) {
+    chunks.push(current.trim());
+  }
+
+  // If any chunk is still too long, split by sentences
+  const result: string[] = [];
+  for (const chunk of chunks) {
+    if (chunk.length <= maxChars) {
+      result.push(chunk);
+      continue;
+    }
+    const sentences = chunk.split(/(?<=[.!?…])\s+/);
+    let sentenceBuf = '';
+    for (const sentence of sentences) {
+      if ((sentenceBuf + ' ' + sentence).length > maxChars && sentenceBuf.length > 0) {
+        result.push(sentenceBuf.trim());
+        sentenceBuf = sentence;
+      } else {
+        sentenceBuf = sentenceBuf ? sentenceBuf + ' ' + sentence : sentence;
+      }
+    }
+    if (sentenceBuf.trim().length > 0) {
+      result.push(sentenceBuf.trim());
+    }
+  }
+
+  return result;
+}
+
 export async function generateTTS(
   c: Context,
   text: string,
