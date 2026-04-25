@@ -39,13 +39,15 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
 
   return c.html(
     <Layout title="Exams" user={user}>
-      <h1>Exams</h1>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h1>Exams</h1>
+        {isAdmin(user, c.env) && (
+          <a href="/admin/generate" class="btn btn-primary">Generate Exam</a>
+        )}
+      </div>
       {allExams.length === 0 ? (
         <div class="card">
           <p>No exams available yet.</p>
-          {isAdmin(user, c.env) && (
-            <a href="/admin/generate" class="btn btn-primary">Generate Exam</a>
-          )}
         </div>
       ) : (
         allExams.map((exam) => (
