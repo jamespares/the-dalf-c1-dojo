@@ -8,13 +8,17 @@ export function Layout(props: { children: any; title?: string; user?: { email: s
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{title}</title>
+        <link rel="icon" type="image/png" href="/logo.png" />
         <link rel="stylesheet" href="/static/style.css" />
       </head>
       <body>
         <nav>
           <div class="container">
-            <div>
-              <a href="/dashboard">DALF C1</a>
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+              <a href="/dashboard" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none;">
+                <img src="/static/logo.png" alt="Logo" style="height:28px;width:auto;" />
+                <span style="font-weight:600;color:var(--text);">DALF C1</span>
+              </a>
               {user && (
                 <>
                   <a href="/exams">Exams</a>

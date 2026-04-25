@@ -9,12 +9,13 @@ landing.get('/', (c) => {
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>The DALF Dojo — AI-Powered French Exam Preparation</title>
-        <meta name="description" content="Practice for the DALF C1 French exam with AI-generated listening, reading, writing, and speaking exercises. Authentic exam format, instant feedback." />
+        <title>The DALF Dojo — DALF C1 Past Papers, Marking & Error Tracking</title>
+        <meta name="description" content="Generate DALF C1 past papers on any topic, get marked against the official DALF mark scheme, and track your error patterns over time. Free AI-powered French exam prep." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-        <link rel="stylesheet" href="/static/landing.css" />
+        <link rel="icon" type="image/png" href="/logo.png" />
+        <link rel="stylesheet" href="/static/landing.css?v=3" />
       </head>
       <body class="landing-page">
 
@@ -22,10 +23,7 @@ landing.get('/', (c) => {
         <nav class="landing-nav">
           <div class="nav-inner">
             <a href="/" class="nav-logo">
-              {/* Fleur-de-lis style icon */}
-              <span class="logo-badge">
-                <span class="logo-fr">🥋</span>
-              </span>
+              <img src="/static/logo.png" alt="The DALF Dojo Logo" class="logo-img" />
               <span class="logo-name">
                 <span class="logo-the">The</span>
                 <span class="logo-dojo">DALF Dojo</span>
@@ -33,11 +31,6 @@ landing.get('/', (c) => {
             </a>
 
             <div class="nav-actions">
-              <div class="lang-toggle">
-                <span>EN</span>
-                <span class="active">FR</span>
-                <span>中文</span>
-              </div>
               <a href="/login" class="nav-cta-pill">Sign In</a>
             </div>
           </div>
@@ -59,27 +52,33 @@ landing.get('/', (c) => {
             </div>
 
             <h1 class="hero-title">
-              DALF C1 practice,<br />
-              generated <span class="highlight">instantly.</span>
+              The fastest way to master<br />
+              the <span class="highlight">DALF C1</span>
             </h1>
 
             <p class="hero-subtitle">
-              Enter any topic. Get a complete DALF C1 exam set — listening, reading,
-              writing, and speaking — all aligned to the official exam format.
+              Generate full-length past papers across all 4 sections. Get marked against the official
+              France Education International rubric. Track your error patterns over time.
             </p>
 
             <div class="hero-form-card">
-              <form action="/generate" method="GET">
-                <label class="form-label">What do you want to practice?</label>
+              <form action="/register" method="GET">
+                <label class="form-label">Choose your exam topic</label>
                 <div class="form-input-row">
-                  <input
-                    type="text"
-                    name="topic"
-                    id="topic-input"
-                    placeholder="e.g., L'intelligence artificielle, Le changement climatique..."
-                    required
-                  />
-                  <button type="submit" class="form-submit-btn">Générer →</button>
+                  <select name="theme" id="topic-select" required>
+                    <option value="" disabled selected>Select a topic...</option>
+                    <option value="Environment and sustainable development">Environment &amp; Sustainable Development</option>
+                    <option value="Urbanism and city transformation">Urbanism &amp; City Transformation</option>
+                    <option value="Culture and arts">Culture &amp; Arts</option>
+                    <option value="Social issues">Social Issues</option>
+                    <option value="Science and technology">Science &amp; Technology</option>
+                    <option value="Economics and society">Economics &amp; Society</option>
+                    <option value="Family and education">Family &amp; Education</option>
+                    <option value="Work and wellbeing">Work &amp; Wellbeing</option>
+                    <option value="Digital society">Digital Society</option>
+                    <option value="Consumption and ethics">Consumption &amp; Ethics</option>
+                  </select>
+                  <button type="submit" class="form-submit-btn">Get Started →</button>
                 </div>
               </form>
             </div>
@@ -93,27 +92,55 @@ landing.get('/', (c) => {
           <div class="bar-red"></div>
         </div>
 
+        {/* === STATS BAR === */}
+        <section class="stats-bar">
+          <div class="section-inner">
+            <div class="stats-grid">
+              <div class="stat-item reveal">
+                <span class="stat-number">4</span>
+                <span class="stat-label">Exam sections covered</span>
+                <span class="stat-detail">CO · CE · PE · PO</span>
+              </div>
+              <div class="stat-item reveal">
+                <span class="stat-number">/100</span>
+                <span class="stat-label">Scored to official scale</span>
+                <span class="stat-detail">25 pts per section</span>
+              </div>
+              <div class="stat-item reveal">
+                <span class="stat-number">10</span>
+                <span class="stat-label">DALF exam topics</span>
+                <span class="stat-detail">Post-2020 unified format</span>
+              </div>
+              <div class="stat-item reveal">
+                <span class="stat-number">5h30</span>
+                <span class="stat-label">Real exam length simulated</span>
+                <span class="stat-detail">4h collective + 1h30 oral</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* === HOW IT WORKS === */}
         <section class="how-section" id="how">
           <div class="section-inner">
             <p class="section-eyebrow">Comment ça marche</p>
-            <h2 class="section-title">Three steps to your exam</h2>
+            <h2 class="section-title">From topic to marked paper in minutes</h2>
 
             <div class="steps-grid">
               <div class="step-card reveal">
                 <div class="step-number step-blue">1</div>
-                <h3>Choose your topic</h3>
-                <p>Enter any subject — from AI to climate change to geopolitics. The platform adapts to your interests.</p>
+                <h3>Generate a full past paper</h3>
+                <p>Select any of 10 DALF themes and instantly receive a complete exam — two listening documents (long interview + short radio extracts), a 1,500–2,000 word reading passage, a synthèse &amp; essai writing dossier, and oral production materials — all calibrated to CEFR C1.</p>
               </div>
               <div class="step-card reveal">
                 <div class="step-number step-dark">2</div>
-                <h3>Generate your dossier</h3>
-                <p>Our AI builds a complete DALF C1 exam package with authentic formatting, audio scripts, and marking criteria.</p>
+                <h3>Get marked by the official rubric</h3>
+                <p>Every response is evaluated using France Education International's actual grading grids: coherence, lexical range, morphosyntax, register, and argumentation — the same 12 criteria real DALF examiners use. Scores follow the /25-per-section scale with the 5/25 eliminatory threshold.</p>
               </div>
               <div class="step-card reveal">
                 <div class="step-number step-red">3</div>
-                <h3>Practice &amp; get feedback</h3>
-                <p>Complete each section at your own pace. Submit for AI marking with detailed corrections in French.</p>
+                <h3>Track errors across attempts</h3>
+                <p>The platform logs every submission and identifies recurring weaknesses — grammar patterns, vocabulary gaps, argumentation structure, sociolinguistic register — building a profile that shows exactly where you fall on the Below C1 → C1 → C1+ performance scale.</p>
               </div>
             </div>
           </div>
@@ -123,7 +150,7 @@ landing.get('/', (c) => {
         <section class="demo-section" id="demo">
           <div class="section-inner">
             <p class="section-eyebrow">Aperçu</p>
-            <h2 class="section-title">Real output, real exam quality</h2>
+            <h2 class="section-title">Past papers that mirror the real DALF C1</h2>
 
             <div class="demo-grid">
               <div class="demo-card reveal">
@@ -131,7 +158,7 @@ landing.get('/', (c) => {
                 <div class="demo-card-body">
                   <span class="demo-card-label label-blue">🎧 Compréhension Orale</span>
                   <h3>Listening Comprehension</h3>
-                  <p>Audio documents with MCQ, true/false, and open-ended questions — matching the real DALF C1 format exactly.</p>
+                  <p>Two AI-generated audio documents per paper — a ~6-minute long interview heard twice and short radio extracts heard once — with MCQ, true/false, and open-ended questions worth up to 25 points.</p>
                 </div>
               </div>
 
@@ -140,7 +167,7 @@ landing.get('/', (c) => {
                 <div class="demo-card-body">
                   <span class="demo-card-label label-red">✍️ Production Écrite</span>
                   <h3>Written Production</h3>
-                  <p>Synthèse (220-240 words) and essai argumenté (250+ words) with real-time word counting and save functionality.</p>
+                  <p>Synthèse (220–240 words, 12.5 pts) and essai argumenté (250+ words, 12.5 pts). Marked on 6 criteria: length compliance, objectivity, task realisation, coherence, lexique, and morphosyntaxe.</p>
                 </div>
               </div>
 
@@ -149,7 +176,7 @@ landing.get('/', (c) => {
                 <div class="demo-card-body">
                   <span class="demo-card-label label-blue">🎤 Production Orale</span>
                   <h3>Oral Production</h3>
-                  <p>Record your 10-minute exposé with built-in timer. Full instructions matching the official exam format.</p>
+                  <p>Record your 10-minute exposé and 20-minute discussion simulation. AI feedback maps to the 5-criterion oral grid: task (exposé), task (entretien), lexique, morphosyntaxe, and phonological mastery.</p>
                 </div>
               </div>
             </div>
@@ -167,38 +194,54 @@ landing.get('/', (c) => {
         <section class="features-section" id="features">
           <div class="section-inner">
             <p class="section-eyebrow">Ce qui est inclus</p>
-            <h2 class="section-title">Everything you need to pass</h2>
+            <h2 class="section-title">Built around the official France Education International framework</h2>
 
             <div class="features-grid">
               <div class="feature-card reveal">
                 <div class="feature-icon icon-blue">🎧</div>
                 <div class="feature-text">
-                  <h3>Compréhension Orale</h3>
-                  <p>Two listening exercises with AI-generated audio — long and short documents with varied question types.</p>
+                  <h3>Compréhension Orale · /25</h3>
+                  <p>Two AI-generated audio documents per exam — a ~6-min interview (heard twice, ~18 pts) and short radio extracts (heard once, ~7 pts). Question types: MCQ, true/false with justification, and open-ended — matching the official exam protocol.</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
                 <div class="feature-icon icon-red">📖</div>
                 <div class="feature-text">
-                  <h3>Compréhension Écrite</h3>
-                  <p>Authentic reading passages with comprehension questions testing analysis, inference, and vocabulary.</p>
+                  <h3>Compréhension Écrite · /25</h3>
+                  <p>1,500–2,000 word texte d'idées at C1 register. Questions test global thesis identification, implicit meaning, argumentative structure analysis, and precise reformulation — raw score /50, converted to /25.</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
                 <div class="feature-icon icon-blue">✍️</div>
                 <div class="feature-text">
-                  <h3>Production Écrite</h3>
-                  <p>Synthèse and essai argumenté with word counting, auto-save, and AI-powered marking with detailed feedback.</p>
+                  <h3>Production Écrite · /25</h3>
+                  <p>Synthèse (12.5 pts) graded on 6 criteria: length, objectivity, task, coherence, lexique, morphosyntaxe. Essai argumenté (12.5 pts) graded on 5 criteria including sociolinguistic register adaptation. Performance mapped to Below C1 / C1 / C1+ descriptors.</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
                 <div class="feature-icon icon-red">🎤</div>
                 <div class="feature-text">
-                  <h3>Production Orale</h3>
-                  <p>Built-in recording with timer. Practice your exposé and get feedback on structure and argumentation.</p>
+                  <h3>Production Orale · /25</h3>
+                  <p>10-min exposé (5 pts) + 20-min entretien (5 pts) + language assessment (15 pts across lexique, morphosyntaxe, phonology). Feedback identifies halo effects, register shifts, and argument-example balance.</p>
+                </div>
+              </div>
+
+              <div class="feature-card reveal">
+                <div class="feature-icon icon-blue">📊</div>
+                <div class="feature-text">
+                  <h3>Error Pattern Tracking</h3>
+                  <p>Every submission is logged and scored on the 3-tier performance scale (Below C1 → C1 → C1+). The platform tracks recurring weaknesses across all 12 marking criteria — grammar patterns, vocabulary gaps, coherence breaks, register errors — building a detailed learner profile.</p>
+                </div>
+              </div>
+
+              <div class="feature-card reveal">
+                <div class="feature-icon icon-red">🏛️</div>
+                <div class="feature-text">
+                  <h3>Post-2020 Unified Format</h3>
+                  <p>All papers follow the current DALF C1 structure — no domain specialisation (Lettres/Sciences split removed March 2020). Themes are universally accessible. Pass threshold: 50/100 with a minimum 5/25 per section (eliminatory).</p>
                 </div>
               </div>
             </div>
@@ -211,9 +254,9 @@ landing.get('/', (c) => {
             <div class="cta-flag">
               <span></span><span></span><span></span>
             </div>
-            <h2 class="cta-title">Ready when you are.</h2>
+            <h2 class="cta-title">Start your first paper now.</h2>
             <p class="cta-text">
-              No subscriptions. No credits. Enter a topic and get a complete DALF C1 exam package in seconds.
+              Free to use. Generate a complete DALF C1 past paper across all 4 sections, submit your answers, and get criterion-level feedback against the official France Education International rubric.
             </p>
             <a href="/register" class="cta-btn">Start Practicing Now →</a>
           </div>
@@ -230,7 +273,7 @@ landing.get('/', (c) => {
         <footer class="landing-footer">
           <div class="footer-inner">
             <div class="footer-brand">
-              <span class="footer-logo-icon">🥋</span>
+              <img src="/static/logo.png" alt="The DALF Dojo Logo" class="footer-logo-img" />
               <div>
                 <div class="footer-site-name">The DALF Dojo</div>
                 <div class="footer-site-url">thedalfdojo.com</div>

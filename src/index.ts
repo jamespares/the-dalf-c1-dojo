@@ -16,7 +16,7 @@ import profile from './routes/profile.tsx';
 const app = new Hono();
 
 // Static assets
-app.get('/static/*', serveStatic({ root: './' }));
+app.get('/static/*', serveStatic({ root: './public' }));
 
 // Landing page (must be before auth to handle '/' first)
 app.route('/', landing);
