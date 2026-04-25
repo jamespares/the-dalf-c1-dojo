@@ -62,13 +62,6 @@ landing.get('/', (c) => {
               France Education International rubric. Track your error patterns over time.
             </p>
 
-            <div class="trust-badges">
-              <span class="trust-badge">🎯 Official DALF Rubric</span>
-              <span class="trust-badge">🤖 OpenAI Powered</span>
-              <span class="trust-badge">💯 Free Forever</span>
-              <span class="trust-badge">🔒 No Credit Card</span>
-            </div>
-
             <div class="hero-form-card">
               <form action="/register" method="GET">
                 <label class="form-label">Choose your exam topic</label>
