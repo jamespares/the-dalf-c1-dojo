@@ -7,6 +7,16 @@ import { Layout } from '../components/Layout';
 
 const examRoutes = new Hono();
 
+function sectionRoute(section: string): string {
+  switch (section) {
+    case 'CO': return 'listening';
+    case 'CE': return 'reading';
+    case 'PE': return 'writing';
+    case 'PO': return 'speaking';
+    default: return section.toLowerCase();
+  }
+}
+
 examRoutes.get('/exams', authMiddleware(), async (c) => {
   const user = c.get('user');
   const db = getDb(c.env.DB);
@@ -54,7 +64,7 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
                       attempt.status === 'completed' ? (
                         <span class="score-badge score-pass">{attempt.totalScore?.toFixed(1) || '-'} / 25</span>
                       ) : (
-                        <a href={`/exams/${exam.id}/${section.toLowerCase()}`} class="btn btn-secondary" style="font-size:0.85rem;">
+                        <a href={`/exams/${exam.id}/${sectionRoute(section)}`} class="btn btn-secondary" style="font-size:0.85rem;">
                           Continue
                         </a>
                       )
@@ -93,7 +103,7 @@ examRoutes.post('/exams/:id/start', authMiddleware(), async (c) => {
     .limit(1);
 
   if (existing) {
-    return c.redirect(`/exams/${examId}/${section.toLowerCase()}?attempt=${existing.id}`);
+    return c.redirect(`/exams/${examId}/${sectionRoute(section)}?attempt=${existing.id}`);
   }
 
   const [attempt] = await db
@@ -101,7 +111,7 @@ examRoutes.post('/exams/:id/start', authMiddleware(), async (c) => {
     .values({ userId: user.id, examId, section, status: 'in_progress' })
     .returning();
 
-  return c.redirect(`/exams/${examId}/${section.toLowerCase()}?attempt=${attempt.id}`);
+  return c.redirect(`/exams/${examId}/${sectionRoute(section)}?attempt=${attempt.id}`);
 });
 
 export default examRoutes;
