@@ -663,9 +663,10 @@
 
 /* ======================== FOOTER ======================== */
 .landing-footer {
-  background: #0d0d1a;
+  background: #f8f9fb;
   padding: 3.5rem 2.5rem;
-  color: rgba(255,255,255,0.6);
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
 }
 
 .footer-inner {
@@ -692,23 +693,23 @@
 .footer-site-name {
   font-weight: 800;
   font-size: 1rem;
-  color: white;
+  color: var(--text);
   letter-spacing: -0.01em;
 }
 
 .footer-site-url {
   font-size: 0.8rem;
-  color: rgba(255,255,255,0.45);
+  color: var(--text-muted);
 }
 
 .footer-tagline {
   font-size: 0.85rem;
   text-align: center;
-  color: rgba(255,255,255,0.45);
+  color: var(--text-muted);
 }
 
 .footer-tagline strong {
-  color: rgba(255,255,255,0.75);
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -723,14 +724,14 @@
   align-items: center;
   gap: 0.45rem;
   text-decoration: none;
-  color: rgba(255,255,255,0.55);
+  color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 500;
   transition: var(--transition);
 }
 
 .social-link:hover {
-  color: white;
+  color: var(--fr-blue);
 }
 
 .social-icon {
