@@ -7,8 +7,7 @@
 		"nodejs_compat"
 	],
 	"vars": {
-		"AI_GATEWAY_URL": "https://gateway.ai.cloudflare.com/v1/3378223e3a7f8d6accc22cc95a70f4ac/dalf-c1-dojo/compat",
-		"ADMIN_EMAILS": ""
+		"AI_GATEWAY_URL": "https://gateway.ai.cloudflare.com/v1/3378223e3a7f8d6accc22cc95a70f4ac/dalf-c1-dojo/compat"
 	},
 	"d1_databases": [
 		{

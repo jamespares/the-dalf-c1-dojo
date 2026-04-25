@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { eq, desc, and } from 'drizzle-orm';
 import { getDb } from '../db';
 import { exams, attempts } from '../db/schema';
-import { authMiddleware } from '../auth';
+import { authMiddleware, isAdmin } from '../auth';
 import { Layout } from '../components/Layout';
 
 const examRoutes = new Hono();
@@ -33,7 +33,9 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
       {allExams.length === 0 ? (
         <div class="card">
           <p>No exams available yet.</p>
-          <a href="/admin/generate" class="btn btn-primary">Generate Exam</a>
+          {isAdmin(user, c.env) && (
+            <a href="/admin/generate" class="btn btn-primary">Generate Exam</a>
+          )}
         </div>
       ) : (
         allExams.map((exam) => (

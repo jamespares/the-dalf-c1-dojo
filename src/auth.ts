@@ -10,7 +10,13 @@ const SESSION_COOKIE = 'session';
 const SESSION_DAYS = 7;
 
 function getSecret(c: Context) {
-  return new TextEncoder().encode(c.env.SESSION_SECRET);
+  const secret = c.env.SESSION_SECRET;
+  if (!secret || secret.length === 0) {
+    throw new Error(
+      'SESSION_SECRET is not set. For local dev, add it to .dev.vars. For production, run: wrangler secret put SESSION_SECRET'
+    );
+  }
+  return new TextEncoder().encode(secret);
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -84,13 +90,17 @@ export function authMiddleware() {
   };
 }
 
+export function isAdmin(user: { email: string }, env: unknown): boolean {
+  const adminEmails = (((env as any)?.ADMIN_EMAILS) || '').split(',').map((e: string) => e.trim()).filter(Boolean);
+  return adminEmails.includes(user.email);
+}
+
 export function adminMiddleware() {
   return async (c: Context, next: () => Promise<void>) => {
     const user = await getCurrentUser(c);
     if (!user) return c.redirect('/login');
 
-    const adminEmails = (c.env.ADMIN_EMAILS || '').split(',').map((e) => e.trim()).filter(Boolean);
-    if (!adminEmails.includes(user.email)) {
+    if (!isAdmin(user, c.env)) {
       return c.text('Forbidden', 403);
     }
 
