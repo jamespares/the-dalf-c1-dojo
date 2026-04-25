@@ -739,6 +739,163 @@
   flex-shrink: 0;
 }
 
+/* ======================== TRUST BADGES ======================== */
+.trust-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 2rem;
+}
+
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255,255,255,0.85);
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  backdrop-filter: blur(8px);
+}
+
+/* ======================== FORM MICROCOPY ======================== */
+.form-microcopy {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+  opacity: 0.8;
+}
+
+/* ======================== STICKY NAV ======================== */
+.landing-nav.nav-scrolled {
+  position: fixed;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 12px rgba(0,0,0,0.06);
+  border-bottom: 1px solid var(--border);
+  padding: 0.9rem 2.5rem;
+  animation: navSlideDown 0.3s ease;
+}
+
+@keyframes navSlideDown {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
+}
+
+.nav-link {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+.nav-link:hover {
+  color: var(--fr-blue);
+}
+
+/* ======================== SOCIAL PROOF ======================== */
+.social-proof-section {
+  padding: 3rem 2rem;
+  background: var(--bg-off);
+  border-bottom: 1px solid var(--border);
+}
+
+.social-proof-content {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.social-proof-headline {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+}
+
+.social-proof-avatars {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  font-size: 1rem;
+  margin-left: -8px;
+}
+
+.avatar:first-child {
+  margin-left: 0;
+}
+
+.social-proof-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ======================== FAQ ======================== */
+.faq-section {
+  padding: 5rem 2rem;
+  background: white;
+}
+
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.faq-item {
+  padding: 1.5rem;
+  border-radius: var(--radius-card);
+  background: var(--bg-off);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.faq-item:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
+}
+
+.faq-item h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.faq-item p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+/* ======================== CTA MICROCOPY ======================== */
+.cta-microcopy {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.6);
+  margin-top: 1rem;
+}
+
 /* ======================== RESPONSIVE ======================== */
 @media (max-width: 900px) {
   .steps-grid {
@@ -803,6 +960,20 @@
 
   .stat-number {
     font-size: 2rem;
+  }
+
+  .faq-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .trust-badges {
+    gap: 0.4rem;
+  }
+
+  .trust-badge {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.6rem;
   }
 }
 

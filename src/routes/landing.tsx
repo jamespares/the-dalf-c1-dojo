@@ -15,12 +15,12 @@ landing.get('/', (c) => {
         <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <link rel="icon" type="image/png" href="/logo.png" />
-        <link rel="stylesheet" href="/static/landing.css?v=3" />
+        <link rel="stylesheet" href="/static/landing.css?v=4" />
       </head>
       <body class="landing-page">
 
         {/* === NAVIGATION === */}
-        <nav class="landing-nav">
+        <nav class="landing-nav" id="landingNav">
           <div class="nav-inner">
             <a href="/" class="nav-logo">
               <img src="/static/logo.png" alt="The DALF Dojo Logo" class="logo-img" />
@@ -31,7 +31,8 @@ landing.get('/', (c) => {
             </a>
 
             <div class="nav-actions">
-              <a href="/login" class="nav-cta-pill">Sign In</a>
+              <a href="/login" class="nav-link">Sign In</a>
+              <a href="/register" class="nav-cta-pill">Get Started Free →</a>
             </div>
           </div>
         </nav>
@@ -61,6 +62,13 @@ landing.get('/', (c) => {
               France Education International rubric. Track your error patterns over time.
             </p>
 
+            <div class="trust-badges">
+              <span class="trust-badge">🎯 Official DALF Rubric</span>
+              <span class="trust-badge">🤖 OpenAI Powered</span>
+              <span class="trust-badge">💯 Free Forever</span>
+              <span class="trust-badge">🔒 No Credit Card</span>
+            </div>
+
             <div class="hero-form-card">
               <form action="/register" method="GET">
                 <label class="form-label">Choose your exam topic</label>
@@ -78,8 +86,9 @@ landing.get('/', (c) => {
                     <option value="Digital society">Digital Society</option>
                     <option value="Consumption and ethics">Consumption &amp; Ethics</option>
                   </select>
-                  <button type="submit" class="form-submit-btn">Get Started →</button>
+                  <button type="submit" class="form-submit-btn">Start Practicing →</button>
                 </div>
+                <p class="form-microcopy">⚡ Instant access. No credit card required. Unlimited past papers.</p>
               </form>
             </div>
           </div>
@@ -116,6 +125,26 @@ landing.get('/', (c) => {
                 <span class="stat-label">Real exam length simulated</span>
                 <span class="stat-detail">4h collective + 1h30 oral</span>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* === SOCIAL PROOF === */}
+        <section class="social-proof-section">
+          <div class="section-inner">
+            <div class="social-proof-content reveal">
+              <p class="social-proof-headline">Join students preparing for the DALF C1</p>
+              <div class="social-proof-avatars">
+                <span class="avatar">🇫🇷</span>
+                <span class="avatar">🇨🇦</span>
+                <span class="avatar">🇧🇪</span>
+                <span class="avatar">🇨🇭</span>
+                <span class="avatar">🇬🇧</span>
+                <span class="avatar">🇺🇸</span>
+                <span class="avatar">🇩🇪</span>
+                <span class="avatar">+</span>
+              </div>
+              <p class="social-proof-sub">From Paris to Montréal to Geneva — practice with past papers that mirror the real exam.</p>
             </div>
           </div>
         </section>
@@ -248,6 +277,40 @@ landing.get('/', (c) => {
           </div>
         </section>
 
+        {/* === FAQ === */}
+        <section class="faq-section" id="faq">
+          <div class="section-inner">
+            <p class="section-eyebrow">Questions fréquentes</p>
+            <h2 class="section-title">Everything you need to know</h2>
+            <div class="faq-grid">
+              <div class="faq-item reveal">
+                <h3>Is The DALF Dojo really free?</h3>
+                <p>Yes — completely free. You can generate unlimited past papers, submit answers, and receive AI marking against the official rubric. We use AI to make high-quality DALF prep accessible to everyone.</p>
+              </div>
+              <div class="faq-item reveal">
+                <h3>How accurate is the AI marking?</h3>
+                <p>Our marking engine is built on the exact France Education International grading grids used by real DALF examiners. It evaluates the same 12 criteria — coherence, lexical range, morphosyntax, register, argumentation — and applies the same /25-per-section scale with the 5/25 eliminatory threshold.</p>
+              </div>
+              <div class="faq-item reveal">
+                <h3>What exam format do the papers follow?</h3>
+                <p>The post-2020 unified format — no domain specialisation. All papers cover the 10 universal DALF C1 themes and follow the current structure: CO (~40 min), CE (~50 min), PE (~2h30), PO (~1h30 prep + 30 min test).</p>
+              </div>
+              <div class="faq-item reveal">
+                <h3>Can I track my progress over time?</h3>
+                <p>Every submission is logged and scored on the 3-tier performance scale (Below C1 → C1 → C1+). The platform identifies recurring weaknesses across all marking criteria so you know exactly what to improve.</p>
+              </div>
+              <div class="faq-item reveal">
+                <h3>Do I need to create an account?</h3>
+                <p>Yes — a free account lets us save your attempts, track your error patterns, and build your learner profile over time. Signing up takes 30 seconds.</p>
+              </div>
+              <div class="faq-item reveal">
+                <h3>Is the audio generated by AI?</h3>
+                <p>Yes — listening comprehension audio is generated using OpenAI's text-to-speech, producing natural French narration at C1 register. Long documents are split into manageable parts so you can practice under exam conditions.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* === CTA === */}
         <section class="cta-section">
           <div class="cta-content">
@@ -259,6 +322,7 @@ landing.get('/', (c) => {
               Free to use. Generate a complete DALF C1 past paper across all 4 sections, submit your answers, and get criterion-level feedback against the official France Education International rubric.
             </p>
             <a href="/register" class="cta-btn">Start Practicing Now →</a>
+            <p class="cta-microcopy">⚡ Instant access. No credit card required.</p>
           </div>
         </section>
 
@@ -324,6 +388,16 @@ landing.get('/', (c) => {
               });
             }, { threshold: 0.12 });
             reveals.forEach(function(el) { observer.observe(el); });
+
+            // Sticky nav background
+            var nav = document.getElementById('landingNav');
+            window.addEventListener('scroll', function() {
+              if (window.scrollY > 40) {
+                nav.classList.add('nav-scrolled');
+              } else {
+                nav.classList.remove('nav-scrolled');
+              }
+            });
           });
         `}} />
       </body>
