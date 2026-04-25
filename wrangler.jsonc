@@ -1,0 +1,30 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "app",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-04-23",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"vars": {
+		"AI_GATEWAY_URL": "https://gateway.ai.cloudflare.com/v1/3378223e3a7f8d6accc22cc95a70f4ac/dalf-c1-dojo/compat",
+		"ADMIN_EMAILS": ""
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "dalf-c1-db",
+			"database_id": "05a23b1c-89e1-43cb-8292-198b87019d09"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "AUDIO_BUCKET",
+			"bucket_name": "dalf-c1-audio"
+		}
+	],
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS"
+	}
+}
