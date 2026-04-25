@@ -13,7 +13,7 @@ export async function chatCompletion(
 ) {
   const gatewayUrl = c.env.AI_GATEWAY_URL || 'https://api.openai.com/v1';
   const apiKey = c.env.OPENAI_API_KEY;
-  const model = opts?.model || 'openai/gpt-4o';
+  const model = opts?.model || 'gpt-4o';
 
   const body: Record<string, unknown> = {
     model,
