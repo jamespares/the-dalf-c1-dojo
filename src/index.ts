@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/cloudflare-workers';
+import landing from './routes/landing.tsx';
 import auth from './routes/auth.tsx';
 import dashboard from './routes/dashboard.tsx';
 import exams from './routes/exams.tsx';
@@ -16,6 +17,9 @@ const app = new Hono();
 
 // Static assets
 app.get('/static/*', serveStatic({ root: './' }));
+
+// Landing page (must be before auth to handle '/' first)
+app.route('/', landing);
 
 // Routes
 app.route('/', auth);
