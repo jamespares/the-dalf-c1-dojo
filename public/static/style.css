@@ -1,20 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Quicksand:wght@300;400;500;600;700&display=swap');
+
 :root {
-  --bg: #f8f9fa;
+  --bg: #f9fafb;
   --card: #ffffff;
-  --text: #212529;
-  --muted: #6c757d;
-  --primary: #0d6efd;
+  --text: #111827;
+  --muted: #6b7280;
+  --primary: #002395;
   --success: #198754;
-  --danger: #dc3545;
+  --danger: #ED2939;
   --warning: #ffc107;
-  --border: #dee2e6;
-  --radius: 0.5rem;
+  --border: #e5e7eb;
+  --radius: 16px;
   --max-width: 960px;
 }
 
 * { box-sizing: border-box; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   margin: 0;
   padding: 0;
   background: var(--bg);
@@ -57,10 +59,10 @@ nav a:hover { color: var(--primary); }
   margin-bottom: 1rem;
 }
 
-h1, h2, h3 { margin-top: 0; }
-h1 { font-size: 1.75rem; }
-h2 { font-size: 1.4rem; }
-h3 { font-size: 1.15rem; }
+h1, h2, h3 { margin-top: 0; font-family: 'Patrick Hand', cursive; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.6rem; }
+h3 { font-size: 1.25rem; }
 
 .btn {
   display: inline-block;

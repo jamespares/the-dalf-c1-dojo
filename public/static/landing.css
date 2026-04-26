@@ -4,7 +4,7 @@
    Google Labs aesthetic with bold French identity
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Quicksand:wght@300;400;500;600;700&display=swap');
 
 :root {
   /* Core French flag colours */
@@ -39,7 +39,7 @@
 }
 
 .landing-page {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--text);
   line-height: 1.6;
   overflow-x: hidden;
@@ -97,10 +97,11 @@
 }
 
 .logo-dojo {
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.4rem;
+  font-weight: 400;
   color: var(--fr-blue);
-  letter-spacing: -0.02em;
+  letter-spacing: 0.02em;
 }
 
 .nav-actions {
@@ -223,9 +224,9 @@
 .tca-red   { background: var(--fr-red); }
 
 .hero-title {
-  font-size: clamp(2.8rem, 5.5vw, 4.5rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-family: 'Patrick Hand', cursive;
+  font-size: clamp(3.2rem, 6vw, 5.5rem);
+  font-weight: 400;
   color: var(--text);
   line-height: 1.1;
   margin-bottom: 1.5rem;
@@ -397,9 +398,9 @@
 }
 
 .section-title {
-  font-size: clamp(2rem, 3.5vw, 2.75rem);
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-family: 'Patrick Hand', cursive;
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-weight: 400;
   color: var(--text);
   text-align: center;
   margin-bottom: 3.5rem;
@@ -627,10 +628,10 @@
 .cta-flag span:nth-child(3) { background: var(--fr-red); }
 
 .cta-title {
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 800;
+  font-family: 'Patrick Hand', cursive;
+  font-size: clamp(2.5rem, 4.5vw, 3.5rem);
+  font-weight: 400;
   color: white;
-  letter-spacing: -0.03em;
   margin-bottom: 1.25rem;
   line-height: 1.1;
 }

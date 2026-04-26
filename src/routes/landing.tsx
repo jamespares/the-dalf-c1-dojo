@@ -185,9 +185,31 @@ landing.get('/', (c) => {
               </div>
 
               <div class="demo-card reveal">
+                <div style="background:#f9fafb; padding:1.25rem; border-bottom:1px solid var(--border); overflow:hidden; position:relative; height: 210px;">
+                  <h4 style="font-family:'Patrick Hand',cursive; font-size:1.15rem; margin-bottom:0.25rem; color:var(--text); line-height: 1.2; font-weight: 600;">Reading Comprehension — DALF C1 — Culture and arts</h4>
+                  <p style="color:var(--text-muted); font-size:0.7rem; margin-bottom:0.85rem;">Recommended time: 50 minutes</p>
+                  <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:1rem; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                    <h5 style="font-weight:700; margin-bottom:0.5rem; font-size: 0.85rem; color: var(--text);">Text</h5>
+                    <p style="font-size:0.65rem; line-height:1.6; color:var(--text); margin-bottom:0.5rem; text-align: justify;">
+                      Dans une époque où la mondialisation semble homogénéiser les cultures, la question de l'identité culturelle devient cruciale. Les expressions artistiques, qu'elles soient traditionnelles ou contemporaines, constituent des vecteurs puissants pour la préservation et la promotion de cette identité. Dans ce contexte, il est pertinent d'examiner le rôle des artistes en tant que gardiens de la culture et comment leurs œuvres peuvent à la fois refléter et influencer la société.
+                    </p>
+                    <p style="font-size:0.65rem; line-height:1.6; color:var(--text); text-align: justify;">
+                      Prenons par exemple le mouvement impressionniste du XIXe siècle. À une époque où l'art académique dominait, les impressionnistes ont osé rompre avec les conventions esthétiques établies...
+                    </p>
+                  </div>
+                  <div style="position:absolute; bottom:0; left:0; right:0; height:50px; background:linear-gradient(to bottom, rgba(249,250,251,0), #f9fafb); border-bottom: 1px solid var(--border);"></div>
+                </div>
+                <div class="demo-card-body">
+                  <span class="demo-card-label label-red">📖 Compréhension Écrite</span>
+                  <h3>Reading Comprehension</h3>
+                  <p>1,500–2,000 word texts at C1 register. Practice global thesis identification, implicit meaning analysis, and precise reformulation with accurate AI grading.</p>
+                </div>
+              </div>
+
+              <div class="demo-card reveal">
                 <img src="/static/screenshots/demo-writing.png" alt="Written Production Exercise" class="demo-card-img" />
                 <div class="demo-card-body">
-                  <span class="demo-card-label label-red">✍️ Production Écrite</span>
+                  <span class="demo-card-label label-blue">✍️ Production Écrite</span>
                   <h3>Written Production</h3>
                   <p>Synthèse (220–240 words, 12.5 pts) and essai argumenté (250+ words, 12.5 pts). Marked on 6 criteria: length compliance, objectivity, task realisation, coherence, lexique, and morphosyntaxe.</p>
                 </div>
@@ -196,7 +218,7 @@ landing.get('/', (c) => {
               <div class="demo-card reveal">
                 <img src="/static/screenshots/demo-speaking.png" alt="Oral Production Exercise" class="demo-card-img" />
                 <div class="demo-card-body">
-                  <span class="demo-card-label label-blue">🎤 Production Orale</span>
+                  <span class="demo-card-label label-red">🎤 Production Orale</span>
                   <h3>Oral Production</h3>
                   <p>Record your 10-minute exposé and 20-minute discussion simulation. AI feedback maps to the 5-criterion oral grid: task (exposé), task (entretien), lexique, morphosyntaxe, and phonological mastery.</p>
                 </div>
