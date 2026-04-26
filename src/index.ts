@@ -1,22 +1,19 @@
 import { Hono } from 'hono';
-import { serveStatic } from 'hono/cloudflare-workers';
-import landing from './routes/landing.tsx';
-import auth from './routes/auth.tsx';
-import dashboard from './routes/dashboard.tsx';
-import exams from './routes/exams.tsx';
-import admin from './routes/admin.tsx';
-import listening from './routes/listening.tsx';
-import reading from './routes/reading.tsx';
-import writing from './routes/writing.tsx';
-import speaking from './routes/speaking.tsx';
-import marking from './routes/marking.tsx';
-import review from './routes/review.tsx';
-import profile from './routes/profile.tsx';
+import landing from './routes/landing';
+import auth from './routes/auth';
+import dashboard from './routes/dashboard';
+import exams from './routes/exams';
+import admin from './routes/admin';
+import listening from './routes/listening';
+import reading from './routes/reading';
+import writing from './routes/writing';
+import speaking from './routes/speaking';
+import marking from './routes/marking';
+import review from './routes/review';
+import profile from './routes/profile';
+import terms from './routes/terms';
 
 const app = new Hono();
-
-// Static assets
-app.get('/static/*', serveStatic({ root: './public' }));
 
 // Landing page (must be before auth to handle '/' first)
 app.route('/', landing);
@@ -33,5 +30,6 @@ app.route('/', speaking);
 app.route('/', marking);
 app.route('/', review);
 app.route('/', profile);
+app.route('/', terms);
 
 export default app;

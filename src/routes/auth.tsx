@@ -234,7 +234,7 @@ auth.get('/login', (c) => {
         </form>
         
         <div class="auth-footer-text">
-          By signing in or creating an account, you agree to the <a href="#">Terms of Service</a>.<br/><br/>
+          By signing in or creating an account, you agree to the <a href="/terms">Terms of Service</a>.<br/><br/>
           Don't have an account? <a href="/register">Sign up</a>
         </div>
       </div>
@@ -269,7 +269,7 @@ auth.post('/login', async (c) => {
             <button type="submit" class="auth-btn">Sign In</button>
           </form>
           <div class="auth-footer-text">
-            By signing in or creating an account, you agree to the <a href="#">Terms of Service</a>.<br/><br/>
+            By signing in or creating an account, you agree to the <a href="/terms">Terms of Service</a>.<br/><br/>
             Don't have an account? <a href="/register">Sign up</a>
           </div>
         </div>
@@ -313,7 +313,7 @@ auth.get('/register', (c) => {
         </form>
         
         <div class="auth-footer-text">
-          By signing up, you agree to the <a href="#">Terms of Service</a>.<br/><br/>
+          By signing up, you agree to the <a href="/terms">Terms of Service</a>.<br/><br/>
           Already have an account? <a href={`/login${theme ? `?theme=${encodeURIComponent(theme)}` : ''}`}>Log in</a>
         </div>
       </div>
