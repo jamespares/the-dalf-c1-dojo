@@ -10,7 +10,8 @@
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.14",
-    "jose": "^6.2.2"
+    "jose": "^6.2.2",
+    "stripe": "^22.1.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260423.1",

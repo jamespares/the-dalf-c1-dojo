@@ -4,6 +4,7 @@ import { getDb } from '../db';
 import { attempts, exams } from '../db/schema';
 import { authMiddleware, getCurrentUser } from '../auth';
 import { Layout } from '../components/Layout';
+import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
 const dashboard = new Hono();
 
@@ -16,6 +17,8 @@ dashboard.get('/', async (c) => {
 dashboard.get('/dashboard', authMiddleware(), async (c) => {
   const user = c.get('user');
   const db = getDb(c.env.DB);
+  const lang = detectLang(c);
+  const dict = getDict(lang);
 
   const recentAttempts = await db
     .select({
@@ -39,39 +42,39 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
   }
 
   return c.html(
-    <Layout title="Dashboard" user={user}>
-      <h1>Dashboard</h1>
+    <Layout title={dict.dashTitle} user={user} lang={lang}>
+      <h1>{dict.dashTitle}</h1>
       <div class="card">
-        <h2>Recent Attempts</h2>
+        <h2>{dict.dashRecentAttempts}</h2>
         {recentAttempts.length === 0 ? (
-          <p>No attempts yet. <a href="/exams">Start an exam</a>.</p>
+          <p>{dict.dashNoAttempts} <a href="/exams">{dict.dashStartExam}</a>.</p>
         ) : (
           <table class="table">
             <thead>
               <tr>
-                <th>Exam</th>
-                <th>Section</th>
-                <th>Score</th>
-                <th>Status</th>
-                <th>Date</th>
+                <th>{dict.dashExamCol}</th>
+                <th>{dict.dashSectionCol}</th>
+                <th>{dict.dashScoreCol}</th>
+                <th>{dict.dashStatusCol}</th>
+                <th>{dict.dashDateCol}</th>
               </tr>
             </thead>
             <tbody>
               {recentAttempts.map((row) => (
                 <tr>
-                  <td>{row.exam?.title || 'Unknown'}</td>
+                  <td>{row.exam?.title || dict.dashUnknown}</td>
                   <td>{row.attempt.section}</td>
                   <td>
                     {row.attempt.totalScore != null ? (
                       <span class={`score-badge ${row.attempt.totalScore >= 5 ? 'score-pass' : 'score-fail'}`}>
-                        {row.attempt.totalScore.toFixed(1)} / 25
+                        {row.attempt.totalScore.toFixed(1)}{dict.dashScoreSuffix}
                       </span>
                     ) : (
-                      '-'
+                      dict.dashDash
                     )}
                   </td>
                   <td>{row.attempt.status}</td>
-                  <td>{row.attempt.startedAt ? new Date(row.attempt.startedAt).toLocaleDateString() : '-'}</td>
+                  <td>{row.attempt.startedAt ? new Date(row.attempt.startedAt).toLocaleDateString() : dict.dashDash}</td>
                 </tr>
               ))}
             </tbody>
@@ -81,18 +84,18 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
 
       <div class="grid-2">
         <div class="card">
-          <h2>Average Scores</h2>
+          <h2>{dict.dashAverageScores}</h2>
           {Object.entries(sectionCounts).map(([section, count]) => (
             <p>
               <strong>{section}:</strong>{' '}
-              {count > 0 ? `${(sectionTotals[section as keyof typeof sectionTotals] / count).toFixed(1)} / 25` : 'No attempts'}
+              {count > 0 ? `${(sectionTotals[section as keyof typeof sectionTotals] / count).toFixed(1)}${dict.dashScoreSuffix}` : dict.dashNoAttemptsShort}
             </p>
           ))}
         </div>
         <div class="card">
-          <h2>Quick Links</h2>
-          <p><a href="/exams" class="btn btn-primary">Browse Exams</a></p>
-          <p><a href="/profile" class="btn btn-secondary">View Profile</a></p>
+          <h2>{dict.dashQuickLinks}</h2>
+          <p><a href="/exams" class="btn btn-primary">{dict.dashBrowseExams}</a></p>
+          <p><a href="/profile" class="btn btn-secondary">{dict.dashViewProfile}</a></p>
         </div>
       </div>
     </Layout>

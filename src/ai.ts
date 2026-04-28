@@ -2,8 +2,28 @@ import { Context } from 'hono';
 
 export interface AiBindings {
   AI_GATEWAY_URL: string;
-  OPENAI_API_KEY: string;
+  /** Cloudflare unified billing token (preferred). Sent via `Authorization`. */
+  CF_AIG_TOKEN?: string;
+  /** Your own OpenAI API key (pass-through mode). */
+  OPENAI_API_KEY?: string;
+  /** Optional AI Gateway access-control token. Sent via `cf-aig-authorization`. */
   CF_GATEWAY_TOKEN?: string;
+}
+
+function resolveAuthHeaders(c: Context): Record<string, string> {
+  const token = c.env.CF_AIG_TOKEN || c.env.OPENAI_API_KEY;
+  if (!token) {
+    throw new Error(
+      'No AI token configured. Set CF_AIG_TOKEN (Cloudflare unified billing) or OPENAI_API_KEY (pass-through).'
+    );
+  }
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+  };
+  if (c.env.CF_GATEWAY_TOKEN) {
+    headers['cf-aig-authorization'] = `Bearer ${c.env.CF_GATEWAY_TOKEN}`;
+  }
+  return headers;
 }
 
 export async function chatCompletion(
@@ -12,7 +32,6 @@ export async function chatCompletion(
   opts?: { model?: string; temperature?: number; max_tokens?: number; jsonMode?: boolean }
 ) {
   const gatewayUrl = c.env.AI_GATEWAY_URL || 'https://api.openai.com/v1';
-  const apiKey = c.env.OPENAI_API_KEY;
   const model = opts?.model || 'gpt-4o';
 
   const body: Record<string, unknown> = {
@@ -25,11 +44,8 @@ export async function chatCompletion(
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${apiKey}`,
+    ...resolveAuthHeaders(c),
   };
-  if (c.env.CF_GATEWAY_TOKEN) {
-    headers['cf-aig-authorization'] = `Bearer ${c.env.CF_GATEWAY_TOKEN}`;
-  }
 
   const res = await fetch(`${gatewayUrl}/chat/completions`, {
     method: 'POST',
@@ -97,15 +113,11 @@ export async function generateTTS(
   voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' = 'alloy'
 ): Promise<ArrayBuffer> {
   const gatewayUrl = c.env.AI_GATEWAY_URL || 'https://api.openai.com/v1';
-  const apiKey = c.env.OPENAI_API_KEY;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${apiKey}`,
+    ...resolveAuthHeaders(c),
   };
-  if (c.env.CF_GATEWAY_TOKEN) {
-    headers['cf-aig-authorization'] = `Bearer ${c.env.CF_GATEWAY_TOKEN}`;
-  }
 
   const res = await fetch(`${gatewayUrl}/audio/speech`, {
     method: 'POST',
@@ -128,17 +140,13 @@ export async function transcribeAudio(
   contentType: string = 'audio/mpeg'
 ): Promise<string> {
   const gatewayUrl = c.env.AI_GATEWAY_URL || 'https://api.openai.com/v1';
-  const apiKey = c.env.OPENAI_API_KEY;
 
   const form = new FormData();
   form.append('file', new File([audioBuffer], filename, { type: contentType }));
   form.append('model', 'whisper-1');
   form.append('language', 'fr');
 
-  const headers: Record<string, string> = { Authorization: `Bearer ${apiKey}` };
-  if (c.env.CF_GATEWAY_TOKEN) {
-    headers['cf-aig-authorization'] = `Bearer ${c.env.CF_GATEWAY_TOKEN}`;
-  }
+  const headers = resolveAuthHeaders(c);
 
   const res = await fetch(`${gatewayUrl}/audio/transcriptions`, {
     method: 'POST',

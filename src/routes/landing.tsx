@@ -1,23 +1,66 @@
 import { Hono } from 'hono';
 import { jsx } from 'hono/jsx';
+import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
 const landing = new Hono();
 
 landing.get('/', (c) => {
+  const lang = detectLang(c);
+  const dict = getDict(lang);
   return c.html(
-    <html lang="en">
+    <html lang={lang}>
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>The DALF Dojo — DALF C1 Past Papers, Marking & Error Tracking</title>
-        <meta name="description" content="Generate DALF C1 past papers on any topic, get marked against the official DALF mark scheme, and track your error patterns over time. Free AI-powered French exam prep." />
+        <title>{dict.landingMetaTitle}</title>
+        <meta name="description" content={dict.landingMetaDesc} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <link rel="icon" type="image/png" href="/logo.png" />
         <link rel="stylesheet" href="/static/landing.css?v=5" />
       </head>
       <body class="landing-page">
+
+        {/* === LANGUAGE TOGGLE === */}
+        <div id="lang-toggle" style="position:fixed; top:1rem; right:1rem; z-index:1000; display:flex; gap:0.25rem; background:rgba(255,255,255,0.9); backdrop-filter:blur(8px); padding:0.35rem 0.5rem; border-radius:999px; box-shadow:0 1px 8px rgba(0,0,0,0.06); border:1px solid var(--border);">
+          {[
+            { code: "en", label: dict.langEn },
+            { code: "fr", label: dict.langFr },
+            { code: "zh", label: dict.langZh },
+          ].map((l) => (
+            <a
+              key={l.code}
+              href="#"
+              data-lang={l.code}
+              class="lang-btn"
+              style={`font-size:0.8rem; font-weight:600; padding:0.25rem 0.6rem; border-radius:999px; text-decoration:none; transition:all 0.2s; color:var(--text-muted);`}
+              onmouseenter={`this.style.background='#dce6ff'; this.style.color='var(--fr-blue)'`}
+              onmouseleave={`this.style.background='transparent'; this.style.color='var(--text-muted)'`}
+            >
+              {l.label}
+            </a>
+          ))}
+        </div>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            var u = new URL(location.href);
+            var activeLang = u.searchParams.get('lang') || 'en';
+            document.querySelectorAll('.lang-btn').forEach(function(btn) {
+              if (btn.getAttribute('data-lang') === activeLang) {
+                btn.style.background = 'var(--fr-blue)';
+                btn.style.color = '#fff';
+                btn.onmouseenter = null;
+                btn.onmouseleave = null;
+              }
+              btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var u2 = new URL(location.href);
+                u2.searchParams.set('lang', btn.getAttribute('data-lang'));
+                location.href = u2.toString();
+              });
+            });
+          })();
+        `}} />
 
         {/* === NAVIGATION === */}
         <nav class="landing-nav" id="landingNav">
@@ -25,14 +68,14 @@ landing.get('/', (c) => {
             <a href="/" class="nav-logo">
               <img src="/static/logo.png" alt="The DALF Dojo Logo" class="logo-img" />
               <span class="logo-name">
-                <span class="logo-the">The</span>
-                <span class="logo-dojo">DALF Dojo</span>
+                <span class="logo-the">{dict.landingLogoThe}</span>
+                <span class="logo-dojo">{dict.landingLogoDojo}</span>
               </span>
             </a>
 
             <div class="nav-actions">
-              <a href="/login" class="nav-link">Sign In</a>
-              <a href="/register" class="nav-cta-pill">Get Started Free →</a>
+              <a href="/login" class="nav-link">{dict.landingNavSignIn}</a>
+              <a href="/register" class="nav-cta-pill">{dict.landingNavGetStarted}</a>
             </div>
           </div>
         </nav>
@@ -53,35 +96,34 @@ landing.get('/', (c) => {
             </div>
 
             <h1 class="hero-title">
-              The fastest way to master<br />
-              the <span class="highlight">DALF C1</span>
+              {dict.landingHeroPrefix}<br />
+              <span class="highlight">{dict.landingHeroHighlight}</span>
             </h1>
 
             <p class="hero-subtitle">
-              Generate full-length past papers across all 4 sections. Get marked against the official
-              France Education International rubric. Track your error patterns over time.
+              {dict.landingHeroSubtitle}
             </p>
 
             <div class="hero-form-card">
               <form action="/register" method="GET">
-                <label class="form-label">Choose your exam topic</label>
+                <label class="form-label">{dict.landingTopicLabel}</label>
                 <div class="form-input-row">
                   <select name="theme" id="topic-select" required>
-                    <option value="" disabled selected>Select a topic...</option>
-                    <option value="Environment and sustainable development">Environment &amp; Sustainable Development</option>
-                    <option value="Urbanism and city transformation">Urbanism &amp; City Transformation</option>
-                    <option value="Culture and arts">Culture &amp; Arts</option>
-                    <option value="Social issues">Social Issues</option>
-                    <option value="Science and technology">Science &amp; Technology</option>
-                    <option value="Economics and society">Economics &amp; Society</option>
-                    <option value="Family and education">Family &amp; Education</option>
-                    <option value="Work and wellbeing">Work &amp; Wellbeing</option>
-                    <option value="Digital society">Digital Society</option>
-                    <option value="Consumption and ethics">Consumption &amp; Ethics</option>
+                    <option value="" disabled selected>{dict.landingTopicPlaceholder}</option>
+                    <option value="Environment and sustainable development">{dict.landingTopicEnv}</option>
+                    <option value="Urbanism and city transformation">{dict.landingTopicUrban}</option>
+                    <option value="Culture and arts">{dict.landingTopicCulture}</option>
+                    <option value="Social issues">{dict.landingTopicSocial}</option>
+                    <option value="Science and technology">{dict.landingTopicScience}</option>
+                    <option value="Economics and society">{dict.landingTopicEcon}</option>
+                    <option value="Family and education">{dict.landingTopicFamily}</option>
+                    <option value="Work and wellbeing">{dict.landingTopicWork}</option>
+                    <option value="Digital society">{dict.landingTopicDigital}</option>
+                    <option value="Consumption and ethics">{dict.landingTopicConsume}</option>
                   </select>
-                  <button type="submit" class="form-submit-btn">Start Practicing →</button>
+                  <button type="submit" class="form-submit-btn">{dict.landingStartBtn}</button>
                 </div>
-                <p class="form-microcopy">⚡ Instant access. No credit card required. Unlimited past papers.</p>
+                <p class="form-microcopy">{dict.landingMicrocopy}</p>
               </form>
             </div>
           </div>
@@ -100,23 +142,23 @@ landing.get('/', (c) => {
             <div class="stats-grid">
               <div class="stat-item reveal">
                 <span class="stat-number">4</span>
-                <span class="stat-label">Exam sections covered</span>
-                <span class="stat-detail">CO · CE · PE · PO</span>
+                <span class="stat-label">{dict.landingStatSectionsLabel}</span>
+                <span class="stat-detail">{dict.landingStatSectionsValue}</span>
               </div>
               <div class="stat-item reveal">
                 <span class="stat-number">/100</span>
-                <span class="stat-label">Scored to official scale</span>
-                <span class="stat-detail">25 pts per section</span>
+                <span class="stat-label">{dict.landingStatScaleLabel}</span>
+                <span class="stat-detail">{dict.landingStatScaleValue}</span>
               </div>
               <div class="stat-item reveal">
                 <span class="stat-number">10</span>
-                <span class="stat-label">DALF exam topics</span>
-                <span class="stat-detail">Post-2020 unified format</span>
+                <span class="stat-label">{dict.landingStatTopicsLabel}</span>
+                <span class="stat-detail">{dict.landingStatTopicsValue}</span>
               </div>
               <div class="stat-item reveal">
                 <span class="stat-number">5h30</span>
-                <span class="stat-label">Real exam length simulated</span>
-                <span class="stat-detail">4h collective + 1h30 oral</span>
+                <span class="stat-label">{dict.landingStatLengthLabel}</span>
+                <span class="stat-detail">{dict.landingStatLengthValue}</span>
               </div>
             </div>
           </div>
@@ -126,7 +168,7 @@ landing.get('/', (c) => {
         <section class="social-proof-section">
           <div class="section-inner">
             <div class="social-proof-content reveal">
-              <p class="social-proof-headline">Join students preparing for the DALF C1</p>
+              <p class="social-proof-headline">{dict.landingSocialProofHeadline}</p>
               <div class="social-proof-avatars">
                 <span class="avatar">🇫🇷</span>
                 <span class="avatar">🇨🇦</span>
@@ -137,7 +179,7 @@ landing.get('/', (c) => {
                 <span class="avatar">🇩🇪</span>
                 <span class="avatar">+</span>
               </div>
-              <p class="social-proof-sub">From Paris to Montréal to Geneva — practice with past papers that mirror the real exam.</p>
+              <p class="social-proof-sub">{dict.landingSocialProofSub}</p>
             </div>
           </div>
         </section>
@@ -145,24 +187,24 @@ landing.get('/', (c) => {
         {/* === HOW IT WORKS === */}
         <section class="how-section" id="how">
           <div class="section-inner">
-            <p class="section-eyebrow">Comment ça marche</p>
-            <h2 class="section-title">From topic to marked paper in minutes</h2>
+            <p class="section-eyebrow">{dict.landingHowEyebrow}</p>
+            <h2 class="section-title">{dict.landingHowTitle}</h2>
 
             <div class="steps-grid">
               <div class="step-card reveal">
                 <div class="step-number step-blue">1</div>
-                <h3>Generate a full past paper</h3>
-                <p>Select any of 10 DALF themes and instantly receive a complete exam — two listening documents (long interview + short radio extracts), a 1,500–2,000 word reading passage, a synthèse &amp; essai writing dossier, and oral production materials — all calibrated to CEFR C1.</p>
+                <h3>{dict.landingHowStep1Title}</h3>
+                <p>{dict.landingHowStep1Desc}</p>
               </div>
               <div class="step-card reveal">
                 <div class="step-number step-dark">2</div>
-                <h3>Get marked by the official rubric</h3>
-                <p>Every response is evaluated using France Education International's actual grading grids: coherence, lexical range, morphosyntax, register, and argumentation — the same 12 criteria real DALF examiners use. Scores follow the /25-per-section scale with the 5/25 eliminatory threshold.</p>
+                <h3>{dict.landingHowStep2Title}</h3>
+                <p>{dict.landingHowStep2Desc}</p>
               </div>
               <div class="step-card reveal">
                 <div class="step-number step-red">3</div>
-                <h3>Track errors across attempts</h3>
-                <p>The platform logs every submission and identifies recurring weaknesses — grammar patterns, vocabulary gaps, argumentation structure, sociolinguistic register — building a profile that shows exactly where you fall on the Below C1 → C1 → C1+ performance scale.</p>
+                <h3>{dict.landingHowStep3Title}</h3>
+                <p>{dict.landingHowStep3Desc}</p>
               </div>
             </div>
           </div>
@@ -171,25 +213,25 @@ landing.get('/', (c) => {
         {/* === DEMO SECTION === */}
         <section class="demo-section" id="demo">
           <div class="section-inner">
-            <p class="section-eyebrow">Aperçu</p>
-            <h2 class="section-title">Past papers that mirror the real DALF C1</h2>
+            <p class="section-eyebrow">{dict.landingPreviewEyebrow}</p>
+            <h2 class="section-title">{dict.landingPreviewTitle}</h2>
 
             <div class="demo-grid">
               <div class="demo-card reveal">
-                <img src="/static/screenshots/demo-listening.png" alt="Listening Comprehension Exercise" class="demo-card-img" />
+                <img src="/static/screenshots/demo-listening.png" alt={dict.landingPreviewListeningAlt} class="demo-card-img" />
                 <div class="demo-card-body">
-                  <span class="demo-card-label label-blue">🎧 Compréhension Orale</span>
-                  <h3>Listening Comprehension</h3>
-                  <p>Two AI-generated audio documents per paper — a ~6-minute long interview heard twice and short radio extracts heard once — with MCQ, true/false, and open-ended questions worth up to 25 points.</p>
+                  <span class="demo-card-label label-blue">{dict.landingPreviewListeningLabel}</span>
+                  <h3>{dict.landingPreviewListeningTitle}</h3>
+                  <p>{dict.landingPreviewListeningDesc}</p>
                 </div>
               </div>
 
               <div class="demo-card reveal">
                 <div style="background:#f9fafb; padding:1.25rem; border-bottom:1px solid var(--border); overflow:hidden; position:relative; height: 210px;">
                   <h4 style="font-family:'Patrick Hand',cursive; font-size:1.15rem; margin-bottom:0.25rem; color:var(--text); line-height: 1.2; font-weight: 600;">Reading Comprehension — DALF C1 — Culture and arts</h4>
-                  <p style="color:var(--text-muted); font-size:0.7rem; margin-bottom:0.85rem;">Recommended time: 50 minutes</p>
+                  <p style="color:var(--text-muted); font-size:0.7rem; margin-bottom:0.85rem;">{dict.readingTime}</p>
                   <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:1rem; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                    <h5 style="font-weight:700; margin-bottom:0.5rem; font-size: 0.85rem; color: var(--text);">Text</h5>
+                    <h5 style="font-weight:700; margin-bottom:0.5rem; font-size: 0.85rem; color: var(--text);">{dict.readingText}</h5>
                     <p style="font-size:0.65rem; line-height:1.6; color:var(--text); margin-bottom:0.5rem; text-align: justify;">
                       Dans une époque où la mondialisation semble homogénéiser les cultures, la question de l'identité culturelle devient cruciale. Les expressions artistiques, qu'elles soient traditionnelles ou contemporaines, constituent des vecteurs puissants pour la préservation et la promotion de cette identité. Dans ce contexte, il est pertinent d'examiner le rôle des artistes en tant que gardiens de la culture et comment leurs œuvres peuvent à la fois refléter et influencer la société.
                     </p>
@@ -200,27 +242,27 @@ landing.get('/', (c) => {
                   <div style="position:absolute; bottom:0; left:0; right:0; height:50px; background:linear-gradient(to bottom, rgba(249,250,251,0), #f9fafb); border-bottom: 1px solid var(--border);"></div>
                 </div>
                 <div class="demo-card-body">
-                  <span class="demo-card-label label-red">📖 Compréhension Écrite</span>
-                  <h3>Reading Comprehension</h3>
-                  <p>1,500–2,000 word texts at C1 register. Practice global thesis identification, implicit meaning analysis, and precise reformulation with accurate AI grading.</p>
+                  <span class="demo-card-label label-red">{dict.landingPreviewReadingLabel}</span>
+                  <h3>{dict.landingPreviewReadingTitle}</h3>
+                  <p>{dict.landingPreviewReadingDesc}</p>
                 </div>
               </div>
 
               <div class="demo-card reveal">
-                <img src="/static/screenshots/demo-writing.png" alt="Written Production Exercise" class="demo-card-img" />
+                <img src="/static/screenshots/demo-writing.png" alt={dict.landingPreviewWritingAlt} class="demo-card-img" />
                 <div class="demo-card-body">
-                  <span class="demo-card-label label-blue">✍️ Production Écrite</span>
-                  <h3>Written Production</h3>
-                  <p>Synthèse (220–240 words, 12.5 pts) and essai argumenté (250+ words, 12.5 pts). Marked on 6 criteria: length compliance, objectivity, task realisation, coherence, lexique, and morphosyntaxe.</p>
+                  <span class="demo-card-label label-blue">{dict.landingPreviewWritingLabel}</span>
+                  <h3>{dict.landingPreviewWritingTitle}</h3>
+                  <p>{dict.landingPreviewWritingDesc}</p>
                 </div>
               </div>
 
               <div class="demo-card reveal">
-                <img src="/static/screenshots/demo-speaking.png" alt="Oral Production Exercise" class="demo-card-img" />
+                <img src="/static/screenshots/demo-speaking.png" alt={dict.landingPreviewSpeakingAlt} class="demo-card-img" />
                 <div class="demo-card-body">
-                  <span class="demo-card-label label-red">🎤 Production Orale</span>
-                  <h3>Oral Production</h3>
-                  <p>Record your 10-minute exposé and 20-minute discussion simulation. AI feedback maps to the 5-criterion oral grid: task (exposé), task (entretien), lexique, morphosyntaxe, and phonological mastery.</p>
+                  <span class="demo-card-label label-red">{dict.landingPreviewSpeakingLabel}</span>
+                  <h3>{dict.landingPreviewSpeakingTitle}</h3>
+                  <p>{dict.landingPreviewSpeakingDesc}</p>
                 </div>
               </div>
             </div>
@@ -237,56 +279,78 @@ landing.get('/', (c) => {
         {/* === FEATURES === */}
         <section class="features-section" id="features">
           <div class="section-inner">
-            <p class="section-eyebrow">Ce qui est inclus</p>
-            <h2 class="section-title">Built around the official France Education International framework</h2>
+            <p class="section-eyebrow">{dict.landingIncludesEyebrow}</p>
+            <h2 class="section-title">{dict.landingIncludesTitle}</h2>
 
             <div class="features-grid">
               <div class="feature-card reveal">
                 <div class="feature-icon icon-blue">🎧</div>
                 <div class="feature-text">
-                  <h3>Compréhension Orale · /25</h3>
-                  <p>Two AI-generated audio documents per exam — a ~6-min interview (heard twice, ~18 pts) and short radio extracts (heard once, ~7 pts). Question types: MCQ, true/false with justification, and open-ended — matching the official exam protocol.</p>
+                  <h3>{dict.landingIncludesCOLabel}</h3>
+                  <p>{dict.landingIncludesCODesc}</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
                 <div class="feature-icon icon-red">📖</div>
                 <div class="feature-text">
-                  <h3>Compréhension Écrite · /25</h3>
-                  <p>1,500–2,000 word texte d'idées at C1 register. Questions test global thesis identification, implicit meaning, argumentative structure analysis, and precise reformulation — raw score /50, converted to /25.</p>
+                  <h3>{dict.landingIncludesCELabel}</h3>
+                  <p>{dict.landingIncludesCEDesc}</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
                 <div class="feature-icon icon-blue">✍️</div>
                 <div class="feature-text">
-                  <h3>Production Écrite · /25</h3>
-                  <p>Synthèse (12.5 pts) graded on 6 criteria: length, objectivity, task, coherence, lexique, morphosyntaxe. Essai argumenté (12.5 pts) graded on 5 criteria including sociolinguistic register adaptation. Performance mapped to Below C1 / C1 / C1+ descriptors.</p>
+                  <h3>{dict.landingIncludesPELabel}</h3>
+                  <p>{dict.landingIncludesPEDesc}</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
                 <div class="feature-icon icon-red">🎤</div>
                 <div class="feature-text">
-                  <h3>Production Orale · /25</h3>
-                  <p>10-min exposé (5 pts) + 20-min entretien (5 pts) + language assessment (15 pts across lexique, morphosyntaxe, phonology). Feedback identifies halo effects, register shifts, and argument-example balance.</p>
+                  <h3>{dict.landingIncludesPOLabel}</h3>
+                  <p>{dict.landingIncludesPODesc}</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
                 <div class="feature-icon icon-blue">📊</div>
                 <div class="feature-text">
-                  <h3>Error Pattern Tracking</h3>
-                  <p>Every submission is logged and scored on the 3-tier performance scale (Below C1 → C1 → C1+). The platform tracks recurring weaknesses across all 12 marking criteria — grammar patterns, vocabulary gaps, coherence breaks, register errors — building a detailed learner profile.</p>
+                  <h3>{dict.landingIncludesTrackLabel}</h3>
+                  <p>{dict.landingIncludesTrackDesc}</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
                 <div class="feature-icon icon-red">🏛️</div>
                 <div class="feature-text">
-                  <h3>Post-2020 Unified Format</h3>
-                  <p>All papers follow the current DALF C1 structure — no domain specialisation (Lettres/Sciences split removed March 2020). Themes are universally accessible. Pass threshold: 50/100 with a minimum 5/25 per section (eliminatory).</p>
+                  <h3>{dict.landingIncludesFormatLabel}</h3>
+                  <p>{dict.landingIncludesFormatDesc}</p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* === PRICING === */}
+        <section class="features-section" id="pricing">
+          <div class="section-inner">
+            <p class="section-eyebrow">{dict.landingPricingEyebrow}</p>
+            <h2 class="section-title">{dict.landingPricingTitle}</h2>
+            <div style="max-width:400px;margin:2rem auto 0;">
+              <div class="feature-card reveal" style="text-align:center;padding:2rem;">
+                <div style="font-size:2.5rem;font-weight:700;color:var(--fr-blue);">{dict.landingPricingAmount}</div>
+                <div style="color:var(--text-muted);margin-bottom:1rem;">{dict.landingPricingPeriod}</div>
+                <ul style="text-align:left;padding-left:1.25rem;margin:1rem 0;">
+                  <li>{dict.billingFeature1}</li>
+                  <li>{dict.billingFeature2}</li>
+                  <li>{dict.billingFeature3}</li>
+                  <li>{dict.billingFeature4}</li>
+                  <li>{dict.landingPricingCancel}</li>
+                </ul>
+                <a href="/register" class="cta-btn" style="display:inline-block;margin-top:0.5rem;">{dict.landingPricingCTA}</a>
               </div>
             </div>
           </div>
@@ -295,32 +359,32 @@ landing.get('/', (c) => {
         {/* === FAQ === */}
         <section class="faq-section" id="faq">
           <div class="section-inner">
-            <p class="section-eyebrow">Questions fréquentes</p>
-            <h2 class="section-title">Everything you need to know</h2>
+            <p class="section-eyebrow">{dict.landingFaqEyebrow}</p>
+            <h2 class="section-title">{dict.landingFaqTitle}</h2>
             <div class="faq-grid">
               <div class="faq-item reveal">
-                <h3>Is The DALF Dojo really free?</h3>
-                <p>Yes — completely free. You can generate unlimited past papers, submit answers, and receive AI marking against the official rubric. We use AI to make high-quality DALF prep accessible to everyone.</p>
+                <h3>{dict.landingFaq1Q}</h3>
+                <p>{dict.landingFaq1A}</p>
               </div>
               <div class="faq-item reveal">
-                <h3>How accurate is the AI marking?</h3>
-                <p>Our marking engine is built on the exact France Education International grading grids used by real DALF examiners. It evaluates the same 12 criteria — coherence, lexical range, morphosyntax, register, argumentation — and applies the same /25-per-section scale with the 5/25 eliminatory threshold.</p>
+                <h3>{dict.landingFaq2Q}</h3>
+                <p>{dict.landingFaq2A}</p>
               </div>
               <div class="faq-item reveal">
-                <h3>What exam format do the papers follow?</h3>
-                <p>The post-2020 unified format — no domain specialisation. All papers cover the 10 universal DALF C1 themes and follow the current structure: CO (~40 min), CE (~50 min), PE (~2h30), PO (~1h30 prep + 30 min test).</p>
+                <h3>{dict.landingFaq3Q}</h3>
+                <p>{dict.landingFaq3A}</p>
               </div>
               <div class="faq-item reveal">
-                <h3>Can I track my progress over time?</h3>
-                <p>Every submission is logged and scored on the 3-tier performance scale (Below C1 → C1 → C1+). The platform identifies recurring weaknesses across all marking criteria so you know exactly what to improve.</p>
+                <h3>{dict.landingFaq4Q}</h3>
+                <p>{dict.landingFaq4A}</p>
               </div>
               <div class="faq-item reveal">
-                <h3>Do I need to create an account?</h3>
-                <p>Yes — a free account lets us save your attempts, track your error patterns, and build your learner profile over time. Signing up takes 30 seconds.</p>
+                <h3>{dict.landingFaq5Q}</h3>
+                <p>{dict.landingFaq5A}</p>
               </div>
               <div class="faq-item reveal">
-                <h3>Is the audio generated by AI?</h3>
-                <p>Yes — listening comprehension audio is generated using OpenAI's text-to-speech, producing natural French narration at C1 register. Long documents are split into manageable parts so you can practice under exam conditions.</p>
+                <h3>{dict.landingFaq6Q}</h3>
+                <p>{dict.landingFaq6A}</p>
               </div>
             </div>
           </div>
@@ -332,12 +396,12 @@ landing.get('/', (c) => {
             <div class="cta-flag">
               <span></span><span></span><span></span>
             </div>
-            <h2 class="cta-title">Start your first paper now.</h2>
+            <h2 class="cta-title">{dict.landingFinalCTAHeadline}</h2>
             <p class="cta-text">
-              Free to use. Generate a complete DALF C1 past paper across all 4 sections, submit your answers, and get criterion-level feedback against the official France Education International rubric.
+              {dict.landingFinalCTADesc}
             </p>
-            <a href="/register" class="cta-btn">Start Practicing Now →</a>
-            <p class="cta-microcopy">⚡ Instant access. No credit card required.</p>
+            <a href="/register" class="cta-btn">{dict.landingPricingCTA}</a>
+            <p class="cta-microcopy">{dict.landingPricingMicrocopy}</p>
           </div>
         </section>
 
@@ -354,38 +418,46 @@ landing.get('/', (c) => {
             <div class="footer-brand">
               <img src="/static/logo.png" alt="The DALF Dojo Logo" class="footer-logo-img" />
               <div>
-                <div class="footer-site-name">The DALF Dojo</div>
+                <div class="footer-site-name">{dict.landingLogoThe} {dict.landingLogoDojo}</div>
                 <div class="footer-site-url">thedalfdojo.com</div>
               </div>
             </div>
 
             <div class="footer-tagline">
-              Built by <strong>James Pares</strong> — helping you conquer the DALF C1.
+              {dict.landingFooterBuiltBy} <strong>James Pares</strong> {dict.landingFooterTagline}
+            </div>
+
+            <div class="footer-products" style="font-size:0.9rem;color:var(--text-muted);margin:0.5rem 0;">
+              {dict.landingFooterAlso} <a href="https://teachanythingnow.com" target="_blank" rel="noopener noreferrer" style="color:var(--fr-blue);text-decoration:none;font-weight:600;">Teach Anything Now</a>
+              <span style="margin:0 0.5rem;">·</span>
+              <a href="https://jamespares.me/terms/" target="_blank" rel="noopener noreferrer" style="color:var(--text-muted);text-decoration:underline;">{dict.landingFooterTerms}</a>
+              <span style="margin:0 0.5rem;">·</span>
+              <a href="https://jamespares.me/privacy/" target="_blank" rel="noopener noreferrer" style="color:var(--text-muted);text-decoration:underline;">{dict.landingFooterPrivacy}</a>
             </div>
 
             <div class="footer-socials">
               {/* X / Twitter */}
-              <a href="https://x.com/jamespareslfg" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Follow on X">
+              <a href="https://x.com/jamespareslfg" class="social-link" target="_blank" rel="noopener noreferrer" aria-label={dict.landingFooterFollowX}>
                 <svg viewBox="0 0 24 24" fill="currentColor" class="social-icon">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                 </svg>
-                <span>@jamespareslfg</span>
+                <span>{dict.landingFooterXHandle}</span>
               </a>
 
               {/* LinkedIn */}
-              <a href="https://www.linkedin.com/in/james-p-ba7653207/" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Connect on LinkedIn">
+              <a href="https://www.linkedin.com/in/james-p-ba7653207/" class="social-link" target="_blank" rel="noopener noreferrer" aria-label={dict.landingFooterLinkedIn}>
                 <svg viewBox="0 0 24 24" fill="currentColor" class="social-icon">
                   <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                 </svg>
-                <span>LinkedIn</span>
+                <span>{dict.landingFooterLinkedInLabel}</span>
               </a>
 
               {/* GitHub */}
-              <a href="https://github.com/jamespares" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub">
+              <a href="https://github.com/jamespares" class="social-link" target="_blank" rel="noopener noreferrer" aria-label={dict.landingFooterGitHub}>
                 <svg viewBox="0 0 24 24" fill="currentColor" class="social-icon">
                   <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
                 </svg>
-                <span>jamespares</span>
+                <span>{dict.landingFooterGitHubLabel}</span>
               </a>
             </div>
           </div>

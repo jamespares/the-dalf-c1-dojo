@@ -13,6 +13,7 @@ import {
 } from '../ai-prompts';
 import { Layout } from '../components/Layout';
 import type { ExamGeneratedContent } from '../types';
+import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
 const admin = new Hono();
 
@@ -31,24 +32,38 @@ const THEMES = [
 
 admin.get('/admin/generate', adminMiddleware(), (c) => {
   const user = c.get('user');
+  const lang = detectLang(c);
+  const dict = getDict(lang);
+  const themeLabels: Record<string, string> = {
+    'Environment and sustainable development': dict.landingTopicEnv,
+    'Urbanism and city transformation': dict.landingTopicUrban,
+    'Culture and arts': dict.landingTopicCulture,
+    'Social issues': dict.landingTopicSocial,
+    'Science and technology': dict.landingTopicScience,
+    'Economics and society': dict.landingTopicEcon,
+    'Family and education': dict.landingTopicFamily,
+    'Work and wellbeing': dict.landingTopicWork,
+    'Digital society': dict.landingTopicDigital,
+    'Consumption and ethics': dict.landingTopicConsume,
+  };
   return c.html(
-    <Layout title="Generate Exam" user={user}>
-      <h1>Generate New Exam</h1>
+    <Layout title={dict.adminTitle} user={user} lang={lang}>
+      <h1>{dict.adminGenerateNew}</h1>
       <div class="card" style="max-width:500px;">
         <form method="POST" action="/admin/generate">
           <div class="form-group">
-            <label>Theme</label>
+            <label>{dict.adminTheme}</label>
             <select name="theme" required>
-              <option value="">Select a theme...</option>
+              <option value="">{dict.adminThemePlaceholder}</option>
               {THEMES.map((t) => (
-                <option value={t}>{t}</option>
+                <option value={t}>{themeLabels[t]}</option>
               ))}
             </select>
           </div>
-          <button type="submit" class="btn btn-primary">Generate Exam</button>
+          <button type="submit" class="btn btn-primary">{dict.adminGenerateBtn}</button>
         </form>
         <p style="color:var(--muted);margin-top:1rem;">
-          This may take 30-60 seconds as AI generates all 4 sections plus audio.
+          {dict.adminGenerateNote}
         </p>
       </div>
     </Layout>
@@ -56,6 +71,8 @@ admin.get('/admin/generate', adminMiddleware(), (c) => {
 });
 
 admin.post('/admin/generate', adminMiddleware(), async (c) => {
+  const lang = detectLang(c);
+  const dict = getDict(lang);
   const body = await c.req.parseBody<{ theme: string }>();
   const theme = body.theme;
   const db = getDb(c.env.DB);
@@ -136,10 +153,10 @@ admin.post('/admin/generate', adminMiddleware(), async (c) => {
   } catch (err: any) {
     console.error('Exam generation failed:', err);
     return c.html(
-      <Layout title="Error" user={c.get('user')}>
+      <Layout title={dict.adminErrorTitle} user={c.get('user')} lang={lang}>
         <div class="card">
-          <div class="alert alert-danger">Failed to generate exam: {err.message}</div>
-          <a href="/admin/generate" class="btn btn-secondary">Try again</a>
+          <div class="alert alert-danger">{dict.adminErrorPrefix}{err.message}</div>
+          <a href="/admin/generate" class="btn btn-secondary">{dict.adminTryAgain}</a>
         </div>
       </Layout>,
       500

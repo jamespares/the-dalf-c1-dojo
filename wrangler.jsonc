@@ -7,8 +7,10 @@
     "nodejs_compat"
   ],
   "vars": {
-    "AI_GATEWAY_URL": "https://gateway.ai.cloudflare.com/v1/3378223e3a7f8d6accc22cc95a70f4ac/dalf-c1-dojo/compat/chat/completions",
-    "ADMIN_EMAILS": "[EMAIL_ADDRESS]"
+    "AI_GATEWAY_URL": "https://gateway.ai.cloudflare.com/v1/3378223e3a7f8d6accc22cc95a70f4ac/dalf-c1-dojo/compat",
+    "ADMIN_EMAILS": "[EMAIL_ADDRESS]",
+    "STRIPE_PUBLISHABLE_KEY": "pk_live_...",
+    "STRIPE_PRICE_ID": "price_..."
   },
   "d1_databases": [
     {

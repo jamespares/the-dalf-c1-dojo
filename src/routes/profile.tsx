@@ -4,11 +4,14 @@ import { getDb } from '../db';
 import { attempts, errorLogs } from '../db/schema';
 import { authMiddleware } from '../auth';
 import { Layout } from '../components/Layout';
+import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
 const profile = new Hono();
 
 profile.get('/profile', authMiddleware(), async (c) => {
   const user = c.get('user');
+  const lang = detectLang(c);
+  const dict = getDict(lang);
   const db = getDb(c.env.DB);
 
   const errorStats = await db
@@ -28,14 +31,14 @@ profile.get('/profile', authMiddleware(), async (c) => {
     .limit(20);
 
   return c.html(
-    <Layout title="Profile" user={user}>
-      <h1>Your Profile</h1>
+    <Layout title={dict.profileTitle} user={user} lang={lang}>
+      <h1>{dict.profileYourProfile}</h1>
 
       <div class="grid-2">
         <div class="card">
-          <h2>Error Breakdown</h2>
+          <h2>{dict.profileErrorBreakdown}</h2>
           {errorStats.length === 0 ? (
-            <p>No errors logged yet. Complete some exam sections to build your profile.</p>
+            <p>{dict.profileNoErrors}</p>
           ) : (
             <ul>
               {errorStats.map((s) => (
@@ -47,30 +50,30 @@ profile.get('/profile', authMiddleware(), async (c) => {
           )}
         </div>
         <div class="card">
-          <h2>Focus Areas</h2>
+          <h2>{dict.profileFocusAreas}</h2>
           {errorStats.length === 0 ? (
-            <p>Complete exams to see your weakest areas.</p>
+            <p>{dict.profileNoFocus}</p>
           ) : (
             <p>
-              Your most frequent error type is <strong>{errorStats.sort((a, b) => b.count - a.count)[0]?.type}</strong>.
-              Focus your study there.
+              {dict.profileMostFrequent}<strong>{errorStats.sort((a, b) => b.count - a.count)[0]?.type}</strong>.
+              {dict.profileFocusStudy}
             </p>
           )}
         </div>
       </div>
 
       <div class="card">
-        <h2>Recent Errors</h2>
+        <h2>{dict.profileRecentErrors}</h2>
         {recentErrors.length === 0 ? (
-          <p>No errors yet.</p>
+          <p>{dict.profileNoErrorsYet}</p>
         ) : (
           <table class="table">
             <thead>
               <tr>
-                <th>Type</th>
-                <th>Original</th>
-                <th>Correction</th>
-                <th>Explanation</th>
+                <th>{dict.profileType}</th>
+                <th>{dict.profileOriginal}</th>
+                <th>{dict.profileCorrection}</th>
+                <th>{dict.profileExplanation}</th>
               </tr>
             </thead>
             <tbody>

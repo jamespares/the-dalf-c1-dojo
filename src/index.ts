@@ -12,8 +12,22 @@ import marking from './routes/marking';
 import review from './routes/review';
 import profile from './routes/profile';
 import terms from './routes/terms';
+import billing from './routes/billing';
+import webhooks from './routes/webhooks';
+import { detectLang } from './lib/i18n';
 
 const app = new Hono();
+
+// Persist language preference
+app.use('*', async (c, next) => {
+  await next();
+});
+
+// Make detectLang available on context
+app.use('*', async (c, next) => {
+  c.set('lang', detectLang(c));
+  await next();
+});
 
 // Landing page (must be before auth to handle '/' first)
 app.route('/', landing);
@@ -31,5 +45,7 @@ app.route('/', marking);
 app.route('/', review);
 app.route('/', profile);
 app.route('/', terms);
+app.route('/', billing);
+app.route('/', webhooks);
 
 export default app;

@@ -5,11 +5,14 @@ import { exams, attempts, answers } from '../db/schema';
 import { authMiddleware } from '../auth';
 import { getAudio } from '../storage';
 import { Layout } from '../components/Layout';
+import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
 const listening = new Hono();
 
 listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
   const user = c.get('user');
+  const lang = detectLang(c);
+  const dict = getDict(lang);
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
 
@@ -46,7 +49,7 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
     const arr = Array.isArray(keys) ? keys : [keys];
     return arr.map((k, i) => ({
       url: `/exams/${examId}/audio/${encodeURIComponent(k)}`,
-      label: arr.length > 1 ? `Part ${i + 1}` : '',
+      label: arr.length > 1 ? `${dict.listeningPart}${i + 1}` : '',
     }));
   }
 
@@ -54,13 +57,13 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
   const shortAudioUrls = toAudioUrls(audioKeys.listeningShort);
 
   return c.html(
-    <Layout title="Listening — DALF C1" user={user}>
-      <h1>Listening Comprehension — {exam.title}</h1>
-      <p style="color:var(--muted);">Recommended time: ~40 minutes. Long document played twice. Short documents played once.</p>
+    <Layout title={`${dict.listeningTitle}DALF C1`} user={user} lang={lang}>
+      <h1>{dict.listeningTitle}{exam.title}</h1>
+      <p style="color:var(--muted);">{dict.listeningTime}</p>
 
       <form method="POST" action={`/exams/${examId}/listening/save?attempt=${attempt.id}`}>
         <div class="card">
-          <h2>Exercise 1 — Long Document</h2>
+          <h2>{dict.listeningExercise1}</h2>
           {longAudioUrls.map((a) => (
             <div style="margin-bottom:0.5rem;">
               {a.label && <span style="color:var(--muted);font-size:0.85rem;">{a.label}</span>}
@@ -101,8 +104,8 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
         </div>
 
         <div class="card">
-          <h2>Exercise 2 — Short Documents</h2>
-          <p style="color:var(--muted);">Each document is played once only.</p>
+          <h2>{dict.listeningExercise2}</h2>
+          <p style="color:var(--muted);">{dict.listeningOnceOnly}</p>
           {shortAudioUrls.map((a) => (
             <div style="margin-bottom:0.5rem;">
               {a.label && <span style="color:var(--muted);font-size:0.85rem;">{a.label}</span>}
@@ -113,7 +116,7 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
           ))}
           {content.listening.shortDocuments.map((doc: any, idx: number) => (
             <div style="margin-bottom:1.5rem;">
-              <h3>Document {idx + 1}</h3>
+              <h3>{dict.listeningDocument}{idx + 1}</h3>
               {doc.questions.map((q: any) => (
                 <div class="form-group" style="margin-top:1rem;">
                   <label>
@@ -138,18 +141,20 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
               ))}
             </div>
           ))}
-          <button type="submit" class="btn btn-secondary">Save Answers</button>
+          <button type="submit" class="btn btn-secondary">{dict.listeningSave}</button>
         </div>
       </form>
 
       <form method="POST" action={`/exams/${examId}/listening/submit?attempt=${attempt.id}`}>
-        <button type="submit" class="btn btn-success">Submit for Marking</button>
+        <button type="submit" class="btn btn-success">{dict.listeningSubmit}</button>
       </form>
     </Layout>
   );
 });
 
 listening.post('/exams/:id/listening/save', authMiddleware(), async (c) => {
+  const lang = detectLang(c);
+  const dict = getDict(lang);
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
   const body = await c.req.parseBody();
@@ -187,6 +192,8 @@ listening.post('/exams/:id/listening/save', authMiddleware(), async (c) => {
 });
 
 listening.post('/exams/:id/listening/submit', authMiddleware(), async (c) => {
+  const lang = detectLang(c);
+  const dict = getDict(lang);
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
 

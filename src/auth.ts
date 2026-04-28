@@ -113,5 +113,6 @@ export function adminMiddleware() {
 declare module 'hono' {
   interface ContextVariableMap {
     user: typeof users.$inferSelect;
+    lang: 'en' | 'fr' | 'zh';
   }
 }
