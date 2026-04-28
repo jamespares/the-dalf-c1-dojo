@@ -19,22 +19,7 @@ export function Layout(props: { children: any; title?: string; user?: { email: s
         <link rel="stylesheet" href="/static/style.css" />
       </head>
       <body>
-        {/* Language toggle — fixed top-right */}
-        <div id="lang-toggle" style="position:fixed; top:1rem; right:1rem; z-index:1000; display:flex; gap:0.25rem; background:rgba(255,255,255,0.9); backdrop-filter:blur(8px); padding:0.35rem 0.5rem; border-radius:999px; box-shadow:0 1px 8px rgba(0,0,0,0.06); border:1px solid var(--border);">
-          {langs.map((l) => (
-            <a
-              key={l.code}
-              href="#"
-              data-lang={l.code}
-              class="lang-btn"
-              style={`font-size:0.8rem; font-weight:600; padding:0.25rem 0.6rem; border-radius:999px; text-decoration:none; transition:all 0.2s; ${lang === l.code ? 'background:var(--primary); color:#fff;' : 'color:var(--muted);'}`}
-              onmouseenter={lang !== l.code ? `this.style.background='#dce6ff'; this.style.color='var(--primary)'` : undefined}
-              onmouseleave={lang !== l.code ? `this.style.background='transparent'; this.style.color='var(--muted)'` : undefined}
-            >
-              {l.label}
-            </a>
-          ))}
-        </div>
+
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
             var u = new URL(location.href);
@@ -75,7 +60,22 @@ export function Layout(props: { children: any; title?: string; user?: { email: s
                 </>
               )}
             </div>
-            <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="display:flex;align-items:center;gap:1.25rem;">
+              <div id="lang-toggle" style="display:flex; gap:0.25rem; background:rgba(255,255,255,0.9); backdrop-filter:blur(8px); padding:0.35rem 0.5rem; border-radius:999px; border:1px solid var(--border);">
+                {langs.map((l) => (
+                  <a
+                    key={l.code}
+                    href="#"
+                    data-lang={l.code}
+                    class="lang-btn"
+                    style={`font-family:'Inter', sans-serif; font-size:0.85rem; font-weight:500; padding:0.3rem 0.75rem; border-radius:999px; text-decoration:none; transition:all 0.2s; ${lang === l.code ? 'background:var(--primary); color:#fff;' : 'color:var(--muted);'}`}
+                    onmouseenter={lang !== l.code ? `this.style.background='rgba(0,0,0,0.05)'; this.style.color='var(--text)'` : undefined}
+                    onmouseleave={lang !== l.code ? `this.style.background='transparent'; this.style.color='var(--muted)'` : undefined}
+                  >
+                    {l.label}
+                  </a>
+                ))}
+              </div>
               <a href="https://jamespares.me/terms/" target="_blank" rel="noopener noreferrer" style="font-size:0.8rem;color:var(--muted);">{dict.navTerms}</a>
               <a href="https://jamespares.me/privacy/" target="_blank" rel="noopener noreferrer" style="font-size:0.8rem;color:var(--muted);">{dict.navPrivacy}</a>
               {user ? (
