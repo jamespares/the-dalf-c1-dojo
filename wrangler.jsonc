@@ -10,7 +10,9 @@
     "AI_GATEWAY_URL": "https://gateway.ai.cloudflare.com/v1/3378223e3a7f8d6accc22cc95a70f4ac/dalf-c1-dojo/compat",
     "ADMIN_EMAILS": "[EMAIL_ADDRESS]",
     "STRIPE_PUBLISHABLE_KEY": "pk_live_...",
-    "STRIPE_PRICE_ID": "price_..."
+    "STRIPE_PRICE_ID": "price_...",
+    "BETTER_AUTH_URL": "https://thedalfdojo.com",
+    "BETTER_AUTH_SECRET": ""
   },
   "d1_databases": [
     {
@@ -28,5 +30,10 @@
   "assets": {
     "directory": "./public",
     "binding": "ASSETS"
-  }
+  },
+  "send_email": [
+    {
+      "name": "SEND_EMAIL"
+    }
+  ]
 }

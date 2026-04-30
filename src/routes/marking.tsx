@@ -14,7 +14,7 @@ import {
 import { Layout } from '../components/Layout';
 import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
-const marking = new Hono();
+const marking = new Hono<{ Bindings: CloudflareBindings }>();
 
 marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
   const user = c.get('user');

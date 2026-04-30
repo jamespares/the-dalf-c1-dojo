@@ -6,7 +6,7 @@ import { authMiddleware, getCurrentUser } from '../auth';
 import { Layout } from '../components/Layout';
 import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
-const dashboard = new Hono();
+const dashboard = new Hono<{ Bindings: CloudflareBindings }>();
 
 dashboard.get('/', async (c) => {
   const user = await getCurrentUser(c);

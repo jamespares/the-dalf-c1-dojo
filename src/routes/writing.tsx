@@ -6,7 +6,7 @@ import { authMiddleware } from '../auth';
 import { Layout } from '../components/Layout';
 import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
-const writing = new Hono();
+const writing = new Hono<{ Bindings: CloudflareBindings }>();
 
 writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
   const user = c.get('user');
@@ -58,7 +58,7 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
         </div>
       </div>
 
-      <form method="POST" action={`/exams/${examId}/writing/save?attempt=${attempt.id}`}>
+      <form method="post" action={`/exams/${examId}/writing/save?attempt=${attempt.id}`}>
         <div class="card">
           <h2>{dict.writingPart1}</h2>
           <p style="color:var(--muted);">{content.writing.synthesisPrompt}</p>
@@ -88,7 +88,7 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
         <button type="submit" class="btn btn-secondary">{dict.writingSave}</button>
       </form>
 
-      <form method="POST" action={`/exams/${examId}/writing/submit?attempt=${attempt.id}`} style="margin-top:1rem;">
+      <form method="post" action={`/exams/${examId}/writing/submit?attempt=${attempt.id}`} style="margin-top:1rem;">
         <button type="submit" class="btn btn-success">{dict.writingSubmit}</button>
       </form>
     </Layout>

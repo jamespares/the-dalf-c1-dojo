@@ -6,7 +6,7 @@ import { authMiddleware } from '../auth';
 import { Layout } from '../components/Layout';
 import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
-const reading = new Hono();
+const reading = new Hono<{ Bindings: CloudflareBindings }>();
 
 reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
   const user = c.get('user');
@@ -52,7 +52,7 @@ reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
 
       <div class="card">
         <h2>{dict.readingQuestions}</h2>
-        <form method="POST" action={`/exams/${examId}/reading/save?attempt=${attempt.id}`}>
+        <form method="post" action={`/exams/${examId}/reading/save?attempt=${attempt.id}`}>
           {content.reading.questions.map((q: any) => (
             <div class="form-group" style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
               <label>
@@ -86,7 +86,7 @@ reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
         </form>
       </div>
 
-      <form method="POST" action={`/exams/${examId}/reading/submit?attempt=${attempt.id}`}>
+      <form method="post" action={`/exams/${examId}/reading/submit?attempt=${attempt.id}`}>
         <button type="submit" class="btn btn-success">{dict.readingSubmit}</button>
       </form>
     </Layout>

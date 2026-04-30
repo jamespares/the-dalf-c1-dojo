@@ -1,65 +1,75 @@
 import { Context, Hono } from 'hono';
-import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
+import { getCookie, deleteCookie } from 'hono/cookie';
 import { SignJWT, jwtVerify } from 'jose';
 import * as bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { getDb } from './db';
 import { users, sessions } from './db/schema';
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 
 const SESSION_COOKIE = 'session';
-const SESSION_DAYS = 7;
+const BETTER_AUTH_COOKIE = 'better-auth.session_token';
 
-function getSecret(c: Context) {
-  const secret = c.env.SESSION_SECRET;
-  if (!secret || secret.length === 0) {
-    throw new Error(
-      'SESSION_SECRET is not set. For local dev, add it to .dev.vars. For production, run: wrangler secret put SESSION_SECRET'
-    );
-  }
-  return new TextEncoder().encode(secret);
-}
+// Unified user type used across the app
+export type AppUser = {
+  id: number;
+  email: string;
+  passwordHash: string;
+  createdAt: Date | null;
+};
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
+export function createAuth(env: { DB: D1Database; BETTER_AUTH_SECRET: string; BETTER_AUTH_URL: string }) {
+  return betterAuth({
+    database: drizzleAdapter(getDb(env.DB), { provider: 'sqlite' }),
+    emailAndPassword: {
+      enabled: true,
+      autoSignIn: true,
+    },
+    secret: env.BETTER_AUTH_SECRET,
+    baseURL: env.BETTER_AUTH_URL,
+  });
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }
 
-export async function createSession(c: Context, userId: number): Promise<string> {
-  const secret = getSecret(c);
-  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  const token = await new SignJWT({ userId })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime(expiresAt)
-    .sign(secret);
-
+export async function getCurrentUser(c: Context): Promise<AppUser | null> {
   const db = getDb(c.env.DB);
-  await db.insert(sessions).values({ userId, token, expiresAt });
 
-  setCookie(c, SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'Strict',
-    maxAge: SESSION_DAYS * 24 * 60 * 60,
-    path: '/',
-  });
+  // Try Better Auth session first
+  try {
+    const auth = createAuth(c.env);
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (session?.user) {
+      // Find existing legacy user by email
+      const [legacyUser] = await db.select().from(users).where(eq(users.email, session.user.email));
+      if (legacyUser) return legacyUser;
 
-  return token;
-}
+      // Create legacy user entry for this Better Auth user
+      const [newUser] = await db.insert(users).values({
+        email: session.user.email,
+        passwordHash: '',
+      }).returning();
+      return newUser;
+    }
+  } catch {
+    // Fall through to legacy
+  }
 
-export async function getCurrentUser(c: Context) {
+  // Legacy JWT fallback
   const token = getCookie(c, SESSION_COOKIE);
   if (!token) return null;
 
   try {
-    const secret = getSecret(c);
+    const secretEnv = (c.env as any).SESSION_SECRET;
+    if (!secretEnv) return null;
+    const secret = new TextEncoder().encode(secretEnv);
     const { payload } = await jwtVerify(token, secret, { clockTolerance: 60 });
     const userId = payload.userId as number;
     if (!userId) return null;
 
-    const db = getDb(c.env.DB);
     const [session] = await db.select().from(sessions).where(eq(sessions.token, token));
     if (!session) return null;
 
@@ -71,6 +81,10 @@ export async function getCurrentUser(c: Context) {
 }
 
 export async function logout(c: Context) {
+  // Clear Better Auth session
+  deleteCookie(c, BETTER_AUTH_COOKIE);
+
+  // Clear legacy session
   const token = getCookie(c, SESSION_COOKIE);
   if (token) {
     const db = getDb(c.env.DB);
@@ -112,7 +126,7 @@ export function adminMiddleware() {
 // Types
 declare module 'hono' {
   interface ContextVariableMap {
-    user: typeof users.$inferSelect;
+    user: AppUser;
     lang: 'en' | 'fr' | 'zh';
   }
 }

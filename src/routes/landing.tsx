@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { jsx } from 'hono/jsx';
 import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
-const landing = new Hono();
+const landing = new Hono<{ Bindings: CloudflareBindings }>();
 
 landing.get('/', (c) => {
   const lang = detectLang(c);
@@ -105,7 +105,7 @@ landing.get('/', (c) => {
             </p>
 
             <div class="hero-form-card">
-              <form action="/register" method="GET">
+              <form action="/register" method="get">
                 <label class="form-label">{dict.landingTopicLabel}</label>
                 <div class="form-input-row">
                   <select name="theme" id="topic-select" required>

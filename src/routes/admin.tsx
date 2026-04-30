@@ -15,7 +15,7 @@ import { Layout } from '../components/Layout';
 import type { ExamGeneratedContent } from '../types';
 import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
-const admin = new Hono();
+const admin = new Hono<{ Bindings: CloudflareBindings }>();
 
 const THEMES = [
   'Environment and sustainable development',
@@ -50,7 +50,7 @@ admin.get('/admin/generate', adminMiddleware(), (c) => {
     <Layout title={dict.adminTitle} user={user} lang={lang}>
       <h1>{dict.adminGenerateNew}</h1>
       <div class="card" style="max-width:500px;">
-        <form method="POST" action="/admin/generate">
+        <form method="post" action="/admin/generate">
           <div class="form-group">
             <label>{dict.adminTheme}</label>
             <select name="theme" required>

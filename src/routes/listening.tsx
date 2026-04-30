@@ -7,7 +7,7 @@ import { getAudio } from '../storage';
 import { Layout } from '../components/Layout';
 import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
-const listening = new Hono();
+const listening = new Hono<{ Bindings: CloudflareBindings }>();
 
 listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
   const user = c.get('user');
@@ -61,7 +61,7 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
       <h1>{dict.listeningTitle}{exam.title}</h1>
       <p style="color:var(--muted);">{dict.listeningTime}</p>
 
-      <form method="POST" action={`/exams/${examId}/listening/save?attempt=${attempt.id}`}>
+      <form method="post" action={`/exams/${examId}/listening/save?attempt=${attempt.id}`}>
         <div class="card">
           <h2>{dict.listeningExercise1}</h2>
           {longAudioUrls.map((a) => (
@@ -145,7 +145,7 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
         </div>
       </form>
 
-      <form method="POST" action={`/exams/${examId}/listening/submit?attempt=${attempt.id}`}>
+      <form method="post" action={`/exams/${examId}/listening/submit?attempt=${attempt.id}`}>
         <button type="submit" class="btn btn-success">{dict.listeningSubmit}</button>
       </form>
     </Layout>
@@ -208,7 +208,7 @@ listening.post('/exams/:id/listening/submit', authMiddleware(), async (c) => {
 
 // Audio proxy
 listening.get('/exams/:id/audio/:key', authMiddleware(), async (c) => {
-  const key = decodeURIComponent(c.req.param('key'));
+  const key = decodeURIComponent(c.req.param('key') || '');
   const obj = await getAudio(c, key);
   if (!obj) return c.notFound();
   c.header('Content-Type', obj.httpMetadata?.contentType || 'audio/mpeg');

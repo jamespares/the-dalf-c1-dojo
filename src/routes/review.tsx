@@ -6,7 +6,7 @@ import { authMiddleware } from '../auth';
 import { Layout } from '../components/Layout';
 import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
-const review = new Hono();
+const review = new Hono<{ Bindings: CloudflareBindings }>();
 
 review.get('/review/:attemptId', authMiddleware(), async (c) => {
   const user = c.get('user');

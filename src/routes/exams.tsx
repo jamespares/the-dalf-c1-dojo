@@ -7,7 +7,7 @@ import { Layout } from '../components/Layout';
 import { canStartAttempt, recordUsageEvent } from '../subscription';
 import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
-const examRoutes = new Hono();
+const examRoutes = new Hono<{ Bindings: CloudflareBindings }>();
 
 function sectionRoute(section: string): string {
   switch (section) {
@@ -82,7 +82,7 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
                         </a>
                       )
                     ) : (
-                      <form method="POST" action={`/exams/${exam.id}/start`} style="display:inline;">
+                      <form method="post" action={`/exams/${exam.id}/start`} style="display:inline;">
                         <input type="hidden" name="section" value={section} />
                         <button type="submit" class="btn btn-primary" style="font-size:0.85rem;">
                           {dict.examsStart}

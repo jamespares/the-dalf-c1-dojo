@@ -8,7 +8,7 @@ import { getPublishableKey, createCheckoutSession, retrieveCheckoutSession } fro
 import { getSubscriptionStatus, syncSubscriptionFromStripe } from '../subscription';
 import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
-const billing = new Hono();
+const billing = new Hono<{ Bindings: CloudflareBindings }>();
 
 billing.get('/billing', authMiddleware(), async (c) => {
   const user = c.get('user');
@@ -33,7 +33,7 @@ billing.get('/billing', authMiddleware(), async (c) => {
             <li>{dict.billingFeature3}</li>
             <li>{dict.billingFeature4}</li>
           </ul>
-          <form action="/billing/checkout" method="POST">
+          <form action="/billing/checkout" method="post">
             <button type="submit" class="btn btn-primary" style="width:100%;">
               {dict.billingSubscribe}
             </button>

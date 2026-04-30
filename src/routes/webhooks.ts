@@ -4,7 +4,7 @@ import { constructStripeEvent, getStripe } from '../stripe';
 import { syncSubscriptionFromStripe } from '../subscription';
 import type Stripe from 'stripe';
 
-const webhooks = new Hono();
+const webhooks = new Hono<{ Bindings: CloudflareBindings }>();
 
 webhooks.post('/webhooks/stripe', async (c) => {
   const payload = await c.req.text();

@@ -7,7 +7,7 @@ import { uploadAudio, userAudioKey } from '../storage';
 import { Layout } from '../components/Layout';
 import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
-const speaking = new Hono();
+const speaking = new Hono<{ Bindings: CloudflareBindings }>();
 
 speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
   const user = c.get('user');
@@ -75,11 +75,11 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
         )}
       </div>
 
-      <form id="uploadForm" method="POST" action={`/exams/${examId}/speaking/upload?attempt=${attempt.id}`} enctype="multipart/form-data" style="display:none;">
+      <form id="uploadForm" method="post" action={`/exams/${examId}/speaking/upload?attempt=${attempt.id}`} enctype="multipart/form-data" style="display:none;">
         <input type="file" name="audio" id="audioInput" accept="audio/*" />
       </form>
 
-      <form method="POST" action={`/exams/${examId}/speaking/submit?attempt=${attempt.id}`}>
+      <form method="post" action={`/exams/${examId}/speaking/submit?attempt=${attempt.id}`}>
         <button type="submit" class="btn btn-success">{dict.speakingSubmit}</button>
       </form>
 
