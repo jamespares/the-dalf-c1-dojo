@@ -14,7 +14,7 @@ landing.get('/', (c) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link rel="icon" type="image/png" href="/logo.png" />
-        <link rel="stylesheet" href="/static/landing.css?v=6" />
+        <link rel="stylesheet" href="/static/landing.css?v=7" />
       </head>
       <body class="landing-page">
 
@@ -23,10 +23,7 @@ landing.get('/', (c) => {
           <div class="nav-inner">
             <a href="/" class="nav-logo">
               <img src="/static/logo.png" alt="The DALF Dojo Logo" class="logo-img" />
-              <span class="logo-name">
-                <span class="logo-the">The</span>
-                <span class="logo-dojo">DALF Dojo</span>
-              </span>
+              <span class="logo-name">The DALF Dojo</span>
             </a>
 
             <div class="nav-actions">

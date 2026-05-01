@@ -83,25 +83,13 @@
 }
 
 .logo-name {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-.logo-the {
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: var(--fr-blue);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.logo-dojo {
   font-family: 'Patrick Hand', cursive;
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 400;
   color: var(--fr-blue);
   letter-spacing: 0.02em;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .nav-actions {
