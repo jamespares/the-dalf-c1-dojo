@@ -14,17 +14,10 @@ import profile from './routes/profile';
 import terms from './routes/terms';
 import billing from './routes/billing';
 import webhooks from './routes/webhooks';
-import { detectLang } from './lib/i18n';
 import { createAuth } from './auth';
 import { getDb } from './db';
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
-
-// Make detectLang available on context
-app.use('*', async (c, next) => {
-  c.set('lang', detectLang(c));
-  await next();
-});
 
 // Better Auth API routes
 app.on(['POST', 'GET'], '/api/auth/*', (c) => {

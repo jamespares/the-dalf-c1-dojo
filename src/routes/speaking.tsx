@@ -5,14 +5,12 @@ import { exams, attempts, answers } from '../db/schema';
 import { authMiddleware } from '../auth';
 import { uploadAudio, userAudioKey } from '../storage';
 import { Layout } from '../components/Layout';
-import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
+import { Navbar } from '../components/Navbar';
 
 const speaking = new Hono<{ Bindings: CloudflareBindings }>();
 
 speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
   const user = c.get('user');
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
 
@@ -42,36 +40,37 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
   const hasRecording = existingAnswers.some((a) => a.audioKey);
 
   return c.html(
-    <Layout title={`${dict.speakingTitle}DALF C1`} user={user} lang={lang}>
-      <h1>{dict.speakingTitle}{exam.title}</h1>
-      <p style="color:var(--muted);">{dict.speakingTime}</p>
+    <Layout title={`Oral Production — DALF C1`}>
+      <Navbar user={user} />
+      <h1>Oral Production — {exam.title}</h1>
+      <p style="color:var(--muted);">Preparation: 1 hour. Exposé: 10 minutes. Discussion: 20 minutes.</p>
 
       <div class="card">
-        <h2>{dict.speakingDossier}</h2>
+        <h2>Dossier</h2>
         {content.speaking.dossier.map((doc: any, idx: number) => (
           <div style="margin-bottom:1.5rem;">
-            <h3>{dict.speakingDocument}{idx + 1}: {doc.title}</h3>
+            <h3>Document {idx + 1}: {doc.title}</h3>
             <div style="white-space:pre-wrap;font-size:1rem;line-height:1.6;">{doc.text}</div>
           </div>
         ))}
         <div style="margin-top:1rem;padding:1rem;background:#f1f3f5;border-radius:var(--radius);">
-          <strong>{dict.speakingInstructions}</strong>
+          <strong>Instructions:</strong>
           <div style="white-space:pre-wrap;">{content.speaking.instructions}</div>
         </div>
       </div>
 
       <div class="card">
-        <h2>{dict.speakingRecording}</h2>
-        <p>{dict.speakingRecordDesc}</p>
+        <h2>Recording</h2>
+        <p>Record your 10-minute exposé below. You can stop and re-record if needed.</p>
 
         <div id="recorder" style="text-align:center;padding:2rem;">
-          <button id="recordBtn" class="btn btn-danger recording-btn">{dict.speakingStartRecording}</button>
+          <button id="recordBtn" class="btn btn-danger recording-btn">🔴 Start Recording</button>
           <div id="recordStatus" style="margin-top:1rem;color:var(--muted);"></div>
-          <div id="recordTimer" class="timer" style="margin-top:0.5rem;">{dict.speakingTimerInit}</div>
+          <div id="recordTimer" class="timer" style="margin-top:0.5rem;">00:00</div>
         </div>
 
         {hasRecording && (
-          <div class="alert alert-success">{dict.speakingSaved}</div>
+          <div class="alert alert-success">Recording saved. You can submit when ready.</div>
         )}
       </div>
 
@@ -80,7 +79,7 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
       </form>
 
       <form method="post" action={`/exams/${examId}/speaking/submit?attempt=${attempt.id}`}>
-        <button type="submit" class="btn btn-success">{dict.speakingSubmit}</button>
+        <button type="submit" class="btn btn-success">Submit for Marking</button>
       </form>
 
       <script dangerouslySetInnerHTML={{
@@ -122,23 +121,23 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
                 audioInput.files = dt.files;
 
                 const formData = new FormData(uploadForm);
-                status.textContent = "${dict.speakingUploading}";
+                status.textContent = "Uploading...";
                 await fetch(uploadForm.action, { method: 'POST', body: formData });
-                status.textContent = "${dict.speakingUploaded}";
+                status.textContent = "Uploaded successfully!";
                 location.reload();
               };
 
               mediaRecorder.start();
-              btn.textContent = "${dict.speakingStop}";
-              status.textContent = "${dict.speakingRecordingStatus}";
+              btn.textContent = "⏹ Stop Recording";
+              status.textContent = "Recording...";
               timerInterval = setInterval(() => {
                 seconds++;
                 timer.textContent = fmt(seconds);
               }, 1000);
             } else {
               mediaRecorder.stop();
-              btn.textContent = "${dict.speakingStartRecording}";
-              status.textContent = "${dict.speakingProcessing}";
+              btn.textContent = "🔴 Start Recording";
+              status.textContent = "Processing...";
             }
           });
         `,
@@ -148,8 +147,6 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
 });
 
 speaking.post('/exams/:id/speaking/upload', authMiddleware(), async (c) => {
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
   const user = c.get('user');
@@ -178,8 +175,6 @@ speaking.post('/exams/:id/speaking/upload', authMiddleware(), async (c) => {
 });
 
 speaking.post('/exams/:id/speaking/submit', authMiddleware(), async (c) => {
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const attemptId = Number(c.req.query('attempt'));
   const db = getDb(c.env.DB);
   await db

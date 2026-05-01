@@ -3,17 +3,14 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '../db';
 import { exams } from '../db/schema';
 import { adminMiddleware } from '../auth';
-import { chatCompletion, generateTTS, splitTextForTTS } from '../ai';
-import { uploadAudio, audioKey } from '../storage';
-import {
-  LISTENING_SYSTEM_PROMPT,
-  READING_SYSTEM_PROMPT,
-  WRITING_SYSTEM_PROMPT,
-  SPEAKING_SYSTEM_PROMPT,
-} from '../ai-prompts';
 import { Layout } from '../components/Layout';
-import type { ExamGeneratedContent } from '../types';
-import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
+import { Navbar } from '../components/Navbar';
+import {
+  findReusableExam,
+  generateExamContent,
+  storeExam,
+  generateAndStoreAudio,
+} from '../exam-generation';
 
 const admin = new Hono<{ Bindings: CloudflareBindings }>();
 
@@ -30,40 +27,40 @@ const THEMES = [
   'Consumption and ethics',
 ];
 
+const themeLabels: Record<string, string> = {
+  'Environment and sustainable development': 'Environment & Sustainable Development',
+  'Urbanism and city transformation': 'Urbanism & City Transformation',
+  'Culture and arts': 'Culture & Arts',
+  'Social issues': 'Social Issues',
+  'Science and technology': 'Science & Technology',
+  'Economics and society': 'Economics & Society',
+  'Family and education': 'Family & Education',
+  'Work and wellbeing': 'Work & Wellbeing',
+  'Digital society': 'Digital Society',
+  'Consumption and ethics': 'Consumption & Ethics',
+};
+
 admin.get('/admin/generate', adminMiddleware(), (c) => {
   const user = c.get('user');
-  const lang = detectLang(c);
-  const dict = getDict(lang);
-  const themeLabels: Record<string, string> = {
-    'Environment and sustainable development': dict.landingTopicEnv,
-    'Urbanism and city transformation': dict.landingTopicUrban,
-    'Culture and arts': dict.landingTopicCulture,
-    'Social issues': dict.landingTopicSocial,
-    'Science and technology': dict.landingTopicScience,
-    'Economics and society': dict.landingTopicEcon,
-    'Family and education': dict.landingTopicFamily,
-    'Work and wellbeing': dict.landingTopicWork,
-    'Digital society': dict.landingTopicDigital,
-    'Consumption and ethics': dict.landingTopicConsume,
-  };
   return c.html(
-    <Layout title={dict.adminTitle} user={user} lang={lang}>
-      <h1>{dict.adminGenerateNew}</h1>
+    <Layout title="Generate Exam">
+      <Navbar user={user} />
+      <h1>Generate New Exam</h1>
       <div class="card" style="max-width:500px;">
         <form method="post" action="/admin/generate">
           <div class="form-group">
-            <label>{dict.adminTheme}</label>
+            <label>Theme</label>
             <select name="theme" required>
-              <option value="">{dict.adminThemePlaceholder}</option>
+              <option value="">Select a theme...</option>
               {THEMES.map((t) => (
                 <option value={t}>{themeLabels[t]}</option>
               ))}
             </select>
           </div>
-          <button type="submit" class="btn btn-primary">{dict.adminGenerateBtn}</button>
+          <button type="submit" class="btn btn-primary">Generate Exam</button>
         </form>
         <p style="color:var(--muted);margin-top:1rem;">
-          {dict.adminGenerateNote}
+          This may take 30-60 seconds as AI generates all 4 sections plus audio.
         </p>
       </div>
     </Layout>
@@ -71,78 +68,21 @@ admin.get('/admin/generate', adminMiddleware(), (c) => {
 });
 
 admin.post('/admin/generate', adminMiddleware(), async (c) => {
-  const lang = detectLang(c);
-  const dict = getDict(lang);
+  const user = c.get('user');
   const body = await c.req.parseBody<{ theme: string }>();
   const theme = body.theme;
   const db = getDb(c.env.DB);
 
+  // Check for reusable exam before burning tokens
+  const reusable = await findReusableExam(db, user.id, theme);
+  if (reusable) {
+    return c.redirect('/exams?cached=1');
+  }
+
   try {
-    // Generate all 4 sections in parallel
-    const [listeningJson, readingJson, writingJson, speakingJson] = await Promise.all([
-      chatCompletion(c, [
-        { role: 'system', content: LISTENING_SYSTEM_PROMPT },
-        { role: 'user', content: `Generate a DALF C1 listening exam on the theme: ${theme}. Output valid JSON only.` },
-      ], { temperature: 0.7, max_tokens: 4000, jsonMode: true }),
-      chatCompletion(c, [
-        { role: 'system', content: READING_SYSTEM_PROMPT },
-        { role: 'user', content: `Generate a DALF C1 reading exam on the theme: ${theme}. Output valid JSON only.` },
-      ], { temperature: 0.7, max_tokens: 6000, jsonMode: true }),
-      chatCompletion(c, [
-        { role: 'system', content: WRITING_SYSTEM_PROMPT },
-        { role: 'user', content: `Generate a DALF C1 writing exam on the theme: ${theme}. Output valid JSON only.` },
-      ], { temperature: 0.7, max_tokens: 4000, jsonMode: true }),
-      chatCompletion(c, [
-        { role: 'system', content: SPEAKING_SYSTEM_PROMPT },
-        { role: 'user', content: `Generate a DALF C1 speaking exam on the theme: ${theme}. Output valid JSON only.` },
-      ], { temperature: 0.7, max_tokens: 4000, jsonMode: true }),
-    ]);
-
-    const content: ExamGeneratedContent = {
-      listening: JSON.parse(listeningJson),
-      reading: JSON.parse(readingJson),
-      writing: JSON.parse(writingJson),
-      speaking: JSON.parse(speakingJson),
-    };
-
-    // Store exam in DB first to get ID
-    const [exam] = await db
-      .insert(exams)
-      .values({
-        title: `DALF C1 — ${theme}`,
-        theme,
-        generatedContent: content as any,
-        status: 'active',
-      })
-      .returning();
-
-    // Generate TTS audio for listening
-    const audioKeys: Record<string, string | string[]> = {};
-
-    // Long document audio (chunked if needed)
-    const longChunks = splitTextForTTS(content.listening.longDocument.transcript);
-    const longBuffers = await Promise.all(
-      longChunks.map((chunk) => generateTTS(c, chunk, 'alloy'))
-    );
-    const longKeys = await Promise.all(
-      longBuffers.map((buf, i) =>
-        uploadAudio(c, audioKey(exam.id, 'listening', `long-${i + 1}.mp3`), buf)
-      )
-    );
-    audioKeys.listeningLong = longKeys.length === 1 ? longKeys[0] : longKeys;
-
-    // Short documents audio (chunked if needed)
-    const shortTexts = content.listening.shortDocuments.map((d: any) => d.transcript).join('\n\n---\n\n');
-    const shortChunks = splitTextForTTS(shortTexts);
-    const shortBuffers = await Promise.all(
-      shortChunks.map((chunk) => generateTTS(c, chunk, 'alloy'))
-    );
-    const shortKeys = await Promise.all(
-      shortBuffers.map((buf, i) =>
-        uploadAudio(c, audioKey(exam.id, 'listening', `short-${i + 1}.mp3`), buf)
-      )
-    );
-    audioKeys.listeningShort = shortKeys.length === 1 ? shortKeys[0] : shortKeys;
+    const content = await generateExamContent(c, theme);
+    const exam = await storeExam(db, theme, content);
+    const audioKeys = await generateAndStoreAudio(c, exam.id, content);
 
     await db
       .update(exams)
@@ -153,10 +93,11 @@ admin.post('/admin/generate', adminMiddleware(), async (c) => {
   } catch (err: any) {
     console.error('Exam generation failed:', err);
     return c.html(
-      <Layout title={dict.adminErrorTitle} user={c.get('user')} lang={lang}>
+      <Layout title="Error">
+        <Navbar user={c.get('user')} />
         <div class="card">
-          <div class="alert alert-danger">{dict.adminErrorPrefix}{err.message}</div>
-          <a href="/admin/generate" class="btn btn-secondary">{dict.adminTryAgain}</a>
+          <div class="alert alert-danger">Failed to generate exam: {err.message}</div>
+          <a href="/admin/generate" class="btn btn-secondary">Try again</a>
         </div>
       </Layout>,
       500

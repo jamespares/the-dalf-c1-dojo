@@ -127,6 +127,5 @@ export function adminMiddleware() {
 declare module 'hono' {
   interface ContextVariableMap {
     user: AppUser;
-    lang: 'en' | 'fr' | 'zh';
   }
 }

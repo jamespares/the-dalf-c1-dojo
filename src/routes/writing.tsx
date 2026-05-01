@@ -4,14 +4,12 @@ import { getDb } from '../db';
 import { exams, attempts, answers } from '../db/schema';
 import { authMiddleware } from '../auth';
 import { Layout } from '../components/Layout';
-import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
+import { Navbar } from '../components/Navbar';
 
 const writing = new Hono<{ Bindings: CloudflareBindings }>();
 
 writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
   const user = c.get('user');
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
 
@@ -41,26 +39,27 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
   const answerMap = new Map(existingAnswers.map((a) => [a.questionId, a.userAnswer]));
 
   return c.html(
-    <Layout title={`${dict.writingTitle}DALF C1`} user={user} lang={lang}>
-      <h1>{dict.writingTitle}{exam.title}</h1>
-      <p style="color:var(--muted);">{dict.writingTime}</p>
+    <Layout title={`Writing Production — DALF C1`}>
+      <Navbar user={user} />
+      <h1>Writing Production — {exam.title}</h1>
+      <p style="color:var(--muted);">Recommended time: 2h30</p>
 
       <div class="card">
-        <h2>{dict.writingDossier}</h2>
+        <h2>Dossier</h2>
         {content.writing.dossier.map((doc: any, idx: number) => (
           <div style="margin-bottom:1.5rem;">
-            <h3>{dict.writingDocument}{idx + 1}: {doc.title}</h3>
+            <h3>Document {idx + 1}: {doc.title}</h3>
             <div style="white-space:pre-wrap;font-size:1rem;line-height:1.6;">{doc.text}</div>
           </div>
         ))}
         <div style="margin-top:1rem;padding:1rem;background:#f1f3f5;border-radius:var(--radius);">
-          <strong>{dict.writingProblematic}</strong> {content.writing.problematique}
+          <strong>Problématique:</strong> {content.writing.problematique}
         </div>
       </div>
 
       <form method="post" action={`/exams/${examId}/writing/save?attempt=${attempt.id}`}>
         <div class="card">
-          <h2>{dict.writingPart1}</h2>
+          <h2>Part 1 — Synthèse (220-240 words)</h2>
           <p style="color:var(--muted);">{content.writing.synthesisPrompt}</p>
           <textarea
             name="q_synthese"
@@ -73,7 +72,7 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
         </div>
 
         <div class="card">
-          <h2>{dict.writingPart2}</h2>
+          <h2>Part 2 — Essai argumenté (250+ words)</h2>
           <p style="color:var(--muted);">{content.writing.essayPrompt}</p>
           <textarea
             name="q_essai"
@@ -85,19 +84,17 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
           </div>
         </div>
 
-        <button type="submit" class="btn btn-secondary">{dict.writingSave}</button>
+        <button type="submit" class="btn btn-secondary">Save</button>
       </form>
 
       <form method="post" action={`/exams/${examId}/writing/submit?attempt=${attempt.id}`} style="margin-top:1rem;">
-        <button type="submit" class="btn btn-success">{dict.writingSubmit}</button>
+        <button type="submit" class="btn btn-success">Submit for Marking</button>
       </form>
     </Layout>
   );
 });
 
 writing.post('/exams/:id/writing/save', authMiddleware(), async (c) => {
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
   const body = await c.req.parseBody();
@@ -127,8 +124,6 @@ writing.post('/exams/:id/writing/save', authMiddleware(), async (c) => {
 });
 
 writing.post('/exams/:id/writing/submit', authMiddleware(), async (c) => {
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const attemptId = Number(c.req.query('attempt'));
   const db = getDb(c.env.DB);
   await db

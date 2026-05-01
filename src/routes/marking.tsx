@@ -12,15 +12,13 @@ import {
   MARKING_SPEAKING_PROMPT,
 } from '../ai-prompts';
 import { Layout } from '../components/Layout';
-import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
+import { Navbar } from '../components/Navbar';
 
 const marking = new Hono<{ Bindings: CloudflareBindings }>();
 
 marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
   const user = c.get('user');
   const attemptId = Number(c.req.param('attemptId'));
-  const lang = detectLang(c);
-  const dict = getDict(lang);
 
   const db = getDb(c.env.DB);
   const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
@@ -228,11 +226,12 @@ marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
   } catch (err: any) {
     console.error('Marking failed:', err);
     return c.html(
-      <Layout title={dict.markingErrorTitle} user={user} lang={lang}>
+      <Layout title="Marking Error">
+        <Navbar user={user} />
         <div class="card">
-          <div class="alert alert-danger">{dict.markingErrorPrefix}{err.message}</div>
+          <div class="alert alert-danger">Marking failed: {err.message}</div>
           <a href={`/exams/${attempt.examId}/${attempt.section.toLowerCase()}?attempt=${attemptId}`} class="btn btn-secondary">
-            {dict.markingBackToExam}
+            Back to exam
           </a>
         </div>
       </Layout>,

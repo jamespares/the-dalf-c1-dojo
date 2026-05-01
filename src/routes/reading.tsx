@@ -4,14 +4,12 @@ import { getDb } from '../db';
 import { exams, attempts, answers } from '../db/schema';
 import { authMiddleware } from '../auth';
 import { Layout } from '../components/Layout';
-import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
+import { Navbar } from '../components/Navbar';
 
 const reading = new Hono<{ Bindings: CloudflareBindings }>();
 
 reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
   const user = c.get('user');
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
 
@@ -41,17 +39,18 @@ reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
   const answerMap = new Map(existingAnswers.map((a) => [a.questionId, a.userAnswer]));
 
   return c.html(
-    <Layout title={`${dict.readingTitle}DALF C1`} user={user} lang={lang}>
-      <h1>{dict.readingTitle}{exam.title}</h1>
-      <p style="color:var(--muted);">{dict.readingTime}</p>
+    <Layout title={`Reading Comprehension — DALF C1`}>
+      <Navbar user={user} />
+      <h1>Reading Comprehension — {exam.title}</h1>
+      <p style="color:var(--muted);">Recommended time: 50 minutes</p>
 
       <div class="card">
-        <h2>{dict.readingText}</h2>
+        <h2>Text</h2>
         <div style="white-space:pre-wrap;font-size:1.05rem;line-height:1.7;">{content.reading.text}</div>
       </div>
 
       <div class="card">
-        <h2>{dict.readingQuestions}</h2>
+        <h2>Questions</h2>
         <form method="post" action={`/exams/${examId}/reading/save?attempt=${attempt.id}`}>
           {content.reading.questions.map((q: any) => (
             <div class="form-group" style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
@@ -82,20 +81,18 @@ reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
               )}
             </div>
           ))}
-          <button type="submit" class="btn btn-secondary">{dict.readingSave}</button>
+          <button type="submit" class="btn btn-secondary">Save Answers</button>
         </form>
       </div>
 
       <form method="post" action={`/exams/${examId}/reading/submit?attempt=${attempt.id}`}>
-        <button type="submit" class="btn btn-success">{dict.readingSubmit}</button>
+        <button type="submit" class="btn btn-success">Submit for Marking</button>
       </form>
     </Layout>
   );
 });
 
 reading.post('/exams/:id/reading/save', authMiddleware(), async (c) => {
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
   const body = await c.req.parseBody();
@@ -126,8 +123,6 @@ reading.post('/exams/:id/reading/save', authMiddleware(), async (c) => {
 });
 
 reading.post('/exams/:id/reading/submit', authMiddleware(), async (c) => {
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const attemptId = Number(c.req.query('attempt'));
   const db = getDb(c.env.DB);
   await db

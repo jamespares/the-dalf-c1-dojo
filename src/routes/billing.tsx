@@ -4,42 +4,41 @@ import { getDb } from '../db';
 import { subscriptions } from '../db/schema';
 import { authMiddleware, getCurrentUser } from '../auth';
 import { Layout } from '../components/Layout';
+import { Navbar } from '../components/Navbar';
 import { getPublishableKey, createCheckoutSession, retrieveCheckoutSession } from '../stripe';
 import { getSubscriptionStatus, syncSubscriptionFromStripe } from '../subscription';
-import { detectLang, getDict, type Lang, type Dict } from '../lib/i18n';
 
 const billing = new Hono<{ Bindings: CloudflareBindings }>();
 
 billing.get('/billing', authMiddleware(), async (c) => {
   const user = c.get('user');
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const db = getDb(c.env.DB);
   const status = await getSubscriptionStatus(db, user.id);
 
   if (!status.active) {
     const pk = getPublishableKey(c);
     return c.html(
-      <Layout title={dict.billingTitle} user={user} lang={lang}>
-        <h1>{dict.billingSubscription}</h1>
+      <Layout title="Billing">
+        <Navbar user={user} />
+        <h1>Subscription</h1>
         <div class="card" style="max-width:500px;">
-          <h2>{dict.billingPlanName}</h2>
+          <h2>DALF Dojo Monthly</h2>
           <p style="font-size:1.25rem; margin:0.5rem 0;">
-            <strong>{dict.billingPrice}</strong>
+            <strong>£30 / month</strong>
           </p>
           <ul style="margin:1rem 0; padding-left:1.25rem;">
-            <li>{dict.billingFeature1}</li>
-            <li>{dict.billingFeature2}</li>
-            <li>{dict.billingFeature3}</li>
-            <li>{dict.billingFeature4}</li>
+            <li>Unlimited access to all generated past papers</li>
+            <li>30 exam section attempts per month</li>
+            <li>AI marking against official rubric</li>
+            <li>Error pattern tracking</li>
           </ul>
           <form action="/billing/checkout" method="post">
             <button type="submit" class="btn btn-primary" style="width:100%;">
-              {dict.billingSubscribe}
+              Subscribe Now
             </button>
           </form>
           <p style="color:var(--muted); font-size:0.85rem; margin-top:0.75rem;">
-            {dict.billingSecure}
+            Secure payment via Stripe. Cancel anytime.
           </p>
         </div>
       </Layout>
@@ -48,31 +47,32 @@ billing.get('/billing', authMiddleware(), async (c) => {
 
   const periodEnd = status.periodEnd
     ? new Date(status.periodEnd).toLocaleDateString()
-    : dict.dashDash;
+    : '-';
 
   return c.html(
-    <Layout title={dict.billingTitle} user={user} lang={lang}>
-      <h1>{dict.billingSubscription}</h1>
+    <Layout title="Billing">
+      <Navbar user={user} />
+      <h1>Subscription</h1>
       <div class="card" style="max-width:500px;">
-        <h2>{dict.billingPlanName}</h2>
+        <h2>DALF Dojo Monthly</h2>
         <p style="font-size:1.25rem; margin:0.5rem 0;">
-          <strong>{dict.billingPrice}</strong>
+          <strong>£30 / month</strong>
         </p>
         <div style="margin:1rem 0;">
           <p>
-            <strong>{dict.billingStatus}</strong>{' '}
-            <span class="score-badge score-pass">{dict.billingActive}</span>
+            <strong>Status:</strong>{' '}
+            <span class="score-badge score-pass">Active</span>
           </p>
           <p>
-            <strong>{dict.billingUsage}</strong>{' '}
+            <strong>Usage:</strong>{' '}
             {status.used} / {status.limit} attempts used
           </p>
           <p>
-            <strong>{dict.billingRemaining}</strong>{' '}
+            <strong>Remaining:</strong>{' '}
             {status.remaining} this period
           </p>
           <p>
-            <strong>{dict.billingRenews}</strong> {periodEnd}
+            <strong>Renews:</strong> {periodEnd}
           </p>
         </div>
         <div class="progress-bar" style="background:#e5e7eb;border-radius:999px;height:8px;overflow:hidden;margin-bottom:1rem;">
@@ -82,13 +82,13 @@ billing.get('/billing', authMiddleware(), async (c) => {
         </div>
         {status.remaining === 0 && (
           <div class="alert alert-warning">
-            {dict.billingLimitReached}{periodEnd}.
+            You have reached your monthly limit. Your quota will reset on {periodEnd}.
           </div>
         )}
         <p style="color:var(--muted); font-size:0.85rem;">
-          {dict.billingManagePrefix}{' '}
+          Manage or cancel your subscription in your {' '}
           <a href="https://billing.stripe.com/p/login" target="_blank" rel="noopener noreferrer">
-            {dict.billingStripePortal}
+            Stripe Customer Portal
           </a>.
         </p>
       </div>
@@ -98,8 +98,6 @@ billing.get('/billing', authMiddleware(), async (c) => {
 
 billing.post('/billing/checkout', authMiddleware(), async (c) => {
   const user = c.get('user');
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const origin = new URL(c.req.url).origin;
 
   const session = await createCheckoutSession(c, {
@@ -114,8 +112,6 @@ billing.post('/billing/checkout', authMiddleware(), async (c) => {
 
 billing.get('/billing/success', authMiddleware(), async (c) => {
   const user = c.get('user');
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   const sessionId = c.req.query('session_id');
 
   if (sessionId) {
@@ -132,13 +128,14 @@ billing.get('/billing/success', authMiddleware(), async (c) => {
   }
 
   return c.html(
-    <Layout title={dict.billingWelcomeTitle} user={user} lang={lang}>
-      <h1>{dict.billingSubActive}</h1>
+    <Layout title="Welcome">
+      <Navbar user={user} />
+      <h1>Subscription Active</h1>
       <div class="card" style="max-width:500px;">
-        <div class="alert alert-success">{dict.billingSubActiveMsg}</div>
-        <p>{dict.billingSubActiveDesc}</p>
+        <div class="alert alert-success">Your subscription is now active!</div>
+        <p>You can now start practicing DALF C1 past papers.</p>
         <p>
-          <a href="/exams" class="btn btn-primary">{dict.billingGoToExams}</a>
+          <a href="/exams" class="btn btn-primary">Go to Exams</a>
         </p>
       </div>
     </Layout>
@@ -147,15 +144,14 @@ billing.get('/billing/success', authMiddleware(), async (c) => {
 
 billing.get('/billing/cancel', authMiddleware(), async (c) => {
   const user = c.get('user');
-  const lang = detectLang(c);
-  const dict = getDict(lang);
   return c.html(
-    <Layout title={dict.billingCancelTitle} user={user} lang={lang}>
-      <h1>{dict.billingCancelTitle}</h1>
+    <Layout title="Checkout Cancelled">
+      <Navbar user={user} />
+      <h1>Checkout Cancelled</h1>
       <div class="card" style="max-width:500px;">
-        <p>{dict.billingCancelMsg}</p>
+        <p>You can subscribe anytime to unlock full access.</p>
         <p>
-          <a href="/billing" class="btn btn-primary">{dict.billingBackToBilling}</a>
+          <a href="/billing" class="btn btn-primary">Back to Billing</a>
         </p>
       </div>
     </Layout>
