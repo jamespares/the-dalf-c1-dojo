@@ -2,7 +2,7 @@ import { Context } from 'hono';
 import { deleteCookie } from 'hono/cookie';
 import { eq } from 'drizzle-orm';
 import { getDb } from './db';
-import { users } from './db/schema';
+import { users, baUser, baSession, baAccount, baVerification } from './db/schema';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 
@@ -18,10 +18,19 @@ export type AppUser = {
 
 export function createAuth(env: { DB: D1Database; BETTER_AUTH_SECRET: string; BETTER_AUTH_URL: string; SEND_EMAIL?: SendEmail }) {
   return betterAuth({
-    database: drizzleAdapter(getDb(env.DB), { provider: 'sqlite' }),
+    database: drizzleAdapter(getDb(env.DB), {
+      provider: 'sqlite',
+      schema: {
+        user: baUser,
+        session: baSession,
+        account: baAccount,
+        verification: baVerification,
+      },
+    }),
     emailAndPassword: {
       enabled: true,
       autoSignIn: true,
+      minPasswordLength: 6,
       sendResetPassword: async ({ user, url }) => {
         if (!env.SEND_EMAIL) {
           console.warn('SEND_EMAIL binding is missing. Cannot send reset password email.');
@@ -73,6 +82,11 @@ export function createAuth(env: { DB: D1Database; BETTER_AUTH_SECRET: string; BE
     },
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
+    advanced: {
+      ipAddress: {
+        ipAddressHeaders: ['cf-connecting-ip', 'x-forwarded-for', 'x-real-ip'],
+      },
+    },
   });
 }
 
