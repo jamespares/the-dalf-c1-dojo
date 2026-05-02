@@ -121,6 +121,10 @@ auth.get('/register', (c) => {
 
         <form id="register-form" class="auth-form">
           <div class="auth-field">
+            <label class="auth-label">Name</label>
+            <input type="text" id="name" class="auth-input" placeholder="Your name" required />
+          </div>
+          <div class="auth-field">
             <label class="auth-label">Email</label>
             <input type="email" id="email" class="auth-input" placeholder="you@example.com" required />
           </div>
@@ -146,6 +150,7 @@ auth.get('/register', (c) => {
         const client = createAuthClient({ baseURL: window.location.origin });
 
         const form = document.getElementById('register-form');
+        const nameInput = document.getElementById('name');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const submitBtn = document.getElementById('submit-btn');
@@ -158,9 +163,9 @@ auth.get('/register', (c) => {
           submitBtn.textContent = 'Creating account...';
 
           const { data, error } = await client.signUp.email({
+            name: nameInput.value,
             email: emailInput.value,
             password: passwordInput.value,
-            name: emailInput.value.split('@')[0],
           });
 
           if (error) {
