@@ -11,8 +11,7 @@
     "ADMIN_EMAILS": "[EMAIL_ADDRESS]",
     "STRIPE_PUBLISHABLE_KEY": "pk_live_...",
     "STRIPE_PRICE_ID": "price_...",
-    "BETTER_AUTH_URL": "https://thedalfdojo.com",
-    "BETTER_AUTH_SECRET": "LuamqfWSF3daqS/KnmsJGolDrS7wPG9cOnYuJME4yk0="
+    "BETTER_AUTH_URL": "https://thedalfdojo.com"
   },
   "d1_databases": [
     {
