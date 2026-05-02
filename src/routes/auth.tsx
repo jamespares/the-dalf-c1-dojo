@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { deleteCookie } from 'hono/cookie';
+import { logout } from '../auth';
 
 const auth = new Hono<{ Bindings: CloudflareBindings }>();
 
@@ -177,8 +177,7 @@ auth.get('/register', (c) => {
 });
 
 auth.get('/logout', async (c) => {
-  // Clear Better Auth cookie and redirect
-  deleteCookie(c, 'better-auth.session_token');
+  await logout(c);
   return c.redirect('/login');
 });
 

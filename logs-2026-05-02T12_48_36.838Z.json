@@ -1,0 +1,662 @@
+[
+  {
+    "source": {
+      "level": "info",
+      "message": "GET https://thedalfdojo.com/register"
+    },
+    "dataset": "cloudflare-workers",
+    "timestamp": "2026-05-02T12:47:26.366Z",
+    "$workers": {
+      "event": {
+        "request": {
+          "cf": {
+            "requestHeaderNames": {},
+            "isEUCountry": false,
+            "tlsClientAuth": {
+              "certRFC9440TooLarge": false,
+              "certChainRFC9440TooLarge": false,
+              "certPresented": "0",
+              "certVerified": "NONE",
+              "certRevoked": "0",
+              "certIssuerDN": "",
+              "certSubjectDN": "",
+              "certIssuerDNRFC2253": "",
+              "certSubjectDNRFC2253": "",
+              "certIssuerDNLegacy": "",
+              "certSubjectDNLegacy": "",
+              "certSerial": "",
+              "certIssuerSerial": "",
+              "certSKI": "",
+              "certIssuerSKI": "",
+              "certFingerprintSHA1": "",
+              "certFingerprintSHA256": "",
+              "certNotBefore": "",
+              "certNotAfter": "",
+              "certRFC9440": "",
+              "certChainRFC9440": ""
+            },
+            "httpProtocol": "HTTP/2",
+            "clientAcceptEncoding": "gzip, deflate, br",
+            "requestPriority": "weight=256;exclusive=1",
+            "colo": "LAX",
+            "asOrganization": "Enterprise Internet Access NA",
+            "country": "US",
+            "city": "New York City",
+            "continent": "NA",
+            "region": "New York",
+            "regionCode": "NY",
+            "timezone": "America/New_York",
+            "longitude": "-74.00597",
+            "latitude": "40.71427",
+            "postalCode": "10001",
+            "metroCode": "501",
+            "tlsVersion": "TLSv1.3",
+            "tlsCipher": "AEAD-AES128-GCM-SHA256",
+            "tlsClientRandom": "bHPfofGxAWn+3lSUkDE0m3kfLFswPL4zyLzEsBC9ryg=",
+            "tlsClientCiphersSha1": "3ITBaTW+cfXno+jbp1Rd9MJFgto=",
+            "tlsClientExtensionsSha1": "JgtUiIOjjarZRGN1GuPNL2VkIBM=",
+            "tlsClientExtensionsSha1Le": "dJ8/DwljxcP4ZO7S44leGpKdD9I=",
+            "tlsExportedAuthenticator": {
+              "clientHandshake": "d7df47683f29fb1efc73d47c4e60786848fdd2502ecac090d2bdc5c81ee7ba44",
+              "serverHandshake": "1b2823448ec85a3cdd0621b4ccb98fa4ce5dac0a0ea783f0c57938ec057adad7",
+              "clientFinished": "26a32c7fcda10b7f0254f634006202557d53476465285dfec8701ae6dc2ad37e",
+              "serverFinished": "fd6ae8e495eccea1f9c07566e995b81d252efc39d971391c7fac676bd4f651fb"
+            },
+            "tlsClientHelloLength": "1955",
+            "verifiedBotCategory": "",
+            "edgeRequestKeepAliveStatus": 1,
+            "clientTcpRtt": 145,
+            "clientQuicRtt": 0,
+            "asn": 57025,
+            "edgeL4": {
+              "deliveryRate": 39625
+            }
+          },
+          "url": "https://thedalfdojo.com/register",
+          "method": "GET",
+          "headers": {
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+            "cf-connecting-ip": "2a13:db01:1a1c:4f8e:d6a4:36fa:1a8b:e360",
+            "cf-ipcountry": "US",
+            "cf-ray": "9f57226dbc974383",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "connection": "Keep-Alive",
+            "host": "thedalfdojo.com",
+            "priority": "u=0, i",
+            "referer": "https://thedalfdojo.com/login",
+            "sec-ch-ua": "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+            "x-forwarded-proto": "https",
+            "x-real-ip": "2a13:db01:1a1c:4f8e:d6a4:36fa:1a8b:e360"
+          },
+          "path": "/register"
+        },
+        "rayId": "9f57226dbc974383",
+        "response": {
+          "status": 200
+        }
+      },
+      "truncated": false,
+      "scriptName": "the-dalf-dojo",
+      "outcome": "ok",
+      "eventType": "fetch",
+      "executionModel": "stateless",
+      "scriptVersion": {
+        "id": "585ab4cf-8275-4fac-8fa0-f05c17555e83"
+      },
+      "requestId": "9f57226dbc974383",
+      "cpuTimeMs": 0,
+      "wallTimeMs": 1
+    },
+    "$metadata": {
+      "id": "01KQMBNG4Y94CD3YVB4WPS2WRT",
+      "requestId": "9f57226dbc974383",
+      "trigger": "GET /register",
+      "service": "the-dalf-dojo",
+      "level": "info",
+      "message": "GET https://thedalfdojo.com/register",
+      "account": "3378223e3a7f8d6accc22cc95a70f4ac",
+      "type": "cf-worker-event",
+      "fingerprint": "c6605f86314e874b7be929a5ae933071",
+      "origin": "fetch",
+      "messageTemplate": "GET https://thedalfdojo.com/register"
+    }
+  },
+  {
+    "source": {
+      "level": "info",
+      "message": "GET https://thedalfdojo.com/login"
+    },
+    "dataset": "cloudflare-workers",
+    "timestamp": "2026-05-02T12:47:23.301Z",
+    "$workers": {
+      "event": {
+        "request": {
+          "cf": {
+            "requestHeaderNames": {},
+            "isEUCountry": false,
+            "tlsClientAuth": {
+              "certRFC9440TooLarge": false,
+              "certChainRFC9440TooLarge": false,
+              "certPresented": "0",
+              "certVerified": "NONE",
+              "certRevoked": "0",
+              "certIssuerDN": "",
+              "certSubjectDN": "",
+              "certIssuerDNRFC2253": "",
+              "certSubjectDNRFC2253": "",
+              "certIssuerDNLegacy": "",
+              "certSubjectDNLegacy": "",
+              "certSerial": "",
+              "certIssuerSerial": "",
+              "certSKI": "",
+              "certIssuerSKI": "",
+              "certFingerprintSHA1": "",
+              "certFingerprintSHA256": "",
+              "certNotBefore": "",
+              "certNotAfter": "",
+              "certRFC9440": "",
+              "certChainRFC9440": ""
+            },
+            "httpProtocol": "HTTP/2",
+            "clientAcceptEncoding": "gzip, deflate, br",
+            "requestPriority": "weight=256;exclusive=1",
+            "colo": "LAX",
+            "asOrganization": "Enterprise Internet Access NA",
+            "country": "US",
+            "city": "New York City",
+            "continent": "NA",
+            "region": "New York",
+            "regionCode": "NY",
+            "timezone": "America/New_York",
+            "longitude": "-74.00597",
+            "latitude": "40.71427",
+            "postalCode": "10001",
+            "metroCode": "501",
+            "tlsVersion": "TLSv1.3",
+            "tlsCipher": "AEAD-AES128-GCM-SHA256",
+            "tlsClientRandom": "bHPfofGxAWn+3lSUkDE0m3kfLFswPL4zyLzEsBC9ryg=",
+            "tlsClientCiphersSha1": "3ITBaTW+cfXno+jbp1Rd9MJFgto=",
+            "tlsClientExtensionsSha1": "JgtUiIOjjarZRGN1GuPNL2VkIBM=",
+            "tlsClientExtensionsSha1Le": "dJ8/DwljxcP4ZO7S44leGpKdD9I=",
+            "tlsExportedAuthenticator": {
+              "clientHandshake": "d7df47683f29fb1efc73d47c4e60786848fdd2502ecac090d2bdc5c81ee7ba44",
+              "serverHandshake": "1b2823448ec85a3cdd0621b4ccb98fa4ce5dac0a0ea783f0c57938ec057adad7",
+              "clientFinished": "26a32c7fcda10b7f0254f634006202557d53476465285dfec8701ae6dc2ad37e",
+              "serverFinished": "fd6ae8e495eccea1f9c07566e995b81d252efc39d971391c7fac676bd4f651fb"
+            },
+            "tlsClientHelloLength": "1955",
+            "verifiedBotCategory": "",
+            "edgeRequestKeepAliveStatus": 1,
+            "clientTcpRtt": 134,
+            "clientQuicRtt": 0,
+            "asn": 57025,
+            "edgeL4": {
+              "deliveryRate": 20035
+            }
+          },
+          "url": "https://thedalfdojo.com/login",
+          "method": "GET",
+          "headers": {
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+            "cf-connecting-ip": "2a13:db01:1a1c:4f8e:d6a4:36fa:1a8b:e360",
+            "cf-ipcountry": "US",
+            "cf-ray": "9f57225a88284383",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "connection": "Keep-Alive",
+            "host": "thedalfdojo.com",
+            "priority": "u=0, i",
+            "referer": "https://thedalfdojo.com/",
+            "sec-ch-ua": "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+            "x-forwarded-proto": "https",
+            "x-real-ip": "2a13:db01:1a1c:4f8e:d6a4:36fa:1a8b:e360"
+          },
+          "path": "/login"
+        },
+        "rayId": "9f57225a88284383",
+        "response": {
+          "status": 200
+        }
+      },
+      "truncated": false,
+      "scriptName": "the-dalf-dojo",
+      "outcome": "ok",
+      "eventType": "fetch",
+      "executionModel": "stateless",
+      "scriptVersion": {
+        "id": "585ab4cf-8275-4fac-8fa0-f05c17555e83"
+      },
+      "requestId": "9f57225a88284383",
+      "cpuTimeMs": 1,
+      "wallTimeMs": 1
+    },
+    "$metadata": {
+      "id": "01KQMBND5588H3X3T6NPZARJV5",
+      "requestId": "9f57225a88284383",
+      "trigger": "GET /login",
+      "service": "the-dalf-dojo",
+      "level": "info",
+      "message": "GET https://thedalfdojo.com/login",
+      "account": "3378223e3a7f8d6accc22cc95a70f4ac",
+      "type": "cf-worker-event",
+      "fingerprint": "c6605f86314e874b7be929a5ae933071",
+      "origin": "fetch",
+      "messageTemplate": "GET https://thedalfdojo.com/login"
+    }
+  },
+  {
+    "source": {
+      "level": "info",
+      "message": "GET https://thedalfdojo.com/"
+    },
+    "dataset": "cloudflare-workers",
+    "timestamp": "2026-05-02T12:45:48.579Z",
+    "$workers": {
+      "event": {
+        "request": {
+          "cf": {
+            "requestHeaderNames": {},
+            "isEUCountry": false,
+            "tlsClientAuth": {
+              "certRFC9440TooLarge": false,
+              "certChainRFC9440TooLarge": false,
+              "certPresented": "0",
+              "certVerified": "NONE",
+              "certRevoked": "0",
+              "certIssuerDN": "",
+              "certSubjectDN": "",
+              "certIssuerDNRFC2253": "",
+              "certSubjectDNRFC2253": "",
+              "certIssuerDNLegacy": "",
+              "certSubjectDNLegacy": "",
+              "certSerial": "",
+              "certIssuerSerial": "",
+              "certSKI": "",
+              "certIssuerSKI": "",
+              "certFingerprintSHA1": "",
+              "certFingerprintSHA256": "",
+              "certNotBefore": "",
+              "certNotAfter": "",
+              "certRFC9440": "",
+              "certChainRFC9440": ""
+            },
+            "httpProtocol": "HTTP/2",
+            "clientAcceptEncoding": "gzip, deflate, br",
+            "requestPriority": "weight=256;exclusive=1",
+            "colo": "LAX",
+            "asOrganization": "Enterprise Internet Access NA",
+            "country": "US",
+            "city": "New York City",
+            "continent": "NA",
+            "region": "New York",
+            "regionCode": "NY",
+            "timezone": "America/New_York",
+            "longitude": "-74.00597",
+            "latitude": "40.71427",
+            "postalCode": "10001",
+            "metroCode": "501",
+            "tlsVersion": "TLSv1.3",
+            "tlsCipher": "AEAD-AES128-GCM-SHA256",
+            "tlsClientRandom": "8FPUfstpD+z4IF6DmJa+o5FqvsnIKaRfzkKs0gqISYw=",
+            "tlsClientCiphersSha1": "DZ1S165cLv9arvI/bxhinz+mlRo=",
+            "tlsClientExtensionsSha1": "2zA34Y4O00Gezy2peiorXUUdOfQ=",
+            "tlsClientExtensionsSha1Le": "QjC9uP2pdwreF29GRvnisve0OB0=",
+            "tlsExportedAuthenticator": {
+              "clientHandshake": "9caf3385c4bb4de4b57d5d09ef560dd8fd2d6e08d7faea6bec0df90983c94466",
+              "serverHandshake": "acd86c0c667a4c22eb1047ff25e9e888667de9b75b44b7404f2b77df2a8875e7",
+              "clientFinished": "82429d36ce3229b84f5256c4d8b937610538046ca4430707932cfb4960f4c548",
+              "serverFinished": "3e966988b3387ed28e27b0a49fe675b5059d58f0d7f38a2323333c4819f7968a"
+            },
+            "tlsClientHelloLength": "2051",
+            "verifiedBotCategory": "",
+            "edgeRequestKeepAliveStatus": 1,
+            "clientTcpRtt": 148,
+            "clientQuicRtt": 0,
+            "asn": 57025,
+            "edgeL4": {
+              "deliveryRate": 89514
+            }
+          },
+          "url": "https://thedalfdojo.com/",
+          "method": "GET",
+          "headers": {
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+            "cf-connecting-ip": "2a13:db01:1a1c:4f8e:d6a4:36fa:1a8b:e360",
+            "cf-ipcountry": "US",
+            "cf-ray": "9f57200a9cebcba2",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "connection": "Keep-Alive",
+            "host": "thedalfdojo.com",
+            "priority": "u=0, i",
+            "referer": "https://thedalfdojo.com/register",
+            "sec-ch-ua": "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+            "x-forwarded-proto": "https",
+            "x-real-ip": "2a13:db01:1a1c:4f8e:d6a4:36fa:1a8b:e360"
+          },
+          "path": "/"
+        },
+        "rayId": "9f57200a9cebcba2",
+        "response": {
+          "status": 200
+        }
+      },
+      "truncated": false,
+      "scriptName": "the-dalf-dojo",
+      "outcome": "ok",
+      "eventType": "fetch",
+      "executionModel": "stateless",
+      "scriptVersion": {
+        "id": "585ab4cf-8275-4fac-8fa0-f05c17555e83"
+      },
+      "requestId": "9f57200a9cebcba2",
+      "cpuTimeMs": 1,
+      "wallTimeMs": 1
+    },
+    "$metadata": {
+      "id": "01KQMBJGN32744A1T9TCJMJQPF",
+      "requestId": "9f57200a9cebcba2",
+      "trigger": "GET /",
+      "service": "the-dalf-dojo",
+      "level": "info",
+      "message": "GET https://thedalfdojo.com/",
+      "account": "3378223e3a7f8d6accc22cc95a70f4ac",
+      "type": "cf-worker-event",
+      "fingerprint": "c6605f86314e874b7be929a5ae933071",
+      "origin": "fetch",
+      "messageTemplate": "GET https://thedalfdojo.com/"
+    }
+  },
+  {
+    "source": {
+      "level": "info",
+      "message": "GET https://thedalfdojo.com/register"
+    },
+    "dataset": "cloudflare-workers",
+    "timestamp": "2026-05-02T12:45:46.424Z",
+    "$workers": {
+      "event": {
+        "request": {
+          "cf": {
+            "requestHeaderNames": {},
+            "isEUCountry": false,
+            "tlsClientAuth": {
+              "certRFC9440TooLarge": false,
+              "certChainRFC9440TooLarge": false,
+              "certPresented": "0",
+              "certVerified": "NONE",
+              "certRevoked": "0",
+              "certIssuerDN": "",
+              "certSubjectDN": "",
+              "certIssuerDNRFC2253": "",
+              "certSubjectDNRFC2253": "",
+              "certIssuerDNLegacy": "",
+              "certSubjectDNLegacy": "",
+              "certSerial": "",
+              "certIssuerSerial": "",
+              "certSKI": "",
+              "certIssuerSKI": "",
+              "certFingerprintSHA1": "",
+              "certFingerprintSHA256": "",
+              "certNotBefore": "",
+              "certNotAfter": "",
+              "certRFC9440": "",
+              "certChainRFC9440": ""
+            },
+            "httpProtocol": "HTTP/2",
+            "clientAcceptEncoding": "gzip, deflate, br",
+            "requestPriority": "weight=256;exclusive=1",
+            "colo": "LAX",
+            "asOrganization": "Enterprise Internet Access NA",
+            "country": "US",
+            "city": "New York City",
+            "continent": "NA",
+            "region": "New York",
+            "regionCode": "NY",
+            "timezone": "America/New_York",
+            "longitude": "-74.00597",
+            "latitude": "40.71427",
+            "postalCode": "10001",
+            "metroCode": "501",
+            "tlsVersion": "TLSv1.3",
+            "tlsCipher": "AEAD-AES128-GCM-SHA256",
+            "tlsClientRandom": "8FPUfstpD+z4IF6DmJa+o5FqvsnIKaRfzkKs0gqISYw=",
+            "tlsClientCiphersSha1": "DZ1S165cLv9arvI/bxhinz+mlRo=",
+            "tlsClientExtensionsSha1": "2zA34Y4O00Gezy2peiorXUUdOfQ=",
+            "tlsClientExtensionsSha1Le": "QjC9uP2pdwreF29GRvnisve0OB0=",
+            "tlsExportedAuthenticator": {
+              "clientHandshake": "9caf3385c4bb4de4b57d5d09ef560dd8fd2d6e08d7faea6bec0df90983c94466",
+              "serverHandshake": "acd86c0c667a4c22eb1047ff25e9e888667de9b75b44b7404f2b77df2a8875e7",
+              "clientFinished": "82429d36ce3229b84f5256c4d8b937610538046ca4430707932cfb4960f4c548",
+              "serverFinished": "3e966988b3387ed28e27b0a49fe675b5059d58f0d7f38a2323333c4819f7968a"
+            },
+            "tlsClientHelloLength": "2051",
+            "verifiedBotCategory": "",
+            "edgeRequestKeepAliveStatus": 1,
+            "clientTcpRtt": 142,
+            "clientQuicRtt": 0,
+            "asn": 57025,
+            "edgeL4": {
+              "deliveryRate": 89514
+            }
+          },
+          "url": "https://thedalfdojo.com/register",
+          "method": "GET",
+          "headers": {
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+            "cf-connecting-ip": "2a13:db01:1a1c:4f8e:d6a4:36fa:1a8b:e360",
+            "cf-ipcountry": "US",
+            "cf-ray": "9f571ffd1d92cba2",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "connection": "Keep-Alive",
+            "host": "thedalfdojo.com",
+            "priority": "u=0, i",
+            "referer": "https://thedalfdojo.com/",
+            "sec-ch-ua": "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+            "x-forwarded-proto": "https",
+            "x-real-ip": "2a13:db01:1a1c:4f8e:d6a4:36fa:1a8b:e360"
+          },
+          "path": "/register"
+        },
+        "rayId": "9f571ffd1d92cba2",
+        "response": {
+          "status": 200
+        }
+      },
+      "truncated": false,
+      "scriptName": "the-dalf-dojo",
+      "outcome": "ok",
+      "eventType": "fetch",
+      "executionModel": "stateless",
+      "scriptVersion": {
+        "id": "585ab4cf-8275-4fac-8fa0-f05c17555e83"
+      },
+      "requestId": "9f571ffd1d92cba2",
+      "cpuTimeMs": 1,
+      "wallTimeMs": 1
+    },
+    "$metadata": {
+      "id": "01KQMBJEHR4EJVXGFNDSZJVYQ0",
+      "requestId": "9f571ffd1d92cba2",
+      "trigger": "GET /register",
+      "service": "the-dalf-dojo",
+      "level": "info",
+      "message": "GET https://thedalfdojo.com/register",
+      "account": "3378223e3a7f8d6accc22cc95a70f4ac",
+      "type": "cf-worker-event",
+      "fingerprint": "c6605f86314e874b7be929a5ae933071",
+      "origin": "fetch",
+      "messageTemplate": "GET https://thedalfdojo.com/register"
+    }
+  },
+  {
+    "source": {
+      "level": "info",
+      "message": "GET https://thedalfdojo.com/"
+    },
+    "dataset": "cloudflare-workers",
+    "timestamp": "2026-05-02T12:45:39.689Z",
+    "$workers": {
+      "event": {
+        "request": {
+          "cf": {
+            "requestHeaderNames": {},
+            "isEUCountry": false,
+            "tlsClientAuth": {
+              "certRFC9440TooLarge": false,
+              "certChainRFC9440TooLarge": false,
+              "certPresented": "0",
+              "certVerified": "NONE",
+              "certRevoked": "0",
+              "certIssuerDN": "",
+              "certSubjectDN": "",
+              "certIssuerDNRFC2253": "",
+              "certSubjectDNRFC2253": "",
+              "certIssuerDNLegacy": "",
+              "certSubjectDNLegacy": "",
+              "certSerial": "",
+              "certIssuerSerial": "",
+              "certSKI": "",
+              "certIssuerSKI": "",
+              "certFingerprintSHA1": "",
+              "certFingerprintSHA256": "",
+              "certNotBefore": "",
+              "certNotAfter": "",
+              "certRFC9440": "",
+              "certChainRFC9440": ""
+            },
+            "httpProtocol": "HTTP/2",
+            "clientAcceptEncoding": "gzip, deflate, br",
+            "requestPriority": "weight=256;exclusive=1",
+            "colo": "LAX",
+            "asOrganization": "Enterprise Internet Access NA",
+            "country": "US",
+            "city": "New York City",
+            "continent": "NA",
+            "region": "New York",
+            "regionCode": "NY",
+            "timezone": "America/New_York",
+            "longitude": "-74.00597",
+            "latitude": "40.71427",
+            "postalCode": "10001",
+            "metroCode": "501",
+            "tlsVersion": "TLSv1.3",
+            "tlsCipher": "AEAD-AES128-GCM-SHA256",
+            "tlsClientRandom": "8FPUfstpD+z4IF6DmJa+o5FqvsnIKaRfzkKs0gqISYw=",
+            "tlsClientCiphersSha1": "DZ1S165cLv9arvI/bxhinz+mlRo=",
+            "tlsClientExtensionsSha1": "2zA34Y4O00Gezy2peiorXUUdOfQ=",
+            "tlsClientExtensionsSha1Le": "QjC9uP2pdwreF29GRvnisve0OB0=",
+            "tlsExportedAuthenticator": {
+              "clientHandshake": "9caf3385c4bb4de4b57d5d09ef560dd8fd2d6e08d7faea6bec0df90983c94466",
+              "serverHandshake": "acd86c0c667a4c22eb1047ff25e9e888667de9b75b44b7404f2b77df2a8875e7",
+              "clientFinished": "82429d36ce3229b84f5256c4d8b937610538046ca4430707932cfb4960f4c548",
+              "serverFinished": "3e966988b3387ed28e27b0a49fe675b5059d58f0d7f38a2323333c4819f7968a"
+            },
+            "tlsClientHelloLength": "2051",
+            "verifiedBotCategory": "",
+            "edgeRequestKeepAliveStatus": 1,
+            "clientTcpRtt": 134,
+            "clientQuicRtt": 0,
+            "asn": 57025,
+            "edgeL4": {
+              "deliveryRate": 20073
+            }
+          },
+          "url": "https://thedalfdojo.com/",
+          "method": "GET",
+          "headers": {
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+            "cf-connecting-ip": "2a13:db01:1a1c:4f8e:d6a4:36fa:1a8b:e360",
+            "cf-ipcountry": "US",
+            "cf-ray": "9f571fd2feedcba2",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "connection": "Keep-Alive",
+            "host": "thedalfdojo.com",
+            "priority": "u=0, i",
+            "referer": "https://thedalfdojo.com/register",
+            "sec-ch-ua": "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+            "x-forwarded-proto": "https",
+            "x-real-ip": "2a13:db01:1a1c:4f8e:d6a4:36fa:1a8b:e360"
+          },
+          "path": "/"
+        },
+        "rayId": "9f571fd2feedcba2",
+        "response": {
+          "status": 200
+        }
+      },
+      "truncated": false,
+      "scriptName": "the-dalf-dojo",
+      "outcome": "ok",
+      "eventType": "fetch",
+      "executionModel": "stateless",
+      "scriptVersion": {
+        "id": "585ab4cf-8275-4fac-8fa0-f05c17555e83"
+      },
+      "requestId": "9f571fd2feedcba2",
+      "cpuTimeMs": 10,
+      "wallTimeMs": 10
+    },
+    "$metadata": {
+      "id": "01KQMBJ7Z9D2HF00ZD0QGAVMSX",
+      "requestId": "9f571fd2feedcba2",
+      "trigger": "GET /",
+      "service": "the-dalf-dojo",
+      "level": "info",
+      "message": "GET https://thedalfdojo.com/",
+      "account": "3378223e3a7f8d6accc22cc95a70f4ac",
+      "type": "cf-worker-event",
+      "fingerprint": "c6605f86314e874b7be929a5ae933071",
+      "origin": "fetch",
+      "messageTemplate": "GET https://thedalfdojo.com/"
+    }
+  }
+]

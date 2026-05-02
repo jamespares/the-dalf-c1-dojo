@@ -19,11 +19,15 @@ import { getDb } from './db';
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
-// Better Auth API routes
-app.on(['POST', 'GET'], '/api/auth/*', (c) => {
-  const db = getDb(c.env.DB);
-  const auth = createAuth(c.env);
-  return auth.handler(c.req.raw);
+// Better Auth API routes — handle all sub-paths
+app.all('/api/auth/*', async (c) => {
+  try {
+    const auth = createAuth(c.env);
+    return auth.handler(c.req.raw);
+  } catch (err: any) {
+    console.error('[auth handler] error:', err?.message || err, 'path:', c.req.path);
+    return c.json({ error: 'Auth service error' }, 500);
+  }
 });
 
 // Landing page (must be before auth to handle '/' first)

@@ -94,12 +94,19 @@ export async function getCurrentUser(c: Context): Promise<AppUser | null> {
       passwordHash: '',
     }).returning();
     return newUser;
-  } catch {
+  } catch (err: any) {
+    console.error('[getCurrentUser] error:', err?.message || err);
     return null;
   }
 }
 
 export async function logout(c: Context) {
+  try {
+    const auth = createAuth(c.env);
+    await auth.api.signOut({ headers: c.req.raw.headers });
+  } catch (err: any) {
+    console.error('[logout] signOut error:', err?.message || err);
+  }
   deleteCookie(c, BETTER_AUTH_COOKIE);
 }
 
