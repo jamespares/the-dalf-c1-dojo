@@ -160,6 +160,7 @@ auth.get('/register', (c) => {
           const { data, error } = await client.signUp.email({
             email: emailInput.value,
             password: passwordInput.value,
+            name: emailInput.value.split('@')[0],
           });
 
           if (error) {
