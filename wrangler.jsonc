@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "app",
+  "name": "the-dalf-dojo",
   "main": "src/index.ts",
   "compatibility_date": "2026-04-23",
   "compatibility_flags": [
@@ -26,6 +26,21 @@
       "bucket_name": "dalf-c1-audio"
     }
   ],
+  "observability": {
+    "enabled": false,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false,
+      "persist": true,
+      "head_sampling_rate": 1
+    }
+  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS"
