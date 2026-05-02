@@ -1,0 +1,6 @@
+- set up stripe properly (add products and api keys etc)
+- does it need to be different (wrangler.jsonc and app router?)
+- set up better auth
+- test with stripe and cloudlfare logs setup
+- remove language toggle
+- start marketing (comments on YT and Reddit)
