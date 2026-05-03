@@ -3,8 +3,7 @@ import { eq, desc } from 'drizzle-orm';
 import { getDb } from '../db';
 import { attempts, exams } from '../db/schema';
 import { authMiddleware, getCurrentUser } from '../auth';
-import { Layout } from '../components/Layout';
-import { Navbar } from '../components/Navbar';
+import { DashboardLayout } from '../components/DashboardLayout';
 
 const dashboard = new Hono<{ Bindings: CloudflareBindings }>();
 
@@ -40,9 +39,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
   }
 
   return c.html(
-    <Layout title="Dashboard">
-      <Navbar user={user} />
-      <h1>Dashboard</h1>
+    <DashboardLayout title="Home" active="home" user={user}>
       <div class="card">
         <h2>Recent Attempts</h2>
         {recentAttempts.length === 0 ? (
@@ -92,12 +89,12 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
           ))}
         </div>
         <div class="card">
-          <h2>Quick Links</h2>
+          <h2>Quick Actions</h2>
           <p><a href="/exams" class="btn btn-primary">Browse Exams</a></p>
-          <p><a href="/profile" class="btn btn-secondary">View Profile</a></p>
+          <p><a href="/exams/generate" class="btn btn-outline">Generate New Exam</a></p>
         </div>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 });
 

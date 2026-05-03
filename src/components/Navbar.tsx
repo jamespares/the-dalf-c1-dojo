@@ -9,19 +9,12 @@ export function Navbar({ user }: NavbarProps) {
     <header class="site-header">
       <a href="/dashboard" class="brand">
         <img src="/static/logo.png" alt="The DALF Dojo" />
+        <span class="logo-name">The DALF Dojo</span>
       </a>
       <nav class="site-nav">
         {user ? (
           <>
-            <a href="/exams" class="text-sm font-semibold transition-colors" style="color:var(--base-text);" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--base-text)'">
-              Exams
-            </a>
-            <a href="/profile" class="text-sm font-semibold transition-colors" style="color:var(--base-text);" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--base-text)'">
-              Profile
-            </a>
-            <a href="/billing" class="text-sm font-semibold transition-colors" style="color:var(--base-text);" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--base-text)'">
-              Billing
-            </a>
+            <span class="user-pill">{user.email}</span>
             <button id="sign-out" class="btn btn-secondary btn-sm">Sign out</button>
             <script type="module" dangerouslySetInnerHTML={{
               __html: `

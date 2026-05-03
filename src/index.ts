@@ -10,7 +10,8 @@ import writing from './routes/writing';
 import speaking from './routes/speaking';
 import marking from './routes/marking';
 import review from './routes/review';
-import profile from './routes/profile';
+import insights from './routes/insights';
+import settings from './routes/settings';
 import terms from './routes/terms';
 import billing from './routes/billing';
 import webhooks from './routes/webhooks';
@@ -30,6 +31,9 @@ app.all('/api/auth/*', async (c) => {
   }
 });
 
+// Redirect old /profile to /settings
+app.get('/profile', (c) => c.redirect('/settings', 301));
+
 // Landing page (must be before auth to handle '/' first)
 app.route('/', landing);
 
@@ -44,7 +48,8 @@ app.route('/', writing);
 app.route('/', speaking);
 app.route('/', marking);
 app.route('/', review);
-app.route('/', profile);
+app.route('/', insights);
+app.route('/', settings);
 app.route('/', terms);
 app.route('/', billing);
 app.route('/', webhooks);

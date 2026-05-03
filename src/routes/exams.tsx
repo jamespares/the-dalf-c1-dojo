@@ -3,8 +3,7 @@ import { eq, desc, and } from 'drizzle-orm';
 import { getDb } from '../db';
 import { exams, attempts } from '../db/schema';
 import { authMiddleware, isAdmin } from '../auth';
-import { Layout } from '../components/Layout';
-import { Navbar } from '../components/Navbar';
+import { DashboardLayout } from '../components/DashboardLayout';
 import {
   canStartAttempt,
   canGenerateExam,
@@ -93,10 +92,9 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
     : await getGenerationStatus(db, user.id);
 
   return c.html(
-    <Layout title="Exams">
-      <Navbar user={user} />
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h1>Exams</h1>
+    <DashboardLayout title="Exams" active="exams" user={user}>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-6);">
+        <h2 style="margin:0;">Your Exams</h2>
         <div style="display:flex;gap:0.75rem;align-items:center;">
           {genStatus.active && (
             <span style="font-size:0.85rem;color:var(--muted);">
@@ -123,20 +121,20 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
       ) : (
         allExams.map((exam) => (
           <div class="card">
-            <h2>{exam.title}</h2>
+            <h3 style="margin-top:0;">{exam.title}</h3>
             <p style="color:var(--muted);">Theme: {exam.theme}</p>
             <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;">
               {['CO', 'CE', 'PE', 'PO'].map((section) => {
                 const key = `${exam.id}-${section}`;
                 const attempt = attemptMap.get(key);
                 return (
-                  <div style="border:1px solid var(--border);border-radius:var(--radius);padding:0.5rem 1rem;">
+                  <div style="border:1px solid var(--border);border-radius:var(--radius);padding:0.5rem 1rem;background:white;">
                     <strong>{sectionLabels[section]}</strong>
                     <br />
                     {attempt ? (
                       attempt.status === 'completed' ? (
                         <span class="score-badge score-pass">
-                          {attempt.totalScore?.toFixed(1) || '-'}{' / 25'}
+                          {attempt.totalScore?.toFixed(1) || '-'} / 25
                         </span>
                       ) : (
                         <a
@@ -166,7 +164,7 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
           </div>
         ))
       )}
-    </Layout>
+    </DashboardLayout>
   );
 });
 
@@ -183,10 +181,9 @@ examRoutes.get('/exams/generate', authMiddleware(), async (c) => {
   }
 
   return c.html(
-    <Layout title="Generate Exam">
-      <Navbar user={user} />
-      <h1>Generate New Exam</h1>
+    <DashboardLayout title="Generate Exam" active="exams" user={user}>
       <div class="card" style="max-width:500px;">
+        <h2 style="margin-top:0;">Generate New Exam</h2>
         <p style="color:var(--muted);margin-bottom:1rem;">
           You have <strong>{genStatus.remaining}</strong> exam generations remaining this month.
         </p>
@@ -208,7 +205,7 @@ examRoutes.get('/exams/generate', authMiddleware(), async (c) => {
           If an exam for your chosen topic already exists and you haven't completed it yet, you'll be directed to that paper instead of generating a new one.
         </p>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 });
 
@@ -223,7 +220,6 @@ examRoutes.post('/exams/generate', authMiddleware(), async (c) => {
 
   const db = getDb(c.env.DB);
 
-  // Check subscription + generation quota (admins bypass)
   if (!isAdmin(user, c.env)) {
     const check = await canGenerateExam(c, user.id);
     if (!check.allowed) {
@@ -234,13 +230,11 @@ examRoutes.post('/exams/generate', authMiddleware(), async (c) => {
     }
   }
 
-  // Look for a reusable exam on this theme
   const reusable = await findReusableExam(db, user.id, theme);
   if (reusable) {
     return c.redirect(`/exams?reused=1&examId=${reusable.id}`);
   }
 
-  // No reusable exam found — generate a new one
   try {
     const content = await generateExamContent(c, theme);
     const exam = await storeExam(db, theme, content);
@@ -251,7 +245,6 @@ examRoutes.post('/exams/generate', authMiddleware(), async (c) => {
       .set({ audioKeys: audioKeys as any })
       .where(eq(exams.id, exam.id));
 
-    // Record generation usage (admins don't consume quota)
     if (!isAdmin(user, c.env)) {
       await recordUsageEvent(db, user.id, 'exam_generation', { examId: exam.id, theme });
     }
@@ -260,13 +253,12 @@ examRoutes.post('/exams/generate', authMiddleware(), async (c) => {
   } catch (err: any) {
     console.error('Exam generation failed:', err);
     return c.html(
-      <Layout title="Error">
-        <Navbar user={user} />
+      <DashboardLayout title="Error" active="exams" user={user}>
         <div class="card">
           <div class="alert alert-danger">Failed to generate exam: {err.message}</div>
           <a href="/exams/generate" class="btn btn-secondary">Try again</a>
         </div>
-      </Layout>,
+      </DashboardLayout>,
       500
     );
   }
@@ -280,7 +272,6 @@ examRoutes.post('/exams/:id/start', authMiddleware(), async (c) => {
 
   const db = getDb(c.env.DB);
 
-  // Admins bypass subscription check
   if (!isAdmin(user, c.env)) {
     const check = await canStartAttempt(c, user.id);
     if (!check.allowed) {
@@ -291,7 +282,6 @@ examRoutes.post('/exams/:id/start', authMiddleware(), async (c) => {
     }
   }
 
-  // Check for existing attempt for this user+exam+section
   const [existing] = await db
     .select()
     .from(attempts)
@@ -308,7 +298,6 @@ examRoutes.post('/exams/:id/start', authMiddleware(), async (c) => {
     return c.redirect(`/exams/${examId}/${sectionRoute(section)}?attempt=${existing.id}`);
   }
 
-  // Record usage before creating attempt
   if (!isAdmin(user, c.env)) {
     await recordUsageEvent(db, user.id, 'attempt_start', { examId, section });
   }
