@@ -31,50 +31,23 @@ export function createAuth(env: { DB: D1Database; BETTER_AUTH_SECRET: string; BE
       enabled: true,
       autoSignIn: true,
       minPasswordLength: 6,
+      resetPasswordTokenExpiresIn: '1h',
       sendResetPassword: async ({ user, url }) => {
         if (!env.SEND_EMAIL) {
           console.warn('SEND_EMAIL binding is missing. Cannot send reset password email.');
           return;
         }
 
-        let EmailMessage: any;
-        try {
-          const mod = await import('cloudflare:email');
-          EmailMessage = mod.EmailMessage;
-        } catch {
-          console.warn('cloudflare:email module not available. Cannot send reset password email.');
-          return;
-        }
-
-        const boundary = 'boundary-' + crypto.randomUUID();
-        const mimeMessage = [
-          `To: ${user.email}`,
-          `From: noreply@thedalfdojo.com`,
-          `Subject: Reset your password`,
-          `MIME-Version: 1.0`,
-          `Content-Type: multipart/alternative; boundary="${boundary}"`,
-          ``,
-          `--${boundary}`,
-          `Content-Type: text/plain; charset="utf-8"`,
-          ``,
-          `Click the following link to reset your password: ${url}`,
-          ``,
-          `--${boundary}`,
-          `Content-Type: text/html; charset="utf-8"`,
-          ``,
-          `<p>Click <a href="${url}">here</a> to reset your password.</p>`,
-          ``,
-          `--${boundary}--`,
-        ].join('\r\n');
-
-        const msg = new EmailMessage(
-          'noreply@thedalfdojo.com',
-          user.email,
-          mimeMessage
-        );
+        console.log('[sendResetPassword] Reset URL:', url);
 
         try {
-          await env.SEND_EMAIL.send(msg);
+          await env.SEND_EMAIL.send({
+            from: { name: 'The DALF Dojo', email: 'noreply@thedalfdojo.com' },
+            to: { email: user.email },
+            subject: 'Reset your password',
+            text: `Click the following link to reset your password: ${url}`,
+            html: `<p>Click <a href="${url}">here</a> to reset your password.</p>`,
+          });
         } catch (e: any) {
           console.error('Failed to send reset password email:', e?.message);
         }

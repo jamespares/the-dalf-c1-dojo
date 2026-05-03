@@ -15,7 +15,7 @@ import settings from './routes/settings';
 import terms from './routes/terms';
 import billing from './routes/billing';
 import webhooks from './routes/webhooks';
-import { createAuth } from './auth';
+import { createAuth, adminMiddleware } from './auth';
 import { getDb } from './db';
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
@@ -28,6 +28,30 @@ app.all('/api/auth/*', async (c) => {
   } catch (err: any) {
     console.error('[auth handler] error:', err?.message || err, 'path:', c.req.path);
     return c.json({ error: 'Auth service error' }, 500);
+  }
+});
+
+// Admin-only test endpoint for SEND_EMAIL binding
+app.post('/api/debug/send-test-email', adminMiddleware(), async (c) => {
+  const body = await c.req.parseBody();
+  const email = body.email as string;
+
+  if (!c.env.SEND_EMAIL) {
+    return c.json({ error: 'SEND_EMAIL binding is not available' }, 500);
+  }
+
+  try {
+    await c.env.SEND_EMAIL.send({
+      from: { name: 'The DALF Dojo', email: 'noreply@thedalfdojo.com' },
+      to: { email },
+      subject: 'Test email from DALF Dojo',
+      text: 'This is a test email to verify the SEND_EMAIL binding is working.',
+      html: '<p>This is a test email to verify the <code>SEND_EMAIL</code> binding is working.</p>',
+    });
+    return c.json({ success: true, message: `Test email sent to ${email}` });
+  } catch (e: any) {
+    console.error('[debug/send-test-email] failed:', e?.message || e);
+    return c.json({ error: e?.message || 'Failed to send test email' }, 500);
   }
 });
 

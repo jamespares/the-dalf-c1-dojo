@@ -56,7 +56,7 @@ auth.get('/login', (c) => {
           <div class="auth-field">
             <div class="auth-label-row">
               <label class="auth-label">Password</label>
-              <a href="#" class="auth-forgot">Forgot password?</a>
+              <a href="/forgot-password" class="auth-forgot">Forgot password?</a>
             </div>
             <input type="password" id="password" class="auth-input" placeholder="••••••••" required />
           </div>
@@ -74,7 +74,7 @@ auth.get('/login', (c) => {
       <BuiltByFooter />
 
       <script type="module" dangerouslySetInnerHTML={{ __html: `
-        import { createAuthClient } from "https://esm.sh/better-auth@latest/client";
+        import { createAuthClient } from "https://esm.sh/better-auth@1.6.9/client";
         const client = createAuthClient({ baseURL: window.location.origin });
 
         const form = document.getElementById('login-form');
@@ -101,6 +101,164 @@ auth.get('/login', (c) => {
             submitBtn.textContent = 'Sign In';
           } else {
             window.location.href = '/dashboard';
+          }
+        });
+      `}} />
+    </AuthLayout>
+  );
+});
+
+auth.get('/forgot-password', (c) => {
+  return c.html(
+    <AuthLayout title="Forgot Password">
+      <div class="auth-card">
+        <a href="/login" class="auth-back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back to login
+        </a>
+        <h1 class="auth-title">Reset Password</h1>
+        <p class="auth-subtitle">Enter your email and we'll send you a reset link</p>
+
+        <form id="forgot-form" class="auth-form">
+          <div class="auth-field">
+            <label class="auth-label">Email</label>
+            <input type="email" id="email" class="auth-input" placeholder="you@example.com" required />
+          </div>
+          <div id="error-box" class="hidden alert alert-danger"></div>
+          <div id="success-box" class="hidden alert alert-success"></div>
+          <button type="submit" id="submit-btn" class="auth-btn">Send Reset Link</button>
+        </form>
+
+        <hr class="auth-divider" />
+
+        <div class="auth-agreement">
+          <p>Remember your password? <a href="/login">Log in</a></p>
+        </div>
+      </div>
+      <BuiltByFooter />
+
+      <script type="module" dangerouslySetInnerHTML={{ __html: `
+        import { createAuthClient } from "https://esm.sh/better-auth@1.6.9/client";
+        const client = createAuthClient({ baseURL: window.location.origin });
+
+        const form = document.getElementById('forgot-form');
+        const emailInput = document.getElementById('email');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorBox = document.getElementById('error-box');
+        const successBox = document.getElementById('success-box');
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          errorBox.classList.add('hidden');
+          successBox.classList.add('hidden');
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Sending...';
+
+          const { data, error } = await client.forgetPassword({
+            email: emailInput.value,
+            redirectTo: '/reset-password',
+          });
+
+          if (error) {
+            errorBox.textContent = error.message || 'Something went wrong. Please try again.';
+            errorBox.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send Reset Link';
+          } else {
+            successBox.textContent = 'If an account exists for that email, you will receive a reset link shortly.';
+            successBox.classList.remove('hidden');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sent';
+          }
+        });
+      `}} />
+    </AuthLayout>
+  );
+});
+
+auth.get('/reset-password', (c) => {
+  const token = c.req.query('token') || '';
+
+  return c.html(
+    <AuthLayout title="Reset Password">
+      <div class="auth-card">
+        <a href="/login" class="auth-back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back to login
+        </a>
+        <h1 class="auth-title">New Password</h1>
+        <p class="auth-subtitle">Choose a new password for your account</p>
+
+        <form id="reset-form" class="auth-form">
+          <div class="auth-field">
+            <label class="auth-label">New Password</label>
+            <input type="password" id="password" class="auth-input" placeholder="••••••••" required minlength={6} />
+          </div>
+          <div class="auth-field">
+            <label class="auth-label">Confirm Password</label>
+            <input type="password" id="confirm-password" class="auth-input" placeholder="••••••••" required minlength={6} />
+          </div>
+          <div id="error-box" class="hidden alert alert-danger"></div>
+          <div id="success-box" class="hidden alert alert-success"></div>
+          <button type="submit" id="submit-btn" class="auth-btn">Update Password</button>
+        </form>
+
+        <hr class="auth-divider" />
+
+        <div class="auth-agreement">
+          <p>Remember your password? <a href="/login">Log in</a></p>
+        </div>
+      </div>
+      <BuiltByFooter />
+
+      <script type="module" dangerouslySetInnerHTML={{ __html: `
+        import { createAuthClient } from "https://esm.sh/better-auth@1.6.9/client";
+        const client = createAuthClient({ baseURL: window.location.origin });
+
+        const form = document.getElementById('reset-form');
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirm-password');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorBox = document.getElementById('error-box');
+        const successBox = document.getElementById('success-box');
+        const token = new URLSearchParams(window.location.search).get('token');
+
+        if (!token) {
+          errorBox.textContent = 'Invalid or missing reset token. Please request a new reset link.';
+          errorBox.classList.remove('hidden');
+          submitBtn.disabled = true;
+        }
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          errorBox.classList.add('hidden');
+          successBox.classList.add('hidden');
+
+          if (passwordInput.value !== confirmInput.value) {
+            errorBox.textContent = 'Passwords do not match.';
+            errorBox.classList.remove('hidden');
+            return;
+          }
+
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Updating...';
+
+          const { data, error } = await client.resetPassword({
+            newPassword: passwordInput.value,
+            token: token,
+          });
+
+          if (error) {
+            errorBox.textContent = error.message || 'Failed to reset password. The link may have expired.';
+            errorBox.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Update Password';
+          } else {
+            successBox.textContent = 'Password updated successfully. Redirecting to login...';
+            successBox.classList.remove('hidden');
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 2000);
           }
         });
       `}} />
@@ -146,7 +304,7 @@ auth.get('/register', (c) => {
       <BuiltByFooter />
 
       <script type="module" dangerouslySetInnerHTML={{ __html: `
-        import { createAuthClient } from "https://esm.sh/better-auth@latest/client";
+        import { createAuthClient } from "https://esm.sh/better-auth@1.6.9/client";
         const client = createAuthClient({ baseURL: window.location.origin });
 
         const form = document.getElementById('register-form');
