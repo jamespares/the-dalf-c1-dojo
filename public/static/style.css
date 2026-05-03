@@ -260,6 +260,22 @@ textarea { min-height: 120px; resize: vertical; }
   color: var(--base-text-secondary);
 }
 
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
+.status-info { background: #e0f2fe; color: #0369a1; }
+.status-warning { background: #fef3c7; color: #92400e; }
+.status-success { background: #f0fdf4; color: #166534; }
+.status-danger { background: #fef2f2; color: #991b1b; }
+
 /* Score badges */
 .score-badge {
   display: inline-block;

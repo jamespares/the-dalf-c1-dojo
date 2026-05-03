@@ -49,5 +49,8 @@
     {
       "name": "SEND_EMAIL"
     }
-  ]
+  ],
+  "ai": {
+    "binding": "AI"
+  }
 }

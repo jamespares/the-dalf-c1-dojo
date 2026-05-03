@@ -162,3 +162,70 @@ export async function transcribeAudio(
   const data = (await res.json()) as { text: string };
   return data.text;
 }
+
+export interface AiInsights {
+  summary: string;
+  focusAreas: string[];
+  trends: { section: string; direction: 'improving' | 'declining' | 'stable'; comment: string }[];
+  recommendations: string[];
+  strengths: string[];
+}
+
+export interface AiInsightsPayload {
+  completedAttempts: number;
+  sectionAverages: { section: string; average: number | null; count: number }[];
+  errorBreakdown: { type: string; count: number }[];
+  recentAttempts: { section: string; score: number | null; status: string; date: string }[];
+}
+
+const INSIGHTS_SYSTEM_PROMPT = `You are an expert DALF C1 French exam tutor and data analyst. You have been given a student's exam performance data. Your job is to analyse their progress and provide a concise, encouraging, and actionable summary.
+
+You MUST respond with ONLY a valid JSON object. Do not include markdown formatting, explanations, or any text outside the JSON. The JSON must match this exact schema:
+
+{
+  "summary": "1-2 sentence overall narrative about the student's progress",
+  "focusAreas": ["Area 1", "Area 2"],
+  "trends": [
+    { "section": "Listening", "direction": "improving", "comment": "Brief comment" }
+  ],
+  "recommendations": ["Specific actionable recommendation 1", "Recommendation 2", "Recommendation 3"],
+  "strengths": ["What the student is doing well 1", "Strength 2"]
+}
+
+Rules:
+- summary: Be encouraging but honest. Mention overall trajectory.
+- focusAreas: Ranked list of 1-3 weakest areas based on error frequency and low scores. Use capitalised names like "Grammar", "Vocabulary", "Structure", "Register", "Pronunciation".
+- trends: One entry per section the student has attempted. Direction must be exactly "improving", "declining", or "stable".
+- recommendations: 3 specific, actionable next steps tailored to their weakest areas.
+- strengths: 1-2 things they are doing well to keep them motivated.
+- All text should be in English.`;
+
+export async function generateAiInsights(
+  c: Context,
+  payload: AiInsightsPayload
+): Promise<AiInsights> {
+  const response = (await c.env.AI.run('@cf/moonshotai/kimi-k2.6', {
+    messages: [
+      { role: 'system', content: INSIGHTS_SYSTEM_PROMPT },
+      { role: 'user', content: JSON.stringify(payload) },
+    ],
+    chat_template_kwargs: { thinking: true },
+  })) as { response?: string; reasoning?: string };
+
+  const raw = response.response ?? '';
+
+  // Extract JSON from possible markdown code blocks
+  const jsonMatch = raw.match(/```json\s*([\s\S]*?)```/) || raw.match(/```\s*([\s\S]*?)```/);
+  const jsonString = jsonMatch ? jsonMatch[1].trim() : raw.trim();
+
+  try {
+    const parsed = JSON.parse(jsonString) as AiInsights;
+    // Basic validation
+    if (!parsed.summary || !Array.isArray(parsed.focusAreas) || !Array.isArray(parsed.recommendations)) {
+      throw new Error('Invalid insights structure');
+    }
+    return parsed;
+  } catch {
+    throw new Error('Failed to parse AI insights response');
+  }
+}
