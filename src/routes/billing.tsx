@@ -3,8 +3,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '../db';
 import { subscriptions } from '../db/schema';
 import { authMiddleware, getCurrentUser } from '../auth';
-import { Layout } from '../components/Layout';
-import { Navbar } from '../components/Navbar';
+import { DashboardLayout } from '../components/DashboardLayout';
 import { getPublishableKey, createCheckoutSession, retrieveCheckoutSession } from '../stripe';
 import { getSubscriptionStatus, syncSubscriptionFromStripe } from '../subscription';
 
@@ -18,15 +17,13 @@ billing.get('/billing', authMiddleware(), async (c) => {
   if (!status.active) {
     const pk = getPublishableKey(c);
     return c.html(
-      <Layout title="Billing">
-        <Navbar user={user} />
-        <h1>Subscription</h1>
-        <div class="card" style="max-width:500px;">
-          <h2>DALF Dojo Monthly</h2>
+      <DashboardLayout title="Billing" active="settings" user={user}>
+        <div class="card" style="max-width:520px;">
+          <h2 style="margin-top:0;">DALF Dojo Monthly</h2>
           <p style="font-size:1.25rem; margin:0.5rem 0;">
             <strong>£30 / month</strong>
           </p>
-          <ul style="margin:1rem 0; padding-left:1.25rem;">
+          <ul style="margin:1rem 0; padding-left:1.25rem; color: var(--base-text-secondary);">
             <li>Unlimited access to all generated past papers</li>
             <li>30 exam section attempts per month</li>
             <li>AI marking against official rubric</li>
@@ -37,11 +34,11 @@ billing.get('/billing', authMiddleware(), async (c) => {
               Subscribe Now
             </button>
           </form>
-          <p style="color:var(--muted); font-size:0.85rem; margin-top:0.75rem;">
+          <p style="color:var(--muted); font-size:0.85rem; margin-top:0.75rem; margin-bottom:0;">
             Secure payment via Stripe. Cancel anytime.
           </p>
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
@@ -50,11 +47,9 @@ billing.get('/billing', authMiddleware(), async (c) => {
     : '-';
 
   return c.html(
-    <Layout title="Billing">
-      <Navbar user={user} />
-      <h1>Subscription</h1>
-      <div class="card" style="max-width:500px;">
-        <h2>DALF Dojo Monthly</h2>
+    <DashboardLayout title="Billing" active="settings" user={user}>
+      <div class="card" style="max-width:520px;">
+        <h2 style="margin-top:0;">DALF Dojo Monthly</h2>
         <p style="font-size:1.25rem; margin:0.5rem 0;">
           <strong>£30 / month</strong>
         </p>
@@ -75,9 +70,9 @@ billing.get('/billing', authMiddleware(), async (c) => {
             <strong>Renews:</strong> {periodEnd}
           </p>
         </div>
-        <div class="progress-bar" style="background:#e5e7eb;border-radius:999px;height:8px;overflow:hidden;margin-bottom:1rem;">
+        <div style="background:#e5e7eb;border-radius:999px;height:8px;overflow:hidden;margin-bottom:1rem;">
           <div
-            style={`background:var(--primary);height:100%;width:${(status.used / status.limit) * 100}%;transition:width 0.3s;`}
+            style={`background:var(--accent);height:100%;width:${(status.used / status.limit) * 100}%;transition:width 0.3s;`}
           />
         </div>
         {status.remaining === 0 && (
@@ -85,14 +80,14 @@ billing.get('/billing', authMiddleware(), async (c) => {
             You have reached your monthly limit. Your quota will reset on {periodEnd}.
           </div>
         )}
-        <p style="color:var(--muted); font-size:0.85rem;">
-          Manage or cancel your subscription in your {' '}
+        <p style="color:var(--muted); font-size:0.85rem; margin-bottom:0;">
+          Manage or cancel your subscription in your{' '}
           <a href="https://billing.stripe.com/p/login" target="_blank" rel="noopener noreferrer">
             Stripe Customer Portal
           </a>.
         </p>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 });
 
@@ -128,33 +123,29 @@ billing.get('/billing/success', authMiddleware(), async (c) => {
   }
 
   return c.html(
-    <Layout title="Welcome">
-      <Navbar user={user} />
-      <h1>Subscription Active</h1>
-      <div class="card" style="max-width:500px;">
+    <DashboardLayout title="Welcome" active="settings" user={user}>
+      <div class="card" style="max-width:520px;">
         <div class="alert alert-success">Your subscription is now active!</div>
         <p>You can now start practicing DALF C1 past papers.</p>
-        <p>
+        <p style="margin-bottom:0;">
           <a href="/exams" class="btn btn-primary">Go to Exams</a>
         </p>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 });
 
 billing.get('/billing/cancel', authMiddleware(), async (c) => {
   const user = c.get('user');
   return c.html(
-    <Layout title="Checkout Cancelled">
-      <Navbar user={user} />
-      <h1>Checkout Cancelled</h1>
-      <div class="card" style="max-width:500px;">
+    <DashboardLayout title="Checkout Cancelled" active="settings" user={user}>
+      <div class="card" style="max-width:520px;">
         <p>You can subscribe anytime to unlock full access.</p>
-        <p>
+        <p style="margin-bottom:0;">
           <a href="/billing" class="btn btn-primary">Back to Billing</a>
         </p>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 });
 
