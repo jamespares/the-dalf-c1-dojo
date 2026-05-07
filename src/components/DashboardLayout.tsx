@@ -30,7 +30,6 @@ export function DashboardLayout({ children, title = 'Dashboard', active, user }:
           <aside class="dashboard-sidebar" id="sidebar">
             <div class="sidebar-brand">
               <a href="/dashboard" class="sidebar-logo-link">
-                <img src="/static/logo.png" alt="The DALF Dojo" class="sidebar-logo-img" />
                 <span class="sidebar-logo-text">The DALF Dojo</span>
               </a>
             </div>
@@ -46,6 +45,11 @@ export function DashboardLayout({ children, title = 'Dashboard', active, user }:
               ))}
             </nav>
             <div class="sidebar-footer">
+              <button class="sidebar-collapse-btn" id="sidebarCollapse" aria-label="Collapse sidebar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
               <button id="sign-out" class="btn btn-secondary btn-sm" style="width:100%;">Sign out</button>
               <script type="module" dangerouslySetInnerHTML={{
                 __html: `
@@ -89,9 +93,22 @@ export function DashboardLayout({ children, title = 'Dashboard', active, user }:
         <script dangerouslySetInnerHTML={{ __html: `
           const toggle = document.getElementById('sidebarToggle');
           const sidebar = document.getElementById('sidebar');
+          const collapseBtn = document.getElementById('sidebarCollapse');
+
           toggle.addEventListener('click', () => {
             sidebar.classList.toggle('open');
           });
+
+          collapseBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+          });
+
+          // Restore collapsed state
+          if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            sidebar.classList.add('collapsed');
+          }
+
           // Close sidebar when clicking a link on mobile
           document.querySelectorAll('.sidebar-link').forEach(link => {
             link.addEventListener('click', () => {
