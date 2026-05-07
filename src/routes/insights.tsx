@@ -6,12 +6,18 @@ import { authMiddleware } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { formatErrorType, formatSection } from '../lib/formatters';
 import { generateAiInsights, type AiInsightsPayload } from '../ai';
+import { getSubscriptionStatus } from '../subscription';
 
 const insights = new Hono<{ Bindings: CloudflareBindings }>();
 
 insights.get('/insights', authMiddleware(), async (c) => {
   const user = c.get('user');
   const db = getDb(c.env.DB);
+
+  const subStatus = await getSubscriptionStatus(db, user.id);
+  if (!subStatus.active) {
+    return c.redirect('/billing');
+  }
 
   // Error stats
   const errorStats = await db

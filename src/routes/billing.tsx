@@ -4,8 +4,9 @@ import { getDb } from '../db';
 import { subscriptions } from '../db/schema';
 import { authMiddleware, getCurrentUser } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { getPublishableKey, createCheckoutSession, retrieveCheckoutSession } from '../stripe';
+import { getPublishableKey, createCheckoutSession, retrieveCheckoutSession, getStripe } from '../stripe';
 import { getSubscriptionStatus, syncSubscriptionFromStripe } from '../subscription';
+import type Stripe from 'stripe';
 
 const billing = new Hono<{ Bindings: CloudflareBindings }>();
 
@@ -56,7 +57,11 @@ billing.get('/billing', authMiddleware(), async (c) => {
         <div style="margin:1rem 0;">
           <p>
             <strong>Status:</strong>{' '}
-            <span class="score-badge score-pass">Active</span>
+            {status.cancelAtPeriodEnd ? (
+              <span class="score-badge score-fail">Active (cancels on {periodEnd})</span>
+            ) : (
+              <span class="score-badge score-pass">Active</span>
+            )}
           </p>
           <p>
             <strong>Usage:</strong>{' '}
@@ -112,10 +117,18 @@ billing.get('/billing/success', authMiddleware(), async (c) => {
   if (sessionId) {
     try {
       const session = await retrieveCheckoutSession(c, sessionId);
-      const stripeSub = session.subscription as any;
-      if (stripeSub && stripeSub.id) {
+      const stripe = getStripe(c);
+      let subscription: Stripe.Subscription | null = null;
+
+      if (typeof session.subscription === 'string') {
+        subscription = await stripe.subscriptions.retrieve(session.subscription);
+      } else if (session.subscription && typeof session.subscription === 'object') {
+        subscription = session.subscription as Stripe.Subscription;
+      }
+
+      if (subscription) {
         const db = getDb(c.env.DB);
-        await syncSubscriptionFromStripe(db, stripeSub);
+        await syncSubscriptionFromStripe(db, subscription);
       }
     } catch (err) {
       console.error('Failed to sync subscription from success page:', err);

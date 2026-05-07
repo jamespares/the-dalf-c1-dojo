@@ -1,4 +1,6 @@
 - set up stripe properly (add products and api keys etc)
+- change CO, CE etc to the full word for clarity
+- Ensure UI/UX is super clear and 'idiot-proof'
 - does it need to be different (wrangler.jsonc and app router?)
 - set up better auth
 - test with stripe and cloudlfare logs setup

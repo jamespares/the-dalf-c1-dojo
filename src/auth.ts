@@ -31,7 +31,7 @@ export function createAuth(env: { DB: D1Database; BETTER_AUTH_SECRET: string; BE
       enabled: true,
       autoSignIn: true,
       minPasswordLength: 6,
-      resetPasswordTokenExpiresIn: '1h',
+      resetPasswordTokenExpiresIn: 3600,
       sendResetPassword: async ({ user, url }) => {
         if (!env.SEND_EMAIL) {
           console.warn('SEND_EMAIL binding is missing. Cannot send reset password email.');
@@ -43,7 +43,7 @@ export function createAuth(env: { DB: D1Database; BETTER_AUTH_SECRET: string; BE
         try {
           await env.SEND_EMAIL.send({
             from: { name: 'The DALF Dojo', email: 'noreply@thedalfdojo.com' },
-            to: { email: user.email },
+            to: user.email,
             subject: 'Reset your password',
             text: `Click the following link to reset your password: ${url}`,
             html: `<p>Click <a href="${url}">here</a> to reset your password.</p>`,

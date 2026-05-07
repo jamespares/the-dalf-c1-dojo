@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, sql, count } from 'drizzle-orm';
+import { eq, and, gte, lte, sql, count, inArray } from 'drizzle-orm';
 import { getDb } from './db';
 import { subscriptions, usageEvents } from './db/schema';
 import type { Context } from 'hono';
@@ -11,7 +11,12 @@ export async function getActiveSubscription(db: ReturnType<typeof getDb>, userId
   const [sub] = await db
     .select()
     .from(subscriptions)
-    .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, 'active')))
+    .where(
+      and(
+        eq(subscriptions.userId, userId),
+        inArray(subscriptions.status, ['active', 'past_due', 'trialing'])
+      )
+    )
     .limit(1);
   return sub || null;
 }
@@ -171,6 +176,7 @@ export async function syncSubscriptionFromStripe(
     status: stripeSub.status as string,
     currentPeriodStart: new Date((stripeSub as any).current_period_start * 1000),
     currentPeriodEnd: new Date((stripeSub as any).current_period_end * 1000),
+    cancelAtPeriodEnd: (stripeSub as any).cancel_at_period_end === true,
     updatedAt: new Date(),
   };
 
@@ -199,5 +205,6 @@ export async function getSubscriptionStatus(db: ReturnType<typeof getDb>, userId
     limit: MONTHLY_ATTEMPT_LIMIT,
     remaining,
     periodEnd: sub.currentPeriodEnd,
+    cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
   };
 }

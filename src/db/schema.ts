@@ -104,13 +104,14 @@ export const errorLogs = sqliteTable('error_logs', {
 
 export const subscriptions = sqliteTable('subscriptions', {
   id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-  userId: integer('user_id').notNull().unique(),
+  userId: integer('user_id').notNull(),
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id').notNull().unique(),
   stripePriceId: text('stripe_price_id').notNull(),
   status: text('status').notNull(), // active | canceled | past_due | unpaid
   currentPeriodStart: integer('current_period_start', { mode: 'timestamp' }).notNull(),
   currentPeriodEnd: integer('current_period_end', { mode: 'timestamp' }).notNull(),
+  cancelAtPeriodEnd: integer('cancel_at_period_end', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });

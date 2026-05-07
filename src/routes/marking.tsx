@@ -3,7 +3,7 @@ import { eq, and } from 'drizzle-orm';
 import { getDb } from '../db';
 import { attempts, exams, answers, errorLogs } from '../db/schema';
 import { authMiddleware } from '../auth';
-import { chatCompletion, transcribeAudio } from '../ai';
+import { chatCompletion, transcribeAudio, extractJson } from '../ai';
 import { getAudio } from '../storage';
 import {
   MARKING_COMPREHENSION_PROMPT,
@@ -71,10 +71,10 @@ async function runMarking(c: any, attemptId: number, userId: number) {
               content: `SOURCE TEXT:\n${sourceText}\n\nQUESTION: ${q.text}\nCORRECT ANSWER: ${ak.correctAnswer}\nACCEPTABLE ANSWERS: ${(ak.acceptableAnswers || []).join(', ')}\nMAX POINTS: ${ak.points}\n\nSTUDENT ANSWER:\n${ans.userAnswer || ''}`,
             },
           ],
-          { temperature: 0.3, max_tokens: 800, jsonMode: true }
+          { temperature: 0.3, max_tokens: 800, jsonMode: true, timeoutMs: 30000 }
         );
 
-        const result = JSON.parse(resultJson);
+        const result = JSON.parse(extractJson(resultJson));
         totalScore += result.score;
 
         await db
@@ -110,7 +110,7 @@ async function runMarking(c: any, attemptId: number, userId: number) {
           { role: 'system', content: MARKING_SYNTHESIS_PROMPT },
           { role: 'user', content: `DOSSIER:\n${dossier}\n\nSTUDENT SYNTHESIS:\n${synthese}` },
         ],
-        { temperature: 0.3, max_tokens: 1500, jsonMode: true }
+        { temperature: 0.3, max_tokens: 1500, jsonMode: true, timeoutMs: 45000 }
       );
 
       const essResultJson = await chatCompletion(
@@ -122,11 +122,11 @@ async function runMarking(c: any, attemptId: number, userId: number) {
             content: `PROBLÉMATIQUE: ${content.writing.problematique}\n\nDOSSIER:\n${dossier}\n\nSTUDENT ESSAY:\n${essai}`,
           },
         ],
-        { temperature: 0.3, max_tokens: 1500, jsonMode: true }
+        { temperature: 0.3, max_tokens: 1500, jsonMode: true, timeoutMs: 45000 }
       );
 
-      const synResult = JSON.parse(synResultJson);
-      const essResult = JSON.parse(essResultJson);
+      const synResult = JSON.parse(extractJson(synResultJson));
+      const essResult = JSON.parse(extractJson(essResultJson));
 
       scores = { synthese: synResult.scores, essai: essResult.scores };
       totalScore = synResult.scores.total + essResult.scores.total;
@@ -153,7 +153,7 @@ async function runMarking(c: any, attemptId: number, userId: number) {
         const obj = await getAudio(c, speakingAns.audioKey);
         if (obj) {
           const buffer = await obj.arrayBuffer();
-          const transcription = await transcribeAudio(c, buffer, 'speaking.webm', 'audio/webm');
+          const transcription = await transcribeAudio(c, buffer, 'speaking.webm', 'audio/webm', { timeoutMs: 45000 });
 
           const resultJson = await chatCompletion(
             c,
@@ -164,10 +164,10 @@ async function runMarking(c: any, attemptId: number, userId: number) {
                 content: `DOSSIER:\n${content.speaking.dossier.map((d: any) => d.text).join('\n\n')}\n\nSTUDENT TRANSCRIPTION:\n${transcription}`,
               },
             ],
-            { temperature: 0.3, max_tokens: 1500, jsonMode: true }
+            { temperature: 0.3, max_tokens: 1500, jsonMode: true, timeoutMs: 45000 }
           );
 
-          const result = JSON.parse(resultJson);
+          const result = JSON.parse(extractJson(resultJson));
           scores = result.scores;
           totalScore = result.scores.total;
           feedback = { general: result.feedback, transcription };

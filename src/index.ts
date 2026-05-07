@@ -43,7 +43,7 @@ app.post('/api/debug/send-test-email', adminMiddleware(), async (c) => {
   try {
     await c.env.SEND_EMAIL.send({
       from: { name: 'The DALF Dojo', email: 'noreply@thedalfdojo.com' },
-      to: { email },
+      to: email,
       subject: 'Test email from DALF Dojo',
       text: 'This is a test email to verify the SEND_EMAIL binding is working.',
       html: '<p>This is a test email to verify the <code>SEND_EMAIL</code> binding is working.</p>',

@@ -139,11 +139,11 @@ Key field conventions:
 
 ## Auth & Authorization
 
-### Session Auth
-- Passwords hashed with bcrypt (10 rounds).
-- Sessions are JWT tokens signed with `SESSION_SECRET` (HS256), stored in an HTTP-only `session` cookie (`Secure`, `SameSite=Strict`, 7 days).
-- `getCurrentUser(c)` verifies the JWT, then validates the token exists in the `sessions` table.
-- `authMiddleware()` redirects unauthenticated users to `/login` and sets `c.set('user', user)`.
+### Session Auth (Better Auth)
+- Auth is handled by [Better Auth](https://www.better-auth.com/) using the Drizzle SQLite adapter.
+- User credentials live in `ba_user` / `ba_session` tables. A bridge `users` table maps Better Auth accounts to integer IDs used by the rest of the app.
+- `getCurrentUser(c)` reads the Better Auth session, then finds (or auto-creates) the matching bridge user in the `users` table.
+- `authMiddleware()` redirects unauthenticated users to `/login` and sets `c.set('user', user).
 
 ### Admin Check
 - Admin status is email-based. `ADMIN_EMAILS` is a comma-separated env var.
@@ -210,7 +210,7 @@ Each DALF section has a detailed system prompt that instructs GPT-4o to generate
 - **Public vars** (safe to commit): defined in `wrangler.jsonc` under `vars`.
 - **Secrets** (never commit): stored in `.dev.vars` for local dev, and uploaded via `wrangler secret put <NAME>` for production.
 - Required secrets for full functionality:
-  - `SESSION_SECRET`
+  - `BETTER_AUTH_SECRET`
   - `CF_AIG_TOKEN` or `OPENAI_API_KEY`
   - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID`
   - `ADMIN_EMAILS`
@@ -242,14 +242,14 @@ When making changes, test manually via `npm run dev` and verify:
 - **R2 Bucket:** `dalf-c1-audio` — stores generated TTS audio and user speaking recordings.
 - **Static Assets:** `public/` directory served via the Workers `ASSETS` binding.
 - **AI Gateway:** `gateway.ai.cloudflare.com` endpoint configured in `wrangler.jsonc`.
-- **Stripe:** Webhook endpoint is `/webhooks` (must be configured in Stripe Dashboard).
+- **Stripe:** Webhook endpoint is `/webhooks/stripe` (must be configured in Stripe Dashboard).
 - **Email:** `send_email` binding configured in `wrangler.jsonc`. All emails send from `hey@jamespares.me`.
 
 ---
 
 ## Security Considerations
 
-1. **SESSION_SECRET** must be strong and rotated if compromised. The app throws at runtime if it is missing.
+1. **BETTER_AUTH_SECRET** must be strong and rotated if compromised. The app throws at runtime if it is missing.
 2. **Stripe webhook signature** is verified with `STRIPE_WEBHOOK_SECRET`.
 3. **Passwords** are hashed with bcrypt before storage.
 4. **Cookies** are `httpOnly`, `Secure`, and `SameSite=Strict`.

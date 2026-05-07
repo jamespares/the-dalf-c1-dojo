@@ -47,60 +47,81 @@ export async function generateExamContent(
   c: Context,
   theme: string
 ): Promise<ExamGeneratedContent> {
-  const [listeningJson, readingJson, writingJson, speakingJson] =
-    await Promise.all([
-      chatCompletion(
-        c,
-        [
-          { role: 'system', content: LISTENING_SYSTEM_PROMPT },
-          {
-            role: 'user',
-            content: `Generate a DALF C1 listening exam on the theme: ${theme}. Output valid JSON only.`,
-          },
-        ],
-        { temperature: 0.7, max_tokens: 4000, jsonMode: true }
-      ),
-      chatCompletion(
-        c,
-        [
-          { role: 'system', content: READING_SYSTEM_PROMPT },
-          {
-            role: 'user',
-            content: `Generate a DALF C1 reading exam on the theme: ${theme}. Output valid JSON only.`,
-          },
-        ],
-        { temperature: 0.7, max_tokens: 6000, jsonMode: true }
-      ),
-      chatCompletion(
-        c,
-        [
-          { role: 'system', content: WRITING_SYSTEM_PROMPT },
-          {
-            role: 'user',
-            content: `Generate a DALF C1 writing exam on the theme: ${theme}. Output valid JSON only.`,
-          },
-        ],
-        { temperature: 0.7, max_tokens: 4000, jsonMode: true }
-      ),
-      chatCompletion(
-        c,
-        [
-          { role: 'system', content: SPEAKING_SYSTEM_PROMPT },
-          {
-            role: 'user',
-            content: `Generate a DALF C1 speaking exam on the theme: ${theme}. Output valid JSON only.`,
-          },
-        ],
-        { temperature: 0.7, max_tokens: 4000, jsonMode: true }
-      ),
-    ]);
+  const results = await Promise.allSettled([
+    chatCompletion(
+      c,
+      [
+        { role: 'system', content: LISTENING_SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: `Generate a DALF C1 listening exam on the theme: ${theme}. Output valid JSON only.`,
+        },
+      ],
+      { temperature: 0.7, max_tokens: 4000, jsonMode: true, timeoutMs: 30000 }
+    ),
+    chatCompletion(
+      c,
+      [
+        { role: 'system', content: READING_SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: `Generate a DALF C1 reading exam on the theme: ${theme}. Output valid JSON only.`,
+        },
+      ],
+      { temperature: 0.7, max_tokens: 6000, jsonMode: true, timeoutMs: 30000 }
+    ),
+    chatCompletion(
+      c,
+      [
+        { role: 'system', content: WRITING_SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: `Generate a DALF C1 writing exam on the theme: ${theme}. Output valid JSON only.`,
+        },
+      ],
+      { temperature: 0.7, max_tokens: 4000, jsonMode: true, timeoutMs: 30000 }
+    ),
+    chatCompletion(
+      c,
+      [
+        { role: 'system', content: SPEAKING_SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: `Generate a DALF C1 speaking exam on the theme: ${theme}. Output valid JSON only.`,
+        },
+      ],
+      { temperature: 0.7, max_tokens: 4000, jsonMode: true, timeoutMs: 30000 }
+    ),
+  ]);
+
+  const sectionNames = ['listening', 'reading', 'writing', 'speaking'] as const;
+  const failedSections: string[] = [];
+
+  const parsed = results.map((result, index) => {
+    if (result.status === 'rejected') {
+      failedSections.push(sectionNames[index]);
+      return null;
+    }
+    try {
+      return JSON.parse(result.value);
+    } catch {
+      failedSections.push(sectionNames[index]);
+      return null;
+    }
+  });
+
+  if (failedSections.length > 0) {
+    throw new Error(
+      `Failed to generate exam sections: ${failedSections.join(', ')}. Please try again.`
+    );
+  }
 
   return {
-    listening: JSON.parse(listeningJson),
-    reading: JSON.parse(readingJson),
-    writing: JSON.parse(writingJson),
-    speaking: JSON.parse(speakingJson),
-  };
+    listening: parsed[0],
+    reading: parsed[1],
+    writing: parsed[2],
+    speaking: parsed[3],
+  } as ExamGeneratedContent;
 }
 
 export async function storeExam(
@@ -130,7 +151,7 @@ export async function generateAndStoreAudio(
 
   const longChunks = splitTextForTTS(content.listening.longDocument.transcript);
   const longBuffers = await Promise.all(
-    longChunks.map((chunk) => generateTTS(c, chunk, 'alloy'))
+    longChunks.map((chunk) => generateTTS(c, chunk, 'alloy', { timeoutMs: 30000 }))
   );
   const longKeys = await Promise.all(
     longBuffers.map((buf, i) =>
@@ -144,7 +165,7 @@ export async function generateAndStoreAudio(
     .join('\n\n---\n\n');
   const shortChunks = splitTextForTTS(shortTexts);
   const shortBuffers = await Promise.all(
-    shortChunks.map((chunk) => generateTTS(c, chunk, 'alloy'))
+    shortChunks.map((chunk) => generateTTS(c, chunk, 'alloy', { timeoutMs: 30000 }))
   );
   const shortKeys = await Promise.all(
     shortBuffers.map((buf, i) =>

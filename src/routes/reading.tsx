@@ -2,8 +2,9 @@ import { Hono } from 'hono';
 import { eq, and } from 'drizzle-orm';
 import { getDb } from '../db';
 import { exams, attempts, answers } from '../db/schema';
-import { authMiddleware } from '../auth';
+import { authMiddleware, isAdmin } from '../auth';
 import { Layout } from '../components/Layout';
+import { canStartAttempt } from '../subscription';
 import { Navbar } from '../components/Navbar';
 
 const reading = new Hono<{ Bindings: CloudflareBindings }>();
@@ -24,6 +25,12 @@ reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
     : undefined;
 
   if (!attempt || attempt.userId !== user.id) {
+    if (!isAdmin(user, c.env)) {
+      const check = await canStartAttempt(c, user.id);
+      if (!check.allowed) {
+        return c.redirect(check.reason === 'limit_reached' ? '/billing?limit=1' : '/billing');
+      }
+    }
     const [newAttempt] = await db
       .insert(attempts)
       .values({ userId: user.id, examId, section: 'CE', status: 'in_progress' })

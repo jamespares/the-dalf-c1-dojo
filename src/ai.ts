@@ -1,4 +1,5 @@
 import { Context } from 'hono';
+import { z } from 'zod';
 
 export interface AiBindings {
   AI_GATEWAY_URL: string;
@@ -8,6 +9,8 @@ export interface AiBindings {
   OPENAI_API_KEY?: string;
   /** Optional AI Gateway access-control token. Sent via `cf-aig-authorization`. */
   CF_GATEWAY_TOKEN?: string;
+  /** Optional model override for AI insights (e.g. "kimi-k2.6" for A/B testing). */
+  INSIGHTS_MODEL?: string;
 }
 
 function resolveAuthHeaders(c: Context): Record<string, string> {
@@ -26,10 +29,79 @@ function resolveAuthHeaders(c: Context): Record<string, string> {
   return headers;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+interface FetchRetryOptions {
+  /** Number of retry attempts after the first failure (default: 3) */
+  retries?: number;
+  /** Base delay in ms before first retry (default: 1000) */
+  retryDelayMs?: number;
+  /** Request timeout in ms (default: 30000) */
+  timeoutMs?: number;
+}
+
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  opts?: FetchRetryOptions
+): Promise<Response> {
+  const retries = opts?.retries ?? 3;
+  const retryDelayMs = opts?.retryDelayMs ?? 1000;
+  const timeoutMs = opts?.timeoutMs ?? 30000;
+
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const res = await fetch(url, { ...init, signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        return res;
+      }
+
+      const status = res.status;
+      const shouldRetry = status >= 500 || status === 429;
+      if (shouldRetry && attempt < retries) {
+        const delay = retryDelayMs * Math.pow(2, attempt);
+        await sleep(delay);
+        continue;
+      }
+
+      // Not retryable or out of retries — return the error response
+      return res;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      lastError = err instanceof Error ? err : new Error(String(err));
+
+      // Retry on network errors / timeouts
+      if (attempt < retries) {
+        const delay = retryDelayMs * Math.pow(2, attempt);
+        await sleep(delay);
+        continue;
+      }
+      break;
+    }
+  }
+
+  throw lastError ?? new Error(`Request failed after ${retries + 1} attempts`);
+}
+
 export async function chatCompletion(
   c: Context,
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
-  opts?: { model?: string; temperature?: number; max_tokens?: number; jsonMode?: boolean }
+  opts?: {
+    model?: string;
+    temperature?: number;
+    max_tokens?: number;
+    jsonMode?: boolean;
+    timeoutMs?: number;
+  }
 ) {
   const gatewayUrl = c.env.AI_GATEWAY_URL || 'https://api.openai.com/v1';
   const model = opts?.model || 'gpt-4o';
@@ -47,11 +119,15 @@ export async function chatCompletion(
     ...resolveAuthHeaders(c),
   };
 
-  const res = await fetch(`${gatewayUrl}/chat/completions`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-  });
+  const res = await fetchWithRetry(
+    `${gatewayUrl}/chat/completions`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    },
+    { timeoutMs: opts?.timeoutMs }
+  );
 
   if (!res.ok) {
     const text = await res.text();
@@ -110,7 +186,8 @@ export function splitTextForTTS(text: string, maxChars = 3500): string[] {
 export async function generateTTS(
   c: Context,
   text: string,
-  voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' = 'alloy'
+  voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' = 'alloy',
+  opts?: { timeoutMs?: number }
 ): Promise<ArrayBuffer> {
   const gatewayUrl = c.env.AI_GATEWAY_URL || 'https://api.openai.com/v1';
 
@@ -119,11 +196,15 @@ export async function generateTTS(
     ...resolveAuthHeaders(c),
   };
 
-  const res = await fetch(`${gatewayUrl}/audio/speech`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ model: 'tts-1', input: text, voice }),
-  });
+  const res = await fetchWithRetry(
+    `${gatewayUrl}/audio/speech`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ model: 'tts-1', input: text, voice }),
+    },
+    { retries: 2, timeoutMs: opts?.timeoutMs ?? 30000 }
+  );
 
   if (!res.ok) {
     const err = await res.text();
@@ -137,7 +218,8 @@ export async function transcribeAudio(
   c: Context,
   audioBuffer: ArrayBuffer,
   filename: string,
-  contentType: string = 'audio/mpeg'
+  contentType: string = 'audio/mpeg',
+  opts?: { timeoutMs?: number }
 ): Promise<string> {
   const gatewayUrl = c.env.AI_GATEWAY_URL || 'https://api.openai.com/v1';
 
@@ -148,11 +230,15 @@ export async function transcribeAudio(
 
   const headers = resolveAuthHeaders(c);
 
-  const res = await fetch(`${gatewayUrl}/audio/transcriptions`, {
-    method: 'POST',
-    headers,
-    body: form,
-  });
+  const res = await fetchWithRetry(
+    `${gatewayUrl}/audio/transcriptions`,
+    {
+      method: 'POST',
+      headers,
+      body: form,
+    },
+    { retries: 2, timeoutMs: opts?.timeoutMs ?? 45000 }
+  );
 
   if (!res.ok) {
     const err = await res.text();
@@ -163,6 +249,12 @@ export async function transcribeAudio(
   return data.text;
 }
 
+/** Extract JSON from a string that may be wrapped in markdown code blocks. */
+export function extractJson(text: string): string {
+  const jsonMatch = text.match(/```json\s*([\s\S]*?)```/) || text.match(/```\s*([\s\S]*?)```/);
+  return jsonMatch ? jsonMatch[1].trim() : text.trim();
+}
+
 export interface AiInsights {
   summary: string;
   focusAreas: string[];
@@ -170,6 +262,20 @@ export interface AiInsights {
   recommendations: string[];
   strengths: string[];
 }
+
+const AiInsightsSchema = z.object({
+  summary: z.string().min(1),
+  focusAreas: z.array(z.string()).min(1),
+  trends: z.array(
+    z.object({
+      section: z.string(),
+      direction: z.enum(['improving', 'declining', 'stable']),
+      comment: z.string(),
+    })
+  ),
+  recommendations: z.array(z.string()).min(1),
+  strengths: z.array(z.string()).min(1),
+});
 
 export interface AiInsightsPayload {
   completedAttempts: number;
@@ -204,27 +310,21 @@ export async function generateAiInsights(
   c: Context,
   payload: AiInsightsPayload
 ): Promise<AiInsights> {
-  const response = (await c.env.AI.run('@cf/moonshotai/kimi-k2.6', {
-    messages: [
+  const raw = await chatCompletion(
+    c,
+    [
       { role: 'system', content: INSIGHTS_SYSTEM_PROMPT },
       { role: 'user', content: JSON.stringify(payload) },
     ],
-    chat_template_kwargs: { thinking: true },
-  })) as { response?: string; reasoning?: string };
+    { jsonMode: true, timeoutMs: 30000 }
+  );
 
-  const raw = response.response ?? '';
-
-  // Extract JSON from possible markdown code blocks
-  const jsonMatch = raw.match(/```json\s*([\s\S]*?)```/) || raw.match(/```\s*([\s\S]*?)```/);
-  const jsonString = jsonMatch ? jsonMatch[1].trim() : raw.trim();
+  const jsonString = extractJson(raw);
 
   try {
-    const parsed = JSON.parse(jsonString) as AiInsights;
-    // Basic validation
-    if (!parsed.summary || !Array.isArray(parsed.focusAreas) || !Array.isArray(parsed.recommendations)) {
-      throw new Error('Invalid insights structure');
-    }
-    return parsed;
+    const parsed = JSON.parse(jsonString);
+    const validated = AiInsightsSchema.parse(parsed);
+    return validated;
   } catch {
     throw new Error('Failed to parse AI insights response');
   }

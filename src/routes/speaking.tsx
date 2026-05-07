@@ -2,8 +2,9 @@ import { Hono } from 'hono';
 import { eq, and } from 'drizzle-orm';
 import { getDb } from '../db';
 import { exams, attempts, answers } from '../db/schema';
-import { authMiddleware } from '../auth';
+import { authMiddleware, isAdmin } from '../auth';
 import { uploadAudio, userAudioKey } from '../storage';
+import { canStartAttempt } from '../subscription';
 import { Layout } from '../components/Layout';
 import { Navbar } from '../components/Navbar';
 
@@ -25,6 +26,12 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
     : undefined;
 
   if (!attempt || attempt.userId !== user.id) {
+    if (!isAdmin(user, c.env)) {
+      const check = await canStartAttempt(c, user.id);
+      if (!check.allowed) {
+        return c.redirect(check.reason === 'limit_reached' ? '/billing?limit=1' : '/billing');
+      }
+    }
     const [newAttempt] = await db
       .insert(attempts)
       .values({ userId: user.id, examId, section: 'PO', status: 'in_progress' })

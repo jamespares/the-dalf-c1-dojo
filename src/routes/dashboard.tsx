@@ -5,6 +5,7 @@ import { attempts, exams, errorLogs } from '../db/schema';
 import { authMiddleware, getCurrentUser } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { formatStatus, formatSection, formatErrorType } from '../lib/formatters';
+import { getSubscriptionStatus } from '../subscription';
 
 const dashboard = new Hono<{ Bindings: CloudflareBindings }>();
 
@@ -17,6 +18,7 @@ dashboard.get('/', async (c) => {
 dashboard.get('/dashboard', authMiddleware(), async (c) => {
   const user = c.get('user');
   const db = getDb(c.env.DB);
+  const subStatus = await getSubscriptionStatus(db, user.id);
 
   // Recent attempts (last 10)
   const recentAttempts = await db
@@ -77,6 +79,14 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
 
   return c.html(
     <DashboardLayout title="Home" active="home" user={user}>
+      {!subStatus.active && (
+        <div class="alert alert-warning" style="margin-bottom: var(--space-6);">
+          <p style="margin: 0 0 var(--space-3);">
+            <strong>Subscription required</strong> — A subscription is required to start exam attempts and unlock AI insights.
+          </p>
+          <a href="/billing" class="btn btn-primary">Subscribe Now</a>
+        </div>
+      )}
       <div class="card">
         <h2>Recent Attempts</h2>
         {recentAttempts.length === 0 ? (

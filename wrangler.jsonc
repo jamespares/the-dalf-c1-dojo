@@ -9,8 +9,8 @@
   "vars": {
     "AI_GATEWAY_URL": "https://gateway.ai.cloudflare.com/v1/3378223e3a7f8d6accc22cc95a70f4ac/dalf-c1-dojo/compat",
     "ADMIN_EMAILS": "[EMAIL_ADDRESS]",
-    "STRIPE_PUBLISHABLE_KEY": "pk_live_...",
-    "STRIPE_PRICE_ID": "price_...",
+    "STRIPE_PUBLISHABLE_KEY": "pk_live_51TTIVFPcVxquAwBmXbgiDPV49IULxLTYg1GRVuSHjKmlWlV0Ye8RnEoFS7VxKKhHQ6tXI5DMoghj9ibkdLdQBHrD00nlsepwpj",
+    "STRIPE_PRICE_ID": "price_1TUJsVPcVxquAwBmD63vTO2A",
     "BETTER_AUTH_URL": "https://thedalfdojo.com"
   },
   "d1_databases": [
