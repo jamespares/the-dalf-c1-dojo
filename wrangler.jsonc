@@ -47,7 +47,10 @@
   },
   "send_email": [
     {
-      "name": "SEND_EMAIL"
+      "name": "SEND_EMAIL",
+      "allowed_sender_addresses": [
+        "noreply@thedalfdojo.com"
+      ]
     }
   ],
   "ai": {

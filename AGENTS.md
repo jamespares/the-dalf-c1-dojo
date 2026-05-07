@@ -243,7 +243,13 @@ When making changes, test manually via `npm run dev` and verify:
 - **Static Assets:** `public/` directory served via the Workers `ASSETS` binding.
 - **AI Gateway:** `gateway.ai.cloudflare.com` endpoint configured in `wrangler.jsonc`.
 - **Stripe:** Webhook endpoint is `/webhooks/stripe` (must be configured in Stripe Dashboard).
-- **Email:** `send_email` binding configured in `wrangler.jsonc`. All emails send from `hey@jamespares.me`.
+- **Email:** `send_email` binding configured in `wrangler.jsonc`. Password reset emails send from `noreply@thedalfdojo.com` via the Cloudflare `SEND_EMAIL` binding.
+  - **IMPORTANT:** Cloudflare has two email products under the same binding:
+    1. **Email Routing (legacy/free)** — can only send to verified destination addresses you own. Cannot send password resets to arbitrary user emails.
+    2. **Email Service (new, requires paid Workers + beta)** — can send to any address, but requires domain verification (SPF, DKIM, DMARC) and `allowed_sender_addresses` in `wrangler.jsonc`.
+  - The `allowed_sender_addresses` in `wrangler.jsonc` restricts sending to `noreply@thedalfdojo.com`.
+  - Use the admin debug endpoint `POST /api/debug/send-test-email` to verify the binding works.
+  - If emails fail silently, check `wrangler tail` for binding errors. If the destination is unverified, Cloudflare rejects the email.
 
 ---
 

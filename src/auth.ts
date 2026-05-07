@@ -34,22 +34,24 @@ export function createAuth(env: { DB: D1Database; BETTER_AUTH_SECRET: string; BE
       resetPasswordTokenExpiresIn: 3600,
       sendResetPassword: async ({ user, url }) => {
         if (!env.SEND_EMAIL) {
-          console.warn('SEND_EMAIL binding is missing. Cannot send reset password email.');
-          return;
+          console.error('[sendResetPassword] SEND_EMAIL binding is missing. Cannot send reset password email.');
+          throw new Error('Email service is not configured.')
         }
 
-        console.log('[sendResetPassword] Reset URL:', url);
+        console.log('[sendResetPassword] Attempting to send reset email to:', user.email, '| URL:', url)
 
         try {
-          await env.SEND_EMAIL.send({
+          const result = await env.SEND_EMAIL.send({
             from: { name: 'The DALF Dojo', email: 'noreply@thedalfdojo.com' },
             to: user.email,
             subject: 'Reset your password',
             text: `Click the following link to reset your password: ${url}`,
             html: `<p>Click <a href="${url}">here</a> to reset your password.</p>`,
-          });
+          })
+          console.log('[sendResetPassword] Email accepted by Cloudflare. Message ID:', result.messageId)
         } catch (e: any) {
-          console.error('Failed to send reset password email:', e?.message);
+          console.error('[sendResetPassword] Failed to send reset password email:', e?.message || e, '| Stack:', e?.stack)
+          throw new Error(`Failed to send reset password email: ${e?.message || 'Unknown Cloudflare email error'}`)
         }
       },
     },

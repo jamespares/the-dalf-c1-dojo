@@ -41,14 +41,18 @@ app.post('/api/debug/send-test-email', adminMiddleware(), async (c) => {
   }
 
   try {
-    await c.env.SEND_EMAIL.send({
+    const result = await c.env.SEND_EMAIL.send({
       from: { name: 'The DALF Dojo', email: 'noreply@thedalfdojo.com' },
       to: email,
       subject: 'Test email from DALF Dojo',
       text: 'This is a test email to verify the SEND_EMAIL binding is working.',
       html: '<p>This is a test email to verify the <code>SEND_EMAIL</code> binding is working.</p>',
     });
-    return c.json({ success: true, message: `Test email sent to ${email}` });
+    return c.json({
+      success: true,
+      message: `Test email accepted by Cloudflare for delivery to ${email}`,
+      messageId: result.messageId,
+    });
   } catch (e: any) {
     console.error('[debug/send-test-email] failed:', e?.message || e);
     return c.json({ error: e?.message || 'Failed to send test email' }, 500);
