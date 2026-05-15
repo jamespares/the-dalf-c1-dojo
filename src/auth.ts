@@ -1,6 +1,6 @@
 import { Context } from 'hono';
 import { deleteCookie } from 'hono/cookie';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getDb } from './db';
 import { users, baUser, baSession, baAccount, baVerification } from './db/schema';
 import { betterAuth } from 'better-auth';
@@ -73,8 +73,12 @@ export async function getCurrentUser(c: Context): Promise<AppUser | null> {
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session?.user?.email) return null;
 
-    // Find bridge user by email
-    const [legacyUser] = await db.select().from(users).where(eq(users.email, session.user.email));
+    // Find bridge user by email (case-insensitive to avoid duplicates)
+    const [legacyUser] = await db
+      .select()
+      .from(users)
+      .where(sql`lower(${users.email}) = lower(${session.user.email})`)
+      .limit(1);
     if (legacyUser) return legacyUser;
 
     // Auto-create bridge user for new Better Auth accounts

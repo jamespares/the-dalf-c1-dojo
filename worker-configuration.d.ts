@@ -17,6 +17,9 @@ declare namespace Cloudflare {
 		BETTER_AUTH_SECRET: string;
 		BETTER_AUTH_URL: string;
 		ADMIN_EMAILS: string;
+		CF_ACCOUNT_ID: string;
+		CF_EMAIL_API_TOKEN: string;
+		DEFAULT_FROM_EMAIL: string;
 	}
 }
 interface CloudflareBindings extends Cloudflare.Env {}
@@ -24,7 +27,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "AI_GATEWAY_URL" | "STRIPE_PUBLISHABLE_KEY" | "STRIPE_PRICE_ID" | "BETTER_AUTH_SECRET" | "BETTER_AUTH_URL" | "ADMIN_EMAILS">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "AI_GATEWAY_URL" | "STRIPE_PUBLISHABLE_KEY" | "STRIPE_PRICE_ID" | "BETTER_AUTH_SECRET" | "BETTER_AUTH_URL" | "ADMIN_EMAILS" | "CF_ACCOUNT_ID" | "CF_EMAIL_API_TOKEN" | "DEFAULT_FROM_EMAIL">> {}
 }
 
 // Begin runtime types

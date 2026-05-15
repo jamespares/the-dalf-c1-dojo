@@ -4,6 +4,7 @@ import { getDb } from '../db';
 import { attempts, exams, errorLogs } from '../db/schema';
 import { authMiddleware, getCurrentUser } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
+import { FileText, BarChart3, Plus, ArrowRight, CheckCircle, XCircle } from '../components/Icons';
 import { formatStatus, formatSection, formatErrorType } from '../lib/formatters';
 import { getSubscriptionStatus } from '../subscription';
 
@@ -125,6 +126,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
                     <td>
                       {row.attempt.totalScore != null ? (
                         <span class={`score-badge ${row.attempt.totalScore >= 5 ? 'score-pass' : 'score-fail'}`}>
+                          {row.attempt.totalScore >= 5 ? <CheckCircle size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} /> : <XCircle size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />}
                           {row.attempt.totalScore.toFixed(1)} / 25
                         </span>
                       ) : (
@@ -184,15 +186,15 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
       <div class="grid-2">
         <div class="card">
           <h2>Quick Actions</h2>
-          <p><a href="/exams" class="btn btn-primary">Browse Exams</a></p>
-          <p><a href="/exams/generate" class="btn btn-outline">Generate New Exam</a></p>
+          <p><a href="/exams" class="btn btn-primary"><FileText size={18} /> Browse Exams</a></p>
+          <p><a href="/exams/generate" class="btn btn-outline"><Plus size={18} /> Generate New Exam</a></p>
         </div>
         <div class="card">
           <h2>Deep Insights</h2>
           <p style="color: var(--muted); margin-bottom: var(--space-4);">
             Get AI-powered analysis of your progress, trends, and personalised study recommendations.
           </p>
-          <p><a href="/insights" class="btn btn-primary">View Insights</a></p>
+          <p><a href="/insights" class="btn btn-primary"><BarChart3 size={18} /> View Insights</a></p>
         </div>
       </div>
     </DashboardLayout>

@@ -4,7 +4,7 @@ import { getDb } from '../db';
 import { exams, attempts, answers } from '../db/schema';
 import { authMiddleware, isAdmin } from '../auth';
 import { Layout } from '../components/Layout';
-import { canStartAttempt } from '../subscription';
+import { canStartAttempt, recordUsageEvent } from '../subscription';
 import { Navbar } from '../components/Navbar';
 
 const reading = new Hono<{ Bindings: CloudflareBindings }>();
@@ -35,6 +35,7 @@ reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
       .insert(attempts)
       .values({ userId: user.id, examId, section: 'CE', status: 'in_progress' })
       .returning();
+    await recordUsageEvent(db, user.id, 'attempt_start', { examId, section: 'CE' });
     attempt = newAttempt;
   }
 

@@ -4,6 +4,7 @@ import { getDb } from '../db';
 import { exams, attempts } from '../db/schema';
 import { authMiddleware, isAdmin } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
+import { Plus, ArrowRight, Headphones, BookOpen, PenTool, Mic } from '../components/Icons';
 import {
   canStartAttempt,
   canGenerateExam,
@@ -80,11 +81,11 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
     attemptMap.set(`${a.examId}-${a.section}`, a);
   }
 
-  const sectionLabels: Record<string, string> = {
-    CO: 'CO',
-    CE: 'CE',
-    PE: 'PE',
-    PO: 'PO',
+  const sectionConfig: Record<string, { label: string; icon: any }> = {
+    CO: { label: 'CO', icon: Headphones },
+    CE: { label: 'CE', icon: BookOpen },
+    PE: { label: 'PE', icon: PenTool },
+    PO: { label: 'PO', icon: Mic },
   };
 
   const genStatus = isAdmin(user, c.env)
@@ -102,7 +103,7 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
             </span>
           )}
           <a href="/exams/generate" class="btn btn-primary">
-            Generate Exam
+            <Plus size={18} /> Generate Exam
           </a>
           {isAdmin(user, c.env) && (
             <a href="/admin/generate" class="btn btn-secondary">
@@ -127,9 +128,11 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
               {['CO', 'CE', 'PE', 'PO'].map((section) => {
                 const key = `${exam.id}-${section}`;
                 const attempt = attemptMap.get(key);
+                const SectionIcon = sectionConfig[section].icon;
                 return (
-                  <div style="border:1px solid var(--border);border-radius:var(--radius);padding:0.5rem 1rem;background:white;">
-                    <strong>{sectionLabels[section]}</strong>
+                  <div style="border:1px solid var(--base-border);border-radius:var(--radius-lg);padding:0.5rem 1rem;background:white;display:flex;align-items:center;gap:0.5rem;">
+                    <SectionIcon size={16} style={{ color: 'var(--accent)' }} />
+                    <strong>{sectionConfig[section].label}</strong>
                     <br />
                     {attempt ? (
                       attempt.status === 'completed' ? (

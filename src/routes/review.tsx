@@ -5,6 +5,7 @@ import { attempts, exams, answers } from '../db/schema';
 import { authMiddleware } from '../auth';
 import { Layout } from '../components/Layout';
 import { Navbar } from '../components/Navbar';
+import { CheckCircle, XCircle } from '../components/Icons';
 
 const review = new Hono<{ Bindings: CloudflareBindings }>();
 
@@ -106,8 +107,12 @@ review.get('/review/:attemptId', authMiddleware(), async (c) => {
               <span class={`score-badge ${attempt.totalScore >= 5 ? 'score-pass' : 'score-fail'}`} style="font-size:1.5rem;">
                 {attempt.totalScore.toFixed(1)} / 25
               </span>
-              <p style="margin-top:0.5rem;">
-                {attempt.totalScore >= 5 ? '✅ Section passed' : '❌ Section failed (minimum 5/25 required)'}
+              <p style="margin-top:0.5rem; display: flex; align-items: center; gap: 0.35rem;">
+                {attempt.totalScore >= 5 ? (
+                  <><CheckCircle size={18} style={{ color: 'var(--success)' }} /> <span>Section passed</span></>
+                ) : (
+                  <><XCircle size={18} style={{ color: 'var(--error)' }} /> <span>Section failed (minimum 5/25 required)</span></>
+                )}
               </p>
               <ScoreBreakdown scores={scores} totalScore={attempt.totalScore} section={attempt.section} />
             </div>

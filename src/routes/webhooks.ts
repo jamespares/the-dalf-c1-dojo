@@ -20,14 +20,17 @@ webhooks.post('/webhooks/stripe', async (c) => {
 
   const db = getDb(c.env.DB);
 
-  try {
+  const handleEvent = async () => {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         if (session.subscription) {
           const stripe = getStripe(c);
           const sub = await stripe.subscriptions.retrieve(session.subscription as string);
-          await syncSubscriptionFromStripe(db, sub);
+          const fallbackUserId = session.metadata?.userId ? Number(session.metadata.userId) : undefined;
+          await syncSubscriptionFromStripe(db, sub, {
+            fallbackUserId: fallbackUserId && !isNaN(fallbackUserId) ? fallbackUserId : undefined,
+          });
         }
         break;
       }
@@ -38,7 +41,9 @@ webhooks.post('/webhooks/stripe', async (c) => {
         if (subId) {
           const stripe = getStripe(c);
           const sub = await stripe.subscriptions.retrieve(subId as string);
-          await syncSubscriptionFromStripe(db, sub);
+          await syncSubscriptionFromStripe(db, sub, {
+            fallbackCustomerEmail: invoice.customer_email ?? undefined,
+          });
         }
         break;
       }
@@ -49,7 +54,9 @@ webhooks.post('/webhooks/stripe', async (c) => {
         if (subId) {
           const stripe = getStripe(c);
           const sub = await stripe.subscriptions.retrieve(subId as string);
-          await syncSubscriptionFromStripe(db, sub);
+          await syncSubscriptionFromStripe(db, sub, {
+            fallbackCustomerEmail: invoice.customer_email ?? undefined,
+          });
         }
         break;
       }
@@ -64,11 +71,16 @@ webhooks.post('/webhooks/stripe', async (c) => {
       default:
         console.log(`Unhandled webhook event: ${event.type}`);
     }
+  };
 
+  try {
+    await handleEvent();
     return c.json({ received: true });
   } catch (err: any) {
     console.error('Webhook handler error:', err.message);
-    return c.json({ error: 'Handler failed' }, 500);
+    // Return 500 so Stripe retries transient failures.
+    // Only signature verification failures get 400 (above).
+    return c.json({ error: 'Handler failed', message: err.message }, 500);
   }
 });
 

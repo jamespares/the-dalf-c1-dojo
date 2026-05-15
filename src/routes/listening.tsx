@@ -4,7 +4,7 @@ import { getDb } from '../db';
 import { exams, attempts, answers } from '../db/schema';
 import { authMiddleware, isAdmin } from '../auth';
 import { getAudio } from '../storage';
-import { canStartAttempt } from '../subscription';
+import { canStartAttempt, recordUsageEvent } from '../subscription';
 import { Layout } from '../components/Layout';
 import { Navbar } from '../components/Navbar';
 
@@ -38,6 +38,7 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
       .insert(attempts)
       .values({ userId: user.id, examId, section: 'CO', status: 'in_progress' })
       .returning();
+    await recordUsageEvent(db, user.id, 'attempt_start', { examId, section: 'CO' });
     attempt = newAttempt;
   }
 

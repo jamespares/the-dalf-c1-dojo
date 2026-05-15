@@ -1,6 +1,6 @@
-import { eq, and, gte, lte, sql, count, inArray } from 'drizzle-orm';
+import { eq, and, gte, lte, sql, count, inArray, desc } from 'drizzle-orm';
 import { getDb } from './db';
-import { subscriptions, usageEvents } from './db/schema';
+import { subscriptions, usageEvents, users } from './db/schema';
 import type { Context } from 'hono';
 import type Stripe from 'stripe';
 
@@ -14,9 +14,10 @@ export async function getActiveSubscription(db: ReturnType<typeof getDb>, userId
     .where(
       and(
         eq(subscriptions.userId, userId),
-        inArray(subscriptions.status, ['active', 'past_due', 'trialing'])
+        inArray(subscriptions.status, ['active', 'past_due', 'trialing', 'incomplete'])
       )
     )
+    .orderBy(desc(subscriptions.createdAt))
     .limit(1);
   return sub || null;
 }
@@ -158,11 +159,56 @@ export async function recordUsageEvent(
 
 export async function syncSubscriptionFromStripe(
   db: ReturnType<typeof getDb>,
-  stripeSub: Stripe.Subscription
+  stripeSub: Stripe.Subscription,
+  opts?: {
+    fallbackUserId?: number;
+    fallbackCustomerEmail?: string;
+  }
 ) {
-  const userId = Number(stripeSub.metadata?.userId);
+  let userId = Number(stripeSub.metadata?.userId);
+
+  // Fallback: resolve userId from existing subscription or customer lookup
   if (!userId || isNaN(userId)) {
-    throw new Error('No userId in subscription metadata');
+    const existing = await getSubscriptionByStripeId(db, stripeSub.id);
+    if (existing) {
+      userId = existing.userId;
+    } else if (stripeSub.customer) {
+      const customerId = typeof stripeSub.customer === 'string'
+        ? stripeSub.customer
+        : stripeSub.customer.id;
+      const [byCustomer] = await db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.stripeCustomerId, customerId))
+        .limit(1);
+      if (byCustomer) {
+        userId = byCustomer.userId;
+      }
+    }
+  }
+
+  // Final fallback: explicit opts passed by webhook handler
+  if ((!userId || isNaN(userId)) && opts?.fallbackUserId) {
+    userId = opts.fallbackUserId;
+  }
+
+  // Email fallback: look up bridge user by customer email
+  if ((!userId || isNaN(userId)) && opts?.fallbackCustomerEmail) {
+    const [byEmail] = await db
+      .select()
+      .from(users)
+      .where(sql`lower(${users.email}) = lower(${opts.fallbackCustomerEmail})`)
+      .limit(1);
+    if (byEmail) {
+      userId = byEmail.id;
+    }
+  }
+
+  if (!userId || isNaN(userId)) {
+    throw new Error(
+      `[syncSubscriptionFromStripe] Could not resolve userId for subscription ${stripeSub.id}. ` +
+      `metadata: ${JSON.stringify(stripeSub.metadata)}, opts: ${JSON.stringify(opts)}`
+    );
   }
 
   const existing = await getSubscriptionByStripeId(db, stripeSub.id);

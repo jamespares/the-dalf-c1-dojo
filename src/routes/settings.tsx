@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { getDb } from '../db';
 import { authMiddleware } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
+import { User, CreditCard, LogOut } from '../components/Icons';
 import { getSubscriptionStatus } from '../subscription';
 
 const settings = new Hono<{ Bindings: CloudflareBindings }>();
@@ -16,7 +17,10 @@ settings.get('/settings', authMiddleware(), async (c) => {
     <DashboardLayout title="Settings" active="settings" user={user}>
       <div class="grid-2">
         <div class="card">
-          <h2 style="margin-top:0;">Account</h2>
+          <h2 style="margin-top:0; display: flex; align-items: center; gap: 0.5rem;">
+            <User size={20} style={{ color: 'var(--accent)' }} />
+            Account
+          </h2>
           <div class="form-group">
             <label>Email</label>
             <input type="text" value={user.email} disabled style="background:var(--base-bg);cursor:not-allowed;" />
@@ -27,7 +31,10 @@ settings.get('/settings', authMiddleware(), async (c) => {
         </div>
 
         <div class="card">
-          <h2 style="margin-top:0;">Subscription</h2>
+          <h2 style="margin-top:0; display: flex; align-items: center; gap: 0.5rem;">
+            <CreditCard size={20} style={{ color: 'var(--accent)' }} />
+            Subscription
+          </h2>
           {status.active ? (
             <>
               <p>
@@ -43,14 +50,14 @@ settings.get('/settings', authMiddleware(), async (c) => {
                 {status.remaining} this period
               </p>
               <p style="margin-bottom:0;">
-                <a href="/billing" class="btn btn-outline">Manage Billing</a>
+                <a href="/billing" class="btn btn-outline"><CreditCard size={18} /> Manage Billing</a>
               </p>
             </>
           ) : (
             <>
               <p>No active subscription.</p>
               <p style="margin-bottom:0;">
-                <a href="/billing" class="btn btn-primary">Subscribe Now</a>
+                <a href="/billing" class="btn btn-primary"><CreditCard size={18} /> Subscribe Now</a>
               </p>
             </>
           )}

@@ -4,6 +4,7 @@ import { getDb } from '../db';
 import { attempts, errorLogs } from '../db/schema';
 import { authMiddleware } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
+import { Sparkles, TrendingUp, TrendingDown, Minus, Headphones, BookOpen, PenTool, Mic } from '../components/Icons';
 import { formatErrorType, formatSection } from '../lib/formatters';
 import { generateAiInsights, type AiInsightsPayload } from '../ai';
 import { getSubscriptionStatus } from '../subscription';
@@ -95,7 +96,10 @@ insights.get('/insights', authMiddleware(), async (c) => {
     <DashboardLayout title="Insights" active="insights" user={user}>
       {/* AI Insights card */}
       <div class="card" style="border-left: 4px solid var(--accent);">
-        <h2 style="margin-top: 0;">AI-Powered Insights</h2>
+        <h2 style="margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
+          <Sparkles size={20} style={{ color: 'var(--accent)' }} />
+          AI-Powered Insights
+        </h2>
         {aiInsights ? (
           <div class="animate-fade-in">
             <p style="font-size: 1.05rem; line-height: 1.6; margin-bottom: var(--space-6);">
@@ -133,13 +137,13 @@ insights.get('/insights', authMiddleware(), async (c) => {
                       <span
                         style={
                           t.direction === 'improving'
-                            ? 'color: var(--success);'
+                            ? 'color: var(--success); display: inline-flex; align-items: center; gap: 4px;'
                             : t.direction === 'declining'
-                              ? 'color: var(--error);'
-                              : 'color: var(--warning);'
+                              ? 'color: var(--error); display: inline-flex; align-items: center; gap: 4px;'
+                              : 'color: var(--warning); display: inline-flex; align-items: center; gap: 4px;'
                         }
                       >
-                        {t.direction === 'improving' ? '↑' : t.direction === 'declining' ? '↓' : '→'} {t.direction}
+                        {t.direction === 'improving' ? <TrendingUp size={16} /> : t.direction === 'declining' ? <TrendingDown size={16} /> : <Minus size={16} />} {t.direction}
                       </span>
                     </p>
                     <p style="margin: var(--space-1) 0 0; font-size: 0.9rem; color: var(--muted);">{t.comment}</p>

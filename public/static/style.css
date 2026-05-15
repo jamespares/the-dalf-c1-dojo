@@ -334,6 +334,47 @@ textarea { min-height: 120px; resize: vertical; }
   gap: var(--space-4);
 }
 
+/* Icons */
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.btn .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.sidebar-link .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 1px solid var(--base-border);
+  color: var(--base-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: var(--accent-bg-light);
+  color: var(--accent);
+  border-color: var(--accent-bg);
+}
+
+.icon-btn .icon {
+  width: 18px;
+  height: 18px;
+}
+
 .hidden { display: none !important; }
 .font-fun { font-family: var(--font-fun); }
 

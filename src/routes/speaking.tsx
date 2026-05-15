@@ -4,9 +4,10 @@ import { getDb } from '../db';
 import { exams, attempts, answers } from '../db/schema';
 import { authMiddleware, isAdmin } from '../auth';
 import { uploadAudio, userAudioKey } from '../storage';
-import { canStartAttempt } from '../subscription';
+import { canStartAttempt, recordUsageEvent } from '../subscription';
 import { Layout } from '../components/Layout';
 import { Navbar } from '../components/Navbar';
+import { CirclePlay, SquareStop } from '../components/Icons';
 
 const speaking = new Hono<{ Bindings: CloudflareBindings }>();
 
@@ -36,6 +37,7 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
       .insert(attempts)
       .values({ userId: user.id, examId, section: 'PO', status: 'in_progress' })
       .returning();
+    await recordUsageEvent(db, user.id, 'attempt_start', { examId, section: 'PO' });
     attempt = newAttempt;
   }
 
@@ -73,7 +75,11 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
           <p>Record your 10-minute exposé below. You can stop and re-record if needed.</p>
 
           <div id="recorder" style="text-align:center;padding:2rem;">
-            <button id="recordBtn" class="btn btn-danger recording-btn">🔴 Start Recording</button>
+            <button id="recordBtn" class="btn btn-danger recording-btn" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+              <span id="recordIconStart"><CirclePlay size={20} /></span>
+              <span id="recordIconStop" style="display:none;"><SquareStop size={20} /></span>
+              <span id="recordLabel">Start Recording</span>
+            </button>
             <div id="recordStatus" style="margin-top:1rem;color:var(--muted);"></div>
             <div id="recordTimer" class="timer" style="margin-top:0.5rem;">00:00</div>
           </div>
@@ -165,12 +171,16 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
                       showError(err.message || 'Upload failed. Please try again.');
                       status.textContent = "";
                       btn.disabled = false;
-                      btn.textContent = "🔴 Start Recording";
+                      document.getElementById('recordIconStart').style.display = 'inline-flex';
+                      document.getElementById('recordIconStop').style.display = 'none';
+                      document.getElementById('recordLabel').textContent = 'Start Recording';
                     }
                   };
 
                   mediaRecorder.start();
-                  btn.textContent = "⏹ Stop Recording";
+                  document.getElementById('recordIconStart').style.display = 'none';
+                  document.getElementById('recordIconStop').style.display = 'inline-flex';
+                  document.getElementById('recordLabel').textContent = 'Stop Recording';
                   status.textContent = "Recording...";
                   timerInterval = setInterval(() => {
                     seconds++;
@@ -181,7 +191,9 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
                 }
               } else {
                 mediaRecorder.stop();
-                btn.textContent = "🔴 Start Recording";
+                document.getElementById('recordIconStart').style.display = 'inline-flex';
+                document.getElementById('recordIconStop').style.display = 'none';
+                document.getElementById('recordLabel').textContent = 'Start Recording';
                 status.textContent = "Processing...";
               }
             });

@@ -17,6 +17,7 @@ import billing from './routes/billing';
 import webhooks from './routes/webhooks';
 import { createAuth, adminMiddleware } from './auth';
 import { getDb } from './db';
+import { sendEmailViaCloudflare } from './email';
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
@@ -31,13 +32,30 @@ app.all('/api/auth/*', async (c) => {
   }
 });
 
-// Admin-only test endpoint for SEND_EMAIL binding
+// Admin-only test endpoint for email delivery
 app.post('/api/debug/send-test-email', adminMiddleware(), async (c) => {
   const body = await c.req.parseBody();
   const email = body.email as string;
 
+  // Try Cloudflare Email Service first
+  const cfSuccess = await sendEmailViaCloudflare(c.env, {
+    to: email,
+    subject: 'Test email from DALF Dojo (Cloudflare Email Service)',
+    text: 'This is a test email to verify the Cloudflare Email Service integration is working.',
+    html: '<p>This is a test email to verify the <strong>Cloudflare Email Service</strong> integration is working.</p>',
+  });
+
+  if (cfSuccess) {
+    return c.json({
+      success: true,
+      message: `Test email queued via Cloudflare Email Service for delivery to ${email}`,
+      provider: 'cloudflare_email_service',
+    });
+  }
+
+  // Fallback to legacy SEND_EMAIL binding
   if (!c.env.SEND_EMAIL) {
-    return c.json({ error: 'SEND_EMAIL binding is not available' }, 500);
+    return c.json({ error: 'Cloudflare Email Service failed and SEND_EMAIL binding is not available' }, 500);
   }
 
   try {
@@ -52,6 +70,7 @@ app.post('/api/debug/send-test-email', adminMiddleware(), async (c) => {
       success: true,
       message: `Test email accepted by Cloudflare for delivery to ${email}`,
       messageId: result.messageId,
+      provider: 'send_email_binding',
     });
   } catch (e: any) {
     console.error('[debug/send-test-email] failed:', e?.message || e);

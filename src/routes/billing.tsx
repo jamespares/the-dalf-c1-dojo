@@ -4,6 +4,7 @@ import { getDb } from '../db';
 import { subscriptions } from '../db/schema';
 import { authMiddleware, getCurrentUser } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
+import { CreditCard, Check, ArrowRight, RefreshCw } from '../components/Icons';
 import { getPublishableKey, createCheckoutSession, retrieveCheckoutSession, getStripe } from '../stripe';
 import { getSubscriptionStatus, syncSubscriptionFromStripe } from '../subscription';
 import type Stripe from 'stripe';
@@ -20,19 +21,22 @@ billing.get('/billing', authMiddleware(), async (c) => {
     return c.html(
       <DashboardLayout title="Billing" active="settings" user={user}>
         <div class="card" style="max-width:520px;">
-          <h2 style="margin-top:0;">DALF Dojo Monthly</h2>
+          <h2 style="margin-top:0; display: flex; align-items: center; gap: 0.5rem;">
+            <CreditCard size={20} style={{ color: 'var(--accent)' }} />
+            DALF Dojo Monthly
+          </h2>
           <p style="font-size:1.25rem; margin:0.5rem 0;">
             <strong>£30 / month</strong>
           </p>
-          <ul style="margin:1rem 0; padding-left:1.25rem; color: var(--base-text-secondary);">
-            <li>Unlimited access to all generated past papers</li>
-            <li>30 exam section attempts per month</li>
-            <li>AI marking against official rubric</li>
-            <li>Error pattern tracking</li>
+          <ul style="margin:1rem 0; padding-left:0; list-style: none; color: var(--base-text-secondary);">
+            <li style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;"><Check size={18} style={{ color: 'var(--success)', flexShrink: 0, marginTop: '2px' }} /> Unlimited access to all generated past papers</li>
+            <li style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;"><Check size={18} style={{ color: 'var(--success)', flexShrink: 0, marginTop: '2px' }} /> 30 exam section attempts per month</li>
+            <li style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;"><Check size={18} style={{ color: 'var(--success)', flexShrink: 0, marginTop: '2px' }} /> AI marking against official rubric</li>
+            <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><Check size={18} style={{ color: 'var(--success)', flexShrink: 0, marginTop: '2px' }} /> Error pattern tracking</li>
           </ul>
           <form action="/billing/checkout" method="post">
             <button type="submit" class="btn btn-primary" style="width:100%;">
-              Subscribe Now
+              <CreditCard size={18} /> Subscribe Now
             </button>
           </form>
           <p style="color:var(--muted); font-size:0.85rem; margin-top:0.75rem; margin-bottom:0;">
@@ -113,6 +117,7 @@ billing.post('/billing/checkout', authMiddleware(), async (c) => {
 billing.get('/billing/success', authMiddleware(), async (c) => {
   const user = c.get('user');
   const sessionId = c.req.query('session_id');
+  let syncError: string | null = null;
 
   if (sessionId) {
     try {
@@ -130,19 +135,37 @@ billing.get('/billing/success', authMiddleware(), async (c) => {
         const db = getDb(c.env.DB);
         await syncSubscriptionFromStripe(db, subscription);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to sync subscription from success page:', err);
+      syncError = err?.message || 'Unknown error';
     }
   }
 
   return c.html(
     <DashboardLayout title="Welcome" active="settings" user={user}>
       <div class="card" style="max-width:520px;">
-        <div class="alert alert-success">Your subscription is now active!</div>
-        <p>You can now start practicing DALF C1 past papers.</p>
-        <p style="margin-bottom:0;">
-          <a href="/exams" class="btn btn-primary">Go to Exams</a>
-        </p>
+        {syncError ? (
+          <>
+            <div class="alert alert-warning">
+              <strong>Payment received!</strong> We're finalising your subscription sync.
+              Please wait a moment and then refresh this page.
+            </div>
+            <p style="color:var(--muted);font-size:0.85rem;">
+              If this persists, contact support with session ID: <code>{sessionId}</code>
+            </p>
+            <p style="margin-bottom:0;">
+              <a href="/billing" class="btn btn-primary"><RefreshCw size={18} /> Refresh Status</a>
+            </p>
+          </>
+        ) : (
+          <>
+            <div class="alert alert-success">Your subscription is now active!</div>
+            <p>You can now start practicing DALF C1 past papers.</p>
+            <p style="margin-bottom:0;">
+              <a href="/exams" class="btn btn-primary"><ArrowRight size={18} /> Go to Exams</a>
+            </p>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

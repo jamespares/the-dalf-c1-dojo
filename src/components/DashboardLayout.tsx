@@ -1,4 +1,5 @@
 import { jsx } from 'hono/jsx';
+import { Home, FileText, BarChart3, Settings, LogOut, Menu } from './Icons';
 
 interface DashboardLayoutProps {
   children: any;
@@ -8,10 +9,10 @@ interface DashboardLayoutProps {
 }
 
 const navItems = [
-  { key: 'home', label: 'Home', href: '/dashboard', icon: '🏠' },
-  { key: 'exams', label: 'Exams', href: '/exams', icon: '📝' },
-  { key: 'insights', label: 'Insights', href: '/insights', icon: '📊' },
-  { key: 'settings', label: 'Settings', href: '/settings', icon: '⚙️' },
+  { key: 'home', label: 'Home', href: '/dashboard', icon: Home },
+  { key: 'exams', label: 'Exams', href: '/exams', icon: FileText },
+  { key: 'insights', label: 'Insights', href: '/insights', icon: BarChart3 },
+  { key: 'settings', label: 'Settings', href: '/settings', icon: Settings },
 ];
 
 export function DashboardLayout({ children, title = 'Dashboard', active, user }: DashboardLayoutProps) {
@@ -34,15 +35,18 @@ export function DashboardLayout({ children, title = 'Dashboard', active, user }:
               </a>
             </div>
             <nav class="sidebar-nav">
-              {navItems.map((item) => (
-                <a
-                  href={item.href}
-                  class={`sidebar-link ${active === item.key ? 'active' : ''}`}
-                >
-                  <span class="sidebar-icon">{item.icon}</span>
-                  <span class="sidebar-label">{item.label}</span>
-                </a>
-              ))}
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <a
+                    href={item.href}
+                    class={`sidebar-link ${active === item.key ? 'active' : ''}`}
+                  >
+                    <span class="sidebar-icon"><Icon size={20} /></span>
+                    <span class="sidebar-label">{item.label}</span>
+                  </a>
+                );
+              })}
             </nav>
             <div class="sidebar-footer">
               <button class="sidebar-collapse-btn" id="sidebarCollapse" aria-label="Collapse sidebar">
@@ -50,7 +54,10 @@ export function DashboardLayout({ children, title = 'Dashboard', active, user }:
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
               </button>
-              <button id="sign-out" class="btn btn-secondary btn-sm" style="width:100%;">Sign out</button>
+              <button id="sign-out" class="btn btn-secondary btn-sm" style="width:100%;">
+                <LogOut size={16} />
+                <span>Sign out</span>
+              </button>
               <script type="module" dangerouslySetInnerHTML={{
                 __html: `
                 import { createAuthClient } from "https://esm.sh/better-auth@latest/client";
@@ -65,11 +72,7 @@ export function DashboardLayout({ children, title = 'Dashboard', active, user }:
 
           {/* Mobile sidebar toggle */}
           <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
+            <Menu size={24} />
           </button>
 
           {/* Main content */}
