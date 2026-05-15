@@ -54,7 +54,10 @@ billing.get('/billing', authMiddleware(), async (c) => {
   return c.html(
     <DashboardLayout title="Billing" active="settings" user={user}>
       <div class="card" style="max-width:520px;">
-        <h2 style="margin-top:0;">DALF Dojo Monthly</h2>
+        <h2 style="margin-top:0; display: flex; align-items: center; gap: 0.5rem;">
+          <CreditCard size={20} style={{ color: 'var(--accent)' }} />
+          DALF Dojo Monthly
+        </h2>
         <p style="font-size:1.25rem; margin:0.5rem 0;">
           <strong>£30 / month</strong>
         </p>
