@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { jsx } from 'hono/jsx';
+import { Headphones, BookOpen, PenTool, Mic, BarChart3, Landmark } from '../components/Icons';
 
 const landing = new Hono<{ Bindings: CloudflareBindings }>();
 
@@ -54,12 +55,12 @@ landing.get('/', (c) => {
             </h1>
 
             <p class="hero-subtitle">
-              Generate full-length past papers across all four sections. Get marked against the official France Education International rubric. Find your weakspots and fix them before the exam.
+              Free curated past papers for listening, reading, and writing — plus optional oral practice. Get marked against the official France Education International rubric. Track scores and build an evidence-based pass readiness rating.
             </p>
 
             <div class="hero-form-card">
               <form action="/register" method="get">
-                <label class="form-label">Choose your exam topic</label>
+                <label class="form-label">Create a free account to start drilling</label>
                 <div class="form-input-row">
                   <select name="theme" id="topic-select" required>
                     <option value="" disabled selected>Select a topic...</option>
@@ -76,7 +77,7 @@ landing.get('/', (c) => {
                   </select>
                   <button type="submit" class="form-submit-btn">Start Practicing →</button>
                 </div>
-                <p class="form-microcopy">⚡ Full access after subscribing. £30/month — unlimited past papers, 30 marked attempts.</p>
+                <p class="form-microcopy">Free forever — curated papers, AI marking, and pass readiness tracking. No subscription.</p>
               </form>
             </div>
           </div>
@@ -94,9 +95,9 @@ landing.get('/', (c) => {
           <div class="section-inner">
             <div class="stats-grid">
               <div class="stat-item reveal">
-                <span class="stat-number">4</span>
-                <span class="stat-label">Exam sections covered</span>
-                <span class="stat-detail">CO · CE · PE · PO</span>
+                <span class="stat-number">3+1</span>
+                <span class="stat-label">Core sections + oral practice</span>
+                <span class="stat-detail">CO · CE · PE · optional PO</span>
               </div>
               <div class="stat-item reveal">
                 <span class="stat-number">/100</span>
@@ -104,14 +105,14 @@ landing.get('/', (c) => {
                 <span class="stat-detail">25 pts per section</span>
               </div>
               <div class="stat-item reveal">
-                <span class="stat-number">10</span>
-                <span class="stat-label">DALF exam topics</span>
-                <span class="stat-detail">Post-2020 unified format</span>
+                <span class="stat-number">Free</span>
+                <span class="stat-label">No subscription required</span>
+                <span class="stat-detail">Curated past papers</span>
               </div>
               <div class="stat-item reveal">
-                <span class="stat-number">5h30</span>
-                <span class="stat-label">Real exam length simulated</span>
-                <span class="stat-detail">4h collective + 1h30 oral</span>
+                <span class="stat-number">6</span>
+                <span class="stat-label">Attempts per section</span>
+                <span class="stat-detail">Drive pass readiness</span>
               </div>
             </div>
           </div>
@@ -133,13 +134,13 @@ landing.get('/', (c) => {
             <div class="social-proof-content reveal">
               <p class="social-proof-headline">Join students preparing for the DALF C1</p>
               <div class="social-proof-avatars">
-                <span class="avatar">🇫🇷</span>
-                <span class="avatar">🇨🇦</span>
-                <span class="avatar">🇧🇪</span>
-                <span class="avatar">🇨🇭</span>
-                <span class="avatar">🇬🇧</span>
-                <span class="avatar">🇺🇸</span>
-                <span class="avatar">🇩🇪</span>
+                <span class="avatar">FR</span>
+                <span class="avatar">CA</span>
+                <span class="avatar">BE</span>
+                <span class="avatar">CH</span>
+                <span class="avatar">UK</span>
+                <span class="avatar">US</span>
+                <span class="avatar">DE</span>
                 <span class="avatar">+</span>
               </div>
               <p class="social-proof-sub">From Paris to Montréal to Geneva — practice with past papers that mirror the real exam.</p>
@@ -151,23 +152,23 @@ landing.get('/', (c) => {
         <section class="how-section" id="how">
           <div class="section-inner">
             <p class="section-eyebrow">Comment ça marche</p>
-            <h2 class="section-title">From topic to marked paper in minutes</h2>
+            <h2 class="section-title">From paper to readiness rating</h2>
 
             <div class="steps-grid">
               <div class="step-card reveal">
                 <div class="step-number step-blue">1</div>
-                <h3>Generate a full past paper</h3>
-                <p>Select any of 10 DALF themes and instantly receive a complete exam — two listening documents (long interview + short radio extracts), a 1,500–2,000 word reading passage, a synthèse & essai writing dossier, and oral production materials — all calibrated to CEFR C1.</p>
+                <h3>Drill curated past papers</h3>
+                <p>Choose a free mock paper and practise listening, reading, and writing under exam conditions. Optional oral practice lets you record an exposé and spoken answers to on-screen examiner questions — self-study, not a live examiner.</p>
               </div>
               <div class="step-card reveal">
                 <div class="step-number step-dark">2</div>
                 <h3>Get marked by the official rubric</h3>
-                <p>Every response is evaluated using France Education International's actual grading grids: coherence, lexical range, morphosyntax, register, and argumentation — the same 12 criteria real DALF examiners use. Scores follow the /25-per-section scale with the 5/25 eliminatory threshold.</p>
+                <p>Every response is evaluated using France Education International's grading grids: coherence, lexical range, morphosyntax, register, and argumentation. Scores follow the /25-per-section scale with the 5/25 eliminatory threshold.</p>
               </div>
               <div class="step-card reveal">
                 <div class="step-number step-red">3</div>
-                <h3>Track errors across attempts</h3>
-                <p>The platform logs every submission and identifies recurring weaknesses — grammar patterns, vocabulary gaps, argumentation structure, sociolinguistic register — building a profile that shows exactly where you fall on the Below C1 → C1 → C1+ performance scale.</p>
+                <h3>Build pass readiness with data</h3>
+                <p>Track averages across your last 6 attempts per section. Watch your pass readiness climb as weak spots improve — evidence-based preparation through repeated past-paper drilling.</p>
               </div>
             </div>
           </div>
@@ -247,74 +248,74 @@ landing.get('/', (c) => {
 
             <div class="features-grid">
               <div class="feature-card reveal">
-                <div class="feature-icon icon-blue">🎧</div>
+                <div class="feature-icon icon-blue"><Headphones size={28} /></div>
                 <div class="feature-text">
                   <h3>Compréhension Orale · /25</h3>
-                  <p>Two AI-generated audio documents per exam — a ~6-min interview (heard twice, ~18 pts) and short radio extracts (heard once, ~7 pts). Question types: MCQ, true/false with justification, and open-ended — matching the official exam protocol.</p>
+                  <p>Curated listening papers with long and short documents. Question types: MCQ, true/false, and open-ended — matching the official exam protocol. Practice transcripts included alongside audio.</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
-                <div class="feature-icon icon-red">📖</div>
+                <div class="feature-icon icon-red"><BookOpen size={28} /></div>
                 <div class="feature-text">
                   <h3>Compréhension Écrite · /25</h3>
-                  <p>1,500–2,000 word texte d'idées at C1 register. Questions test global thesis identification, implicit meaning, argumentative structure analysis, and precise reformulation — raw score /50, converted to /25.</p>
+                  <p>C1-register reading texts. Questions test global thesis identification, implicit meaning, argumentative structure analysis, and precise reformulation — scored to /25.</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
-                <div class="feature-icon icon-blue">✍️</div>
+                <div class="feature-icon icon-blue"><PenTool size={28} /></div>
                 <div class="feature-text">
                   <h3>Production Écrite · /25</h3>
-                  <p>Synthèse (12.5 pts) graded on 6 criteria: length, objectivity, task, coherence, lexique, morphosyntaxe. Essai argumenté (12.5 pts) graded on 5 criteria including sociolinguistic register adaptation. Performance mapped to Below C1 / C1 / C1+ descriptors.</p>
+                  <p>Synthèse and essai argumenté graded on official criteria: length, objectivity, task, coherence, lexique, morphosyntaxe, and sociolinguistic register.</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
-                <div class="feature-icon icon-red">🎤</div>
+                <div class="feature-icon icon-red"><Mic size={28} /></div>
                 <div class="feature-text">
-                  <h3>Production Orale · /25</h3>
-                  <p>10-min exposé (5 pts) + 20-min entretien (5 pts) + language assessment (15 pts across lexique, morphosyntaxe, phonology). Feedback identifies halo effects, register shifts, and argument-example balance.</p>
+                  <h3>Oral practice · /25</h3>
+                  <p>Record an exposé and spoken answers to on-screen examiner questions. Transcription + AI marking against DALF oral criteria — self-study rehearsal, not a live examiner session.</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
-                <div class="feature-icon icon-blue">📊</div>
+                <div class="feature-icon icon-blue"><BarChart3 size={28} /></div>
                 <div class="feature-text">
-                  <h3>Error Pattern Tracking</h3>
-                  <p>Every submission is logged and scored on the 3-tier performance scale (Below C1 → C1 → C1+). The platform tracks recurring weaknesses across all 12 marking criteria — grammar patterns, vocabulary gaps, coherence breaks, register errors — building a detailed learner profile.</p>
+                  <h3>Pass readiness &amp; error tracking</h3>
+                  <p>Every submission is logged. Track section averages over your last 6 attempts and watch an evidence-based pass readiness rating climb as weak spots improve.</p>
                 </div>
               </div>
 
               <div class="feature-card reveal">
-                <div class="feature-icon icon-red">🏛️</div>
+                <div class="feature-icon icon-red"><Landmark size={28} /></div>
                 <div class="feature-text">
                   <h3>Post-2020 Unified Format</h3>
-                  <p>All papers follow the current DALF C1 structure — no domain specialisation (Lettres/Sciences split removed March 2020). Themes are universally accessible. Pass threshold: 50/100 with a minimum 5/25 per section (eliminatory).</p>
+                  <p>All papers follow the current DALF C1 structure — no domain specialisation. Pass threshold: 50/100 with a minimum 5/25 per section (eliminatory).</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* === PRICING === */}
+        {/* === FREE ACCESS === */}
         <section class="features-section" id="pricing">
           <div class="section-inner">
-            <p class="section-eyebrow">Tarifs</p>
-            <h2 class="section-title">Simple, transparent pricing</h2>
+            <p class="section-eyebrow">Access</p>
+            <h2 class="section-title">Completely free</h2>
             <div class="pricing-card reveal">
               <div class="pricing-price-col">
-                <div class="pricing-price">£30</div>
-                <div class="pricing-period">per month</div>
-                <p class="pricing-desc">Full access to all DALF C1 practice materials</p>
+                <div class="pricing-price">£0</div>
+                <div class="pricing-period">forever</div>
+                <p class="pricing-desc">Full access to DALF C1 practice materials</p>
               </div>
               <div class="pricing-details-col">
                 <ul class="pricing-features">
-                  <li>Unlimited access to all generated past papers</li>
-                  <li>30 exam section attempts per month</li>
+                  <li>Curated past papers (listening, reading, writing)</li>
+                  <li>Optional oral practice with speech-to-text marking</li>
                   <li>AI marking against official rubric</li>
-                  <li>Error pattern tracking</li>
-                  <li>Cancel anytime</li>
+                  <li>Score tracking &amp; pass readiness rating</li>
+                  <li>No subscription, no attempt caps</li>
                 </ul>
                 <a href="/register" class="cta-btn pricing-cta">Start Practicing Now →</a>
               </div>
@@ -330,27 +331,27 @@ landing.get('/', (c) => {
             <div class="faq-grid">
               <div class="faq-item reveal">
                 <h3>How much does it cost?</h3>
-                <p>£30 per month gives you unlimited access to every generated past paper, with up to 30 exam section attempts marked per month. Each past paper covers all 4 DALF C1 sections (CO, CE, PE, PO) and is marked against the official France Education International rubric.</p>
+                <p>Nothing — The DALF Dojo is free. Create an account to save attempts, track scores, and build your pass readiness rating from past-paper drilling.</p>
               </div>
               <div class="faq-item reveal">
                 <h3>How accurate is the AI marking?</h3>
-                <p>Our marking engine is built on the exact France Education International grading grids used by real DALF examiners. It evaluates the same 12 criteria — coherence, lexical range, morphosyntax, register, argumentation — and applies the same /25-per-section scale with the 5/25 eliminatory threshold.</p>
+                <p>Our marking engine is built on the France Education International grading grids used by real DALF examiners. It evaluates the same criteria — coherence, lexical range, morphosyntax, register, argumentation — and applies the /25-per-section scale with the 5/25 eliminatory threshold.</p>
               </div>
               <div class="faq-item reveal">
-                <h3>What exam format do the papers follow?</h3>
-                <p>The post-2020 unified format — no domain specialisation. All papers cover the 10 universal DALF C1 themes and follow the current structure: CO (~40 min), CE (~50 min), PE (~2h30), PO (~1h30 prep + 30 min test).</p>
+                <h3>Is there a speaking test?</h3>
+                <p>There is optional oral practice: record an exposé and spoken answers to on-screen examiner questions. Audio is transcribed and marked against DALF oral criteria. This is self-study rehearsal — not a live examiner session.</p>
               </div>
               <div class="faq-item reveal">
                 <h3>Can I track my progress over time?</h3>
-                <p>Every submission is logged and scored on the 3-tier performance scale (Below C1 → C1 → C1+). The platform identifies recurring weaknesses across all marking criteria so you know exactly what to improve.</p>
+                <p>Yes. Every marked attempt is logged. Your dashboard shows section averages and a pass readiness percentage based on your last 6 attempts per section — an evidence-based signal, not a legal guarantee of passing.</p>
               </div>
               <div class="faq-item reveal">
                 <h3>Do I need to create an account?</h3>
-                <p>Yes — an account lets us save your attempts, track your error patterns, and build your learner profile over time. Signing up takes 30 seconds. A £30/month subscription is required to start exam attempts.</p>
+                <p>Yes — an account lets us save your attempts, track error patterns, and build your learner profile. Signing up takes about 30 seconds. No payment is required.</p>
               </div>
               <div class="faq-item reveal">
-                <h3>Is the audio generated by AI?</h3>
-                <p>Yes — listening comprehension audio is generated using OpenAI's text-to-speech, producing natural French narration at C1 register. Long documents are split into manageable parts so you can practice under exam conditions.</p>
+                <h3>What exam format do the papers follow?</h3>
+                <p>The post-2020 unified format — no domain specialisation. Papers cover listening (CO), reading (CE), writing (PE), and optional oral practice (PO), aligned with official timing and scoring.</p>
               </div>
             </div>
           </div>
@@ -364,10 +365,10 @@ landing.get('/', (c) => {
             </div>
             <h2 class="cta-title">Start your first paper now.</h2>
             <p class="cta-text">
-              Subscribe for £30/month to access complete DALF C1 past papers across all 4 sections, submit your answers, and get criterion-level feedback against the official France Education International rubric.
+              Free access to curated DALF C1 past papers for listening, reading, and writing — plus optional oral practice. Submit answers, get criterion-level feedback, and build an evidence-based pass readiness rating.
             </p>
             <a href="/register" class="cta-btn">Start Practicing Now →</a>
-            <p class="cta-microcopy">⚡ Instant access after subscription. Unlimited past papers, 30 marked attempts per month.</p>
+            <p class="cta-microcopy">Free forever. No subscription. Sign up and start drilling.</p>
           </div>
         </section>
 

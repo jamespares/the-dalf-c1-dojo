@@ -1,17 +1,12 @@
 import { Hono } from 'hono';
-import { getDb } from '../db';
 import { authMiddleware } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { User, CreditCard, LogOut } from '../components/Icons';
-import { getSubscriptionStatus } from '../subscription';
+import { User, LogOut, CheckCircle } from '../components/Icons';
 
 const settings = new Hono<{ Bindings: CloudflareBindings }>();
 
 settings.get('/settings', authMiddleware(), async (c) => {
   const user = c.get('user');
-  const db = getDb(c.env.DB);
-
-  const status = await getSubscriptionStatus(db, user.id);
 
   return c.html(
     <DashboardLayout title="Settings" active="settings" user={user}>
@@ -32,35 +27,16 @@ settings.get('/settings', authMiddleware(), async (c) => {
 
         <div class="card">
           <h2 style="margin-top:0; display: flex; align-items: center; gap: 0.5rem;">
-            <CreditCard size={20} style={{ color: 'var(--accent)' }} />
-            Subscription
+            <CheckCircle size={20} style={{ color: 'var(--accent)' }} />
+            Access
           </h2>
-          {status.active ? (
-            <>
-              <p>
-                <strong>Plan:</strong>{' '}
-                <span class="score-badge score-pass">Active</span>
-              </p>
-              <p>
-                <strong>Usage:</strong>{' '}
-                {status.used} / {status.limit} attempts used
-              </p>
-              <p>
-                <strong>Remaining:</strong>{' '}
-                {status.remaining} this period
-              </p>
-              <p style="margin-bottom:0;">
-                <a href="/billing" class="btn btn-outline"><CreditCard size={18} /> Manage Billing</a>
-              </p>
-            </>
-          ) : (
-            <>
-              <p>No active subscription.</p>
-              <p style="margin-bottom:0;">
-                <a href="/billing" class="btn btn-primary"><CreditCard size={18} /> Subscribe Now</a>
-              </p>
-            </>
-          )}
+          <p>
+            <strong>Plan:</strong>{' '}
+            <span class="score-badge score-pass">Free</span>
+          </p>
+          <p style="color:var(--muted);margin-bottom:0;">
+            Full access to all practice papers, AI marking, and pass readiness tracking — no subscription required.
+          </p>
         </div>
       </div>
 
@@ -69,7 +45,7 @@ settings.get('/settings', authMiddleware(), async (c) => {
         <p style="color:var(--muted);margin-bottom:var(--space-4);">
           Signing out will end your current session.
         </p>
-        <button id="sign-out-settings" class="btn btn-danger">Sign Out</button>
+        <button id="sign-out-settings" class="btn btn-danger"><LogOut size={18} /> Sign Out</button>
         <script type="module" dangerouslySetInnerHTML={{
           __html: `
           import { createAuthClient } from "https://esm.sh/better-auth@latest/client";

@@ -148,45 +148,66 @@ async function runMarking(c: any, attemptId: number, userId: number) {
       if (synAns) await db.update(answers).set({ aiScore: synResult.scores.total, aiFeedback: synResult.feedback }).where(eq(answers.id, synAns.id));
       if (essAns) await db.update(answers).set({ aiScore: essResult.scores.total, aiFeedback: essResult.feedback }).where(eq(answers.id, essAns.id));
     } else if (attempt.section === 'PO') {
-      const speakingAns = userAnswers.find((a) => a.questionId === 'speaking');
-      if (speakingAns?.audioKey) {
-        const obj = await getAudio(c, speakingAns.audioKey);
-        if (obj) {
-          const buffer = await obj.arrayBuffer();
-          const transcription = await transcribeAudio(c, buffer, 'speaking.webm', 'audio/webm', { timeoutMs: 45000 });
+      const speakingAnswers = userAnswers.filter((a) => a.audioKey && a.questionId.startsWith('speaking'));
+      const transcripts: string[] = [];
 
-          const resultJson = await chatCompletion(
-            c,
-            [
-              { role: 'system', content: MARKING_SPEAKING_PROMPT },
-              {
-                role: 'user',
-                content: `DOSSIER:\n${content.speaking.dossier.map((d: any) => d.text).join('\n\n')}\n\nSTUDENT TRANSCRIPTION:\n${transcription}`,
-              },
-            ],
-            { temperature: 0.3, max_tokens: 1500, jsonMode: true, timeoutMs: 45000 }
-          );
+      for (const speakingAns of speakingAnswers) {
+        const obj = await getAudio(c, speakingAns.audioKey!);
+        if (!obj) continue;
+        const buffer = await obj.arrayBuffer();
+        const transcription = await transcribeAudio(c, buffer, `${speakingAns.questionId}.webm`, 'audio/webm', {
+          timeoutMs: 45000,
+        });
+        const label =
+          speakingAns.questionId === 'speaking'
+            ? 'EXPOSÉ'
+            : `QUESTION ${speakingAns.questionId.replace('speaking-q', '')}`;
+        transcripts.push(`[${label}]\n${transcription}`);
+        await db
+          .update(answers)
+          .set({ userAnswer: transcription })
+          .where(eq(answers.id, speakingAns.id));
+      }
 
-          const result = JSON.parse(extractJson(resultJson));
-          scores = result.scores;
-          totalScore = result.scores.total;
-          feedback = { general: result.feedback, transcription };
+      if (transcripts.length > 0) {
+        const examinerQs = (content.speaking?.examinerQuestions || [])
+          .map((q: string, i: number) => `${i}. ${q}`)
+          .join('\n');
 
-          for (const tag of result.errorTags || []) {
-            await db.insert(errorLogs).values({
-              userId,
-              attemptId,
-              errorType: tag.type,
-              originalText: tag.original,
-              correction: tag.correction,
-              explanation: tag.explanation,
-            });
-          }
+        const resultJson = await chatCompletion(
+          c,
+          [
+            { role: 'system', content: MARKING_SPEAKING_PROMPT },
+            {
+              role: 'user',
+              content: `DOSSIER:\n${content.speaking.dossier.map((d: any) => d.text).join('\n\n')}\n\nEXAMINER QUESTIONS:\n${examinerQs || '(none)'}\n\nSTUDENT TRANSCRIPTIONS:\n${transcripts.join('\n\n')}`,
+            },
+          ],
+          { temperature: 0.3, max_tokens: 1500, jsonMode: true, timeoutMs: 45000 }
+        );
 
+        const result = JSON.parse(extractJson(resultJson));
+        scores = result.scores;
+        totalScore = result.scores.total;
+        feedback = { general: result.feedback, transcription: transcripts.join('\n\n') };
+
+        for (const tag of result.errorTags || []) {
+          await db.insert(errorLogs).values({
+            userId,
+            attemptId,
+            errorType: tag.type,
+            originalText: tag.original,
+            correction: tag.correction,
+            explanation: tag.explanation,
+          });
+        }
+
+        const exposeAns = speakingAnswers.find((a) => a.questionId === 'speaking');
+        if (exposeAns) {
           await db
             .update(answers)
             .set({ aiScore: result.scores.total, aiFeedback: result.feedback })
-            .where(eq(answers.id, speakingAns.id));
+            .where(eq(answers.id, exposeAns.id));
         }
       }
     }

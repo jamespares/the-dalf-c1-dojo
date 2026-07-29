@@ -2,9 +2,8 @@ import { Hono } from 'hono';
 import { eq, and } from 'drizzle-orm';
 import { getDb } from '../db';
 import { exams, attempts, answers } from '../db/schema';
-import { authMiddleware, isAdmin } from '../auth';
+import { authMiddleware } from '../auth';
 import { getAudio } from '../storage';
-import { canStartAttempt, recordUsageEvent } from '../subscription';
 import { Layout } from '../components/Layout';
 import { Navbar } from '../components/Navbar';
 
@@ -28,17 +27,10 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
     : undefined;
 
   if (!attempt || attempt.userId !== user.id) {
-    if (!isAdmin(user, c.env)) {
-      const check = await canStartAttempt(c, user.id);
-      if (!check.allowed) {
-        return c.redirect(check.reason === 'limit_reached' ? '/billing?limit=1' : '/billing');
-      }
-    }
     const [newAttempt] = await db
       .insert(attempts)
       .values({ userId: user.id, examId, section: 'CO', status: 'in_progress' })
       .returning();
-    await recordUsageEvent(db, user.id, 'attempt_start', { examId, section: 'CO' });
     attempt = newAttempt;
   }
 
@@ -54,7 +46,8 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
     if (!keys) return [];
     const arr = Array.isArray(keys) ? keys : [keys];
     return arr.map((k, i) => ({
-      url: `/exams/${examId}/audio/${encodeURIComponent(k)}`,
+      // Public static paths (start with /) are served directly; otherwise proxy via R2
+      url: k.startsWith('/') ? k : `/exams/${examId}/audio/${encodeURIComponent(k)}`,
       label: arr.length > 1 ? `Part ${i + 1}` : '',
     }));
   }
@@ -75,10 +68,19 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
             <div style="margin-bottom:0.5rem;">
               {a.label && <span style="color:var(--muted);font-size:0.85rem;">{a.label}</span>}
               <audio controls preload="none" data-max-plays={a.label ? undefined : '2'}>
-                <source src={a.url} type="audio/mpeg" />
+                <source src={a.url} type={a.url.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg'} />
               </audio>
             </div>
           ))}
+          {longAudioUrls.some((a) => a.url.startsWith('/papers/')) && (
+            <details style="margin:0.75rem 0 1rem;padding:0.75rem 1rem;background:var(--base-bg);border-radius:var(--radius-lg);">
+              <summary style="cursor:pointer;font-weight:500;">Practice transcript</summary>
+              <p style="color:var(--muted);font-size:0.85rem;margin:0.5rem 0;">
+                Audio is a timing placeholder. Use this transcript to practise comprehension questions.
+              </p>
+              <div style="white-space:pre-wrap;font-size:0.95rem;line-height:1.55;">{content.listening.longDocument.transcript}</div>
+            </details>
+          )}
           {content.listening.longDocument.questions.map((q: any) => (
             <div class="form-group" style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
               <label>
@@ -117,10 +119,21 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
             <div style="margin-bottom:0.5rem;">
               {a.label && <span style="color:var(--muted);font-size:0.85rem;">{a.label}</span>}
               <audio controls preload="none">
-                <source src={a.url} type="audio/mpeg" />
+                <source src={a.url} type={a.url.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg'} />
               </audio>
             </div>
           ))}
+          {shortAudioUrls.some((a) => a.url.startsWith('/papers/')) && (
+            <details style="margin:0.75rem 0 1rem;padding:0.75rem 1rem;background:var(--base-bg);border-radius:var(--radius-lg);">
+              <summary style="cursor:pointer;font-weight:500;">Short documents — practice transcripts</summary>
+              {content.listening.shortDocuments.map((doc: any, idx: number) => (
+                <div style="margin-top:0.75rem;">
+                  <strong>Document {idx + 1}</strong>
+                  <div style="white-space:pre-wrap;font-size:0.95rem;line-height:1.55;">{doc.transcript}</div>
+                </div>
+              ))}
+            </details>
+          )}
           {content.listening.shortDocuments.map((doc: any, idx: number) => (
             <div style="margin-bottom:1.5rem;">
               <h3>Document {idx + 1}</h3>

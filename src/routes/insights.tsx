@@ -4,21 +4,16 @@ import { getDb } from '../db';
 import { attempts, errorLogs } from '../db/schema';
 import { authMiddleware } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { Sparkles, TrendingUp, TrendingDown, Minus, Headphones, BookOpen, PenTool, Mic } from '../components/Icons';
+import { Sparkles, TrendingUp, TrendingDown, Minus, Headphones, BookOpen, PenTool, Mic, Target } from '../components/Icons';
 import { formatErrorType, formatSection } from '../lib/formatters';
 import { generateAiInsights, type AiInsightsPayload } from '../ai';
-import { getSubscriptionStatus } from '../subscription';
+import { computePassReadiness } from '../lib/pass-readiness';
 
 const insights = new Hono<{ Bindings: CloudflareBindings }>();
 
 insights.get('/insights', authMiddleware(), async (c) => {
   const user = c.get('user');
   const db = getDb(c.env.DB);
-
-  const subStatus = await getSubscriptionStatus(db, user.id);
-  if (!subStatus.active) {
-    return c.redirect('/billing');
-  }
 
   // Error stats
   const errorStats = await db
@@ -54,6 +49,8 @@ insights.get('/insights', authMiddleware(), async (c) => {
       completedCount++;
     }
   }
+
+  const readiness = computePassReadiness(userAttempts);
 
   const sortedErrors = errorStats.sort((a, b) => b.count - a.count);
   const topError = sortedErrors[0];
@@ -94,6 +91,20 @@ insights.get('/insights', authMiddleware(), async (c) => {
 
   return c.html(
     <DashboardLayout title="Insights" active="insights" user={user}>
+      <div class="card" style="border-left: 4px solid var(--accent);">
+        <h2 style="margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
+          <Target size={20} style={{ color: 'var(--accent)' }} />
+          Pass readiness
+        </h2>
+        <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:center;justify-content:space-between;">
+          <p style="margin:0;flex:1;min-width:200px;">{readiness.explanation}</p>
+          <div style="text-align:center;">
+            <div style="font-size:2.25rem;font-weight:700;color:var(--accent);">{readiness.readinessPct}%</div>
+            <span class="score-badge score-pass" style="font-size:0.8rem;">{readiness.confidence} confidence</span>
+          </div>
+        </div>
+      </div>
+
       {/* AI Insights card */}
       <div class="card" style="border-left: 4px solid var(--accent);">
         <h2 style="margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">

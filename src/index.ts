@@ -13,8 +13,6 @@ import review from './routes/review';
 import insights from './routes/insights';
 import settings from './routes/settings';
 import terms from './routes/terms';
-import billing from './routes/billing';
-import webhooks from './routes/webhooks';
 import { createAuth, adminMiddleware } from './auth';
 import { getDb } from './db';
 import { sendEmailViaCloudflare } from './email';
@@ -98,7 +96,5 @@ app.route('/', review);
 app.route('/', insights);
 app.route('/', settings);
 app.route('/', terms);
-app.route('/', billing);
-app.route('/', webhooks);
 
 export default app;

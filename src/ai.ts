@@ -1,97 +1,23 @@
 import { Context } from 'hono';
 import { z } from 'zod';
 
-export interface AiBindings {
-  AI_GATEWAY_URL: string;
-  /** Cloudflare unified billing token (preferred). Sent via `Authorization`. */
-  CF_AIG_TOKEN?: string;
-  /** Your own OpenAI API key (pass-through mode). */
-  OPENAI_API_KEY?: string;
-  /** Optional AI Gateway access-control token. Sent via `cf-aig-authorization`. */
-  CF_GATEWAY_TOKEN?: string;
-  /** Optional model override for AI insights (e.g. "kimi-k2.6" for A/B testing). */
-  INSIGHTS_MODEL?: string;
-}
+export const MARKING_MODEL = '@cf/moonshotai/kimi-k2.6';
+export const WHISPER_MODEL = '@cf/openai/whisper-large-v3-turbo';
 
-function resolveAuthHeaders(c: Context): Record<string, string> {
-  const token = c.env.CF_AIG_TOKEN || c.env.OPENAI_API_KEY;
-  if (!token) {
-    throw new Error(
-      'No AI token configured. Set CF_AIG_TOKEN (Cloudflare unified billing) or OPENAI_API_KEY (pass-through).'
-    );
-  }
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${token}`,
-  };
-  if (c.env.CF_GATEWAY_TOKEN) {
-    headers['cf-aig-authorization'] = `Bearer ${c.env.CF_GATEWAY_TOKEN}`;
-  }
-  return headers;
+export interface AiBindings {
+  AI: Ai;
+  AI_GATEWAY_URL?: string;
+  CF_AIG_TOKEN?: string;
+  OPENAI_API_KEY?: string;
+  CF_GATEWAY_TOKEN?: string;
+  INSIGHTS_MODEL?: string;
 }
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-interface FetchRetryOptions {
-  /** Number of retry attempts after the first failure (default: 3) */
-  retries?: number;
-  /** Base delay in ms before first retry (default: 1000) */
-  retryDelayMs?: number;
-  /** Request timeout in ms (default: 30000) */
-  timeoutMs?: number;
-}
-
-async function fetchWithRetry(
-  url: string,
-  init: RequestInit,
-  opts?: FetchRetryOptions
-): Promise<Response> {
-  const retries = opts?.retries ?? 3;
-  const retryDelayMs = opts?.retryDelayMs ?? 1000;
-  const timeoutMs = opts?.timeoutMs ?? 30000;
-
-  let lastError: Error | undefined;
-
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      const res = await fetch(url, { ...init, signal: controller.signal });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        return res;
-      }
-
-      const status = res.status;
-      const shouldRetry = status >= 500 || status === 429;
-      if (shouldRetry && attempt < retries) {
-        const delay = retryDelayMs * Math.pow(2, attempt);
-        await sleep(delay);
-        continue;
-      }
-
-      // Not retryable or out of retries — return the error response
-      return res;
-    } catch (err) {
-      clearTimeout(timeoutId);
-      lastError = err instanceof Error ? err : new Error(String(err));
-
-      // Retry on network errors / timeouts
-      if (attempt < retries) {
-        const delay = retryDelayMs * Math.pow(2, attempt);
-        await sleep(delay);
-        continue;
-      }
-      break;
-    }
-  }
-
-  throw lastError ?? new Error(`Request failed after ${retries + 1} attempts`);
-}
-
+/** Run a chat completion via Cloudflare Workers AI (Kimi K2.6 by default). */
 export async function chatCompletion(
   c: Context,
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
@@ -103,41 +29,34 @@ export async function chatCompletion(
     timeoutMs?: number;
   }
 ) {
-  const gatewayUrl = c.env.AI_GATEWAY_URL || 'https://api.openai.com/v1';
-  const model = opts?.model || 'gpt-4o';
-
-  const body: Record<string, unknown> = {
-    model,
-    messages,
-    temperature: opts?.temperature ?? 0.7,
-  };
-  if (opts?.max_tokens) body.max_tokens = opts.max_tokens;
-  if (opts?.jsonMode) body.response_format = { type: 'json_object' };
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...resolveAuthHeaders(c),
-  };
-
-  const res = await fetchWithRetry(
-    `${gatewayUrl}/chat/completions`,
-    {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-    },
-    { timeoutMs: opts?.timeoutMs }
-  );
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`AI request failed: ${res.status} ${text}`);
+  const model = opts?.model || MARKING_MODEL;
+  const ai = c.env.AI as Ai | undefined;
+  if (!ai) {
+    throw new Error('Workers AI binding (env.AI) is not configured');
   }
 
-  const data = (await res.json()) as {
-    choices: Array<{ message: { content: string } }>;
+  const input: Record<string, unknown> = {
+    messages,
+    temperature: opts?.temperature ?? 0.7,
+    max_tokens: opts?.max_tokens ?? 2048,
   };
-  return data.choices[0]?.message?.content ?? '';
+  if (opts?.jsonMode) {
+    input.response_format = { type: 'json_object' };
+  }
+
+  // Disable thinking mode for faster, cheaper structured marking
+  input.chat_template_kwargs = { thinking: false };
+
+  const result = (await ai.run(model as any, input as any)) as any;
+
+  // Workers AI return shapes vary by model / gateway
+  if (typeof result === 'string') return result;
+  if (result?.response) return String(result.response);
+  if (result?.choices?.[0]?.message?.content) {
+    return String(result.choices[0].message.content);
+  }
+  if (result?.result?.response) return String(result.result.response);
+  throw new Error('Unexpected Workers AI response shape: ' + JSON.stringify(result).slice(0, 200));
 }
 
 export function splitTextForTTS(text: string, maxChars = 3500): string[] {
@@ -158,7 +77,6 @@ export function splitTextForTTS(text: string, maxChars = 3500): string[] {
     chunks.push(current.trim());
   }
 
-  // If any chunk is still too long, split by sentences
   const result: string[] = [];
   for (const chunk of chunks) {
     if (chunk.length <= maxChars) {
@@ -183,6 +101,7 @@ export function splitTextForTTS(text: string, maxChars = 3500): string[] {
   return result;
 }
 
+/** Optional TTS via AI Gateway (admin authoring only). Returns empty if no key. */
 export async function generateTTS(
   c: Context,
   text: string,
@@ -190,63 +109,67 @@ export async function generateTTS(
   opts?: { timeoutMs?: number }
 ): Promise<ArrayBuffer> {
   const gatewayUrl = c.env.AI_GATEWAY_URL || 'https://api.openai.com/v1';
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...resolveAuthHeaders(c),
-  };
-
-  const res = await fetchWithRetry(
-    `${gatewayUrl}/audio/speech`,
-    {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ model: 'tts-1', input: text, voice }),
-    },
-    { retries: 2, timeoutMs: opts?.timeoutMs ?? 30000 }
-  );
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`TTS failed: ${res.status} ${err}`);
+  const token = c.env.CF_AIG_TOKEN || c.env.OPENAI_API_KEY;
+  if (!token) {
+    throw new Error('TTS requires CF_AIG_TOKEN or OPENAI_API_KEY (admin authoring only)');
   }
 
-  return res.arrayBuffer();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), opts?.timeoutMs ?? 30000);
+
+  try {
+    const res = await fetch(`${gatewayUrl}/audio/speech`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ model: 'tts-1', input: text, voice }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`TTS failed: ${res.status} ${err}`);
+    }
+    return res.arrayBuffer();
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
+/** Transcribe audio via Workers AI Whisper (French). */
 export async function transcribeAudio(
   c: Context,
   audioBuffer: ArrayBuffer,
-  filename: string,
-  contentType: string = 'audio/mpeg',
-  opts?: { timeoutMs?: number }
+  _filename: string,
+  _contentType: string = 'audio/mpeg',
+  _opts?: { timeoutMs?: number }
 ): Promise<string> {
-  const gatewayUrl = c.env.AI_GATEWAY_URL || 'https://api.openai.com/v1';
-
-  const form = new FormData();
-  form.append('file', new File([audioBuffer], filename, { type: contentType }));
-  form.append('model', 'whisper-1');
-  form.append('language', 'fr');
-
-  const headers = resolveAuthHeaders(c);
-
-  const res = await fetchWithRetry(
-    `${gatewayUrl}/audio/transcriptions`,
-    {
-      method: 'POST',
-      headers,
-      body: form,
-    },
-    { retries: 2, timeoutMs: opts?.timeoutMs ?? 45000 }
-  );
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Transcription failed: ${res.status} ${err}`);
+  const ai = c.env.AI as Ai | undefined;
+  if (!ai) {
+    throw new Error('Workers AI binding (env.AI) is not configured');
   }
 
-  const data = (await res.json()) as { text: string };
-  return data.text;
+  const bytes = new Uint8Array(audioBuffer);
+  // Base64-encode for Workers AI Whisper input
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  const audioBase64 = btoa(binary);
+
+  const result = (await ai.run(WHISPER_MODEL as any, {
+    audio: audioBase64,
+    task: 'transcribe',
+    language: 'fr',
+  } as any)) as any;
+
+  if (typeof result === 'string') return result;
+  if (result?.text) return String(result.text);
+  if (result?.result?.text) return String(result.result.text);
+  if (result?.transcription) return String(result.transcription);
+  throw new Error('Unexpected Whisper response: ' + JSON.stringify(result).slice(0, 200));
 }
 
 /** Extract JSON from a string that may be wrapped in markdown code blocks. */
@@ -316,7 +239,7 @@ export async function generateAiInsights(
       { role: 'system', content: INSIGHTS_SYSTEM_PROMPT },
       { role: 'user', content: JSON.stringify(payload) },
     ],
-    { jsonMode: true, timeoutMs: 30000 }
+    { jsonMode: true, timeoutMs: 30000, temperature: 0.3 }
   );
 
   const jsonString = extractJson(raw);
@@ -329,3 +252,6 @@ export async function generateAiInsights(
     throw new Error('Failed to parse AI insights response');
   }
 }
+
+// Keep sleep export unused-safe for retries if needed later
+void sleep;
