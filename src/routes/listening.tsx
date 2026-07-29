@@ -67,20 +67,11 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
           {longAudioUrls.map((a) => (
             <div style="margin-bottom:0.5rem;">
               {a.label && <span style="color:var(--muted);font-size:0.85rem;">{a.label}</span>}
-              <audio controls preload="none" data-max-plays={a.label ? undefined : '2'}>
-                <source src={a.url} type={a.url.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg'} />
+              <audio controls preload="metadata">
+                <source src={a.url} type="audio/mpeg" />
               </audio>
             </div>
           ))}
-          {longAudioUrls.some((a) => a.url.startsWith('/papers/')) && (
-            <details style="margin:0.75rem 0 1rem;padding:0.75rem 1rem;background:var(--base-bg);border-radius:var(--radius-lg);">
-              <summary style="cursor:pointer;font-weight:500;">Practice transcript</summary>
-              <p style="color:var(--muted);font-size:0.85rem;margin:0.5rem 0;">
-                Audio is a timing placeholder. Use this transcript to practise comprehension questions.
-              </p>
-              <div style="white-space:pre-wrap;font-size:0.95rem;line-height:1.55;">{content.listening.longDocument.transcript}</div>
-            </details>
-          )}
           {content.listening.longDocument.questions.map((q: any) => (
             <div class="form-group" style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
               <label>
@@ -115,52 +106,43 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
         <div class="card">
           <h2>Exercise 2 — Short Documents</h2>
           <p style="color:var(--muted);">Each document is played once only.</p>
-          {shortAudioUrls.map((a) => (
-            <div style="margin-bottom:0.5rem;">
-              {a.label && <span style="color:var(--muted);font-size:0.85rem;">{a.label}</span>}
-              <audio controls preload="none">
-                <source src={a.url} type={a.url.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg'} />
-              </audio>
-            </div>
-          ))}
-          {shortAudioUrls.some((a) => a.url.startsWith('/papers/')) && (
-            <details style="margin:0.75rem 0 1rem;padding:0.75rem 1rem;background:var(--base-bg);border-radius:var(--radius-lg);">
-              <summary style="cursor:pointer;font-weight:500;">Short documents — practice transcripts</summary>
-              {content.listening.shortDocuments.map((doc: any, idx: number) => (
-                <div style="margin-top:0.75rem;">
-                  <strong>Document {idx + 1}</strong>
-                  <div style="white-space:pre-wrap;font-size:0.95rem;line-height:1.55;">{doc.transcript}</div>
-                </div>
-              ))}
-            </details>
-          )}
-          {content.listening.shortDocuments.map((doc: any, idx: number) => (
-            <div style="margin-bottom:1.5rem;">
-              <h3>Document {idx + 1}</h3>
-              {doc.questions.map((q: any) => (
-                <div class="form-group" style="margin-top:1rem;">
-                  <label>
-                    <strong>{q.id}</strong> ({q.points} pt{q.points > 1 ? 's' : ''}) {q.text}
-                  </label>
-                  {q.type === 'mcq' && q.options ? (
-                    q.options.map((opt: string, optIdx: number) => (
-                      <label class="mcq-option">
-                        <input
-                          type="radio"
-                          name={`q_${q.id}`}
-                          value={String.fromCharCode(65 + optIdx)}
-                          checked={answerMap.get(q.id) === String.fromCharCode(65 + optIdx)}
-                        />
-                        {opt}
-                      </label>
-                    ))
-                  ) : (
-                    <textarea name={`q_${q.id}`}>{answerMap.get(q.id) || ''}</textarea>
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
+          {content.listening.shortDocuments.map((doc: any, idx: number) => {
+            const a = shortAudioUrls[idx];
+            return (
+              <div style="margin-bottom:1.5rem;">
+                <h3>Document {idx + 1}</h3>
+                {a && (
+                  <div style="margin-bottom:0.75rem;">
+                    <audio controls preload="metadata">
+                      <source src={a.url} type="audio/mpeg" />
+                    </audio>
+                  </div>
+                )}
+                {doc.questions.map((q: any) => (
+                  <div class="form-group" style="margin-top:1rem;">
+                    <label>
+                      <strong>{q.id}</strong> ({q.points} pt{q.points > 1 ? 's' : ''}) {q.text}
+                    </label>
+                    {q.type === 'mcq' && q.options ? (
+                      q.options.map((opt: string, optIdx: number) => (
+                        <label class="mcq-option">
+                          <input
+                            type="radio"
+                            name={`q_${q.id}`}
+                            value={String.fromCharCode(65 + optIdx)}
+                            checked={answerMap.get(q.id) === String.fromCharCode(65 + optIdx)}
+                          />
+                          {opt}
+                        </label>
+                      ))
+                    ) : (
+                      <textarea name={`q_${q.id}`}>{answerMap.get(q.id) || ''}</textarea>
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
           <button type="submit" class="btn btn-secondary">Save Answers</button>
         </div>
       </form>

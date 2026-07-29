@@ -19,6 +19,26 @@ import { sendEmailViaCloudflare } from './email';
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
+// Serve static past-paper audio from the ASSETS binding with correct MIME types.
+// Required because run_worker_first is set for /papers/* in wrangler.jsonc.
+app.get('/papers/*', async (c) => {
+  const assets = c.env.ASSETS;
+  if (!assets) return c.notFound();
+
+  const res = await assets.fetch(c.req.raw);
+  if (!res.ok) return res;
+
+  const path = new URL(c.req.url).pathname.toLowerCase();
+  const headers = new Headers(res.headers);
+  if (path.endsWith('.mp3')) headers.set('Content-Type', 'audio/mpeg');
+  else if (path.endsWith('.wav')) headers.set('Content-Type', 'audio/wav');
+  else if (path.endsWith('.m4a')) headers.set('Content-Type', 'audio/mp4');
+  headers.set('Cache-Control', 'public, max-age=86400');
+  headers.set('Accept-Ranges', 'bytes');
+
+  return new Response(res.body, { status: res.status, headers });
+});
+
 // Better Auth API routes — handle all sub-paths
 app.all('/api/auth/*', async (c) => {
   try {

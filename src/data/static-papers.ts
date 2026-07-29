@@ -10,12 +10,29 @@ export interface StaticPaper {
 
 function audio(slug: string): AudioKeys {
   return {
-    listeningLong: `/papers/${slug}/audio/long.wav`,
+    listeningLong: `/papers/${slug}/audio/long.mp3`,
     listeningShort: [
-      `/papers/${slug}/audio/short-1.wav`,
-      `/papers/${slug}/audio/short-2.wav`,
+      `/papers/${slug}/audio/short-1.mp3`,
+      `/papers/${slug}/audio/short-2.mp3`,
     ],
   };
+}
+
+/** Transcripts used by scripts/generate-paper-audio.ts */
+export function getPaperAudioTranscripts(): {
+  slug: string;
+  long: string;
+  shorts: string[];
+}[] {
+  return STATIC_PAPERS.map((p) => ({
+    slug: p.slug,
+    long: p.content.listening.longDocument.transcript,
+    shorts: p.content.listening.shortDocuments.map((d) => d.transcript),
+  }));
+}
+
+export function staticPaperTitle(paper: StaticPaper): string {
+  return `[static:${paper.slug}] ${paper.title}`;
 }
 
 /** Curated free mock papers (CO / CE / PE / PO). Seeded into D1 on first visit. */
@@ -41,7 +58,7 @@ Présentateur : Quels résultats concrets avez-vous mesurés ?
 Claire Moreau : Dans les villes pilotes, on constate une réduction de 1,5 à 3 degrés en été dans les zones densément végétalisées, une meilleure rétention des eaux de pluie, et une hausse de la fréquentation des espaces publics. Mais le défi majeur reste le financement : planter ne suffit pas, il faut entretenir pendant des décennies. Les collectivités qui réussissent sont celles qui budgétisent l'entretien dès le départ, et non seulement l'inauguration.`,
           questions: [
             { id: 'L1', type: 'mcq', text: 'Selon Claire Moreau, la végétalisation urbaine vise principalement :', points: 2, options: ['A. L\'esthétique des centres-villes', 'B. La santé publique et la résilience climatique', 'C. L\'augmentation du tourisme', 'D. La réduction des transports en commun'] },
-            { id: 'L2', type: 'tf', text: 'La baissede température mesurée est uniquement cosmétique et non mesurable.', points: 1 },
+            { id: 'L2', type: 'tf', text: 'La baisse de température mesurée est uniquement cosmétique et non mesurable.', points: 1 },
             { id: 'L3', type: 'open', text: 'Quel risque social Claire Moreau associe-t-elle à la végétalisation ?', points: 3 },
             { id: 'L4', type: 'open', text: 'Quelles conditions de gouvernance recommande-t-elle ?', points: 3 },
             { id: 'L5', type: 'mcq', text: 'Selon l\'invitée, le défi majeur des projets de renaturation est :', points: 2, options: ['A. Le manque d\'arbres disponibles', 'B. Le financement et l\'entretien à long terme', 'C. L\'opposition des touristes', 'D. L\'interdiction européenne'] },
@@ -455,6 +472,428 @@ Les sciences sociales rappellent qu'un travail soutenable combine trois dimensio
           'Le télétravail est-il un progrès social ou un nouveau piège de disponibilité ?',
           'Comment distinguer vrai care management et care washing ?',
           'La semaine de quatre jours peut-elle fonctionner dans tous les secteurs ?',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'paper-05',
+    title: 'DALF C1 — Consumption & Ethics',
+    theme: 'Consumption and ethics',
+    audioKeys: audio('paper-05'),
+    content: {
+      listening: {
+        longDocument: {
+          transcript: `Émission Économie et société. Ce matin, nous recevons Nadia Benali, économiste spécialisée dans la consommation éthique.
+
+Nadia Benali : Depuis la pandémie, une partie des consommateurs dit vouloir consommer moins et mieux. Pourtant, les données de vente montrent que le volume global de biens jetables continue d'augmenter. Il y a donc un écart entre les intentions déclarées et les comportements réels.
+
+Présentateur : Pourquoi cet écart ?
+
+Nadia Benali : D'abord, le prix. Les produits durables restent souvent plus chers. Ensuite, le marketing vert : beaucoup d'étiquettes écologiques sont floues, ce qui crée de la méfiance. Enfin, l'urgence du quotidien pousse vers la facilité.
+
+Présentateur : Que peuvent faire les pouvoirs publics ?
+
+Nadia Benali : Trois leviers : une fiscalité qui rend le durable compétitif, une information fiable et standardisée, et le soutien aux filières de réparation et de réemploi. Sans cela, l'éthique reste un luxe pour une minorité.`,
+          questions: [
+            { id: 'L1', type: 'open', text: 'Quel écart Nadia Benali met-elle en évidence ?', points: 3 },
+            { id: 'L2', type: 'mcq', text: 'Selon elle, le volume de biens jetables :', points: 2, options: ['A. Diminue fortement', 'B. Continue d\'augmenter', 'C. Est stable', 'D. N\'est pas mesuré'] },
+            { id: 'L3', type: 'open', text: 'Citez deux causes de l\'écart intentions / comportements.', points: 3 },
+            { id: 'L4', type: 'tf', text: 'Nadia Benali estime que le marketing vert renforce toujours la confiance.', points: 1 },
+            { id: 'L5', type: 'open', text: 'Quels trois leviers publics propose-t-elle ?', points: 3 },
+            { id: 'L6', type: 'mcq', text: 'Sans ces leviers, l\'éthique de consommation risque de rester :', points: 2, options: ['A. Une obligation légale', 'B. Un luxe pour une minorité', 'C. Une pratique majoritaire', 'D. Interdite'] },
+          ],
+          answerKey: [
+            { questionId: 'L1', correctAnswer: 'Écart entre intentions déclarées et comportements réels', acceptableAnswers: ['intentions', 'comportements', 'écart'], justificationRequired: false, points: 3 },
+            { questionId: 'L2', correctAnswer: 'B', acceptableAnswers: ['B', 'augmenter'], justificationRequired: false, points: 2 },
+            { questionId: 'L3', correctAnswer: 'Prix ; marketing vert flou / méfiance ; urgence du quotidien', acceptableAnswers: ['prix', 'marketing', 'méfiance', 'quotidien'], justificationRequired: false, points: 3 },
+            { questionId: 'L4', correctAnswer: 'Faux', acceptableAnswers: ['Faux'], justificationRequired: false, points: 1 },
+            { questionId: 'L5', correctAnswer: 'Fiscalité, information fiable, soutien réparation/réemploi', acceptableAnswers: ['fiscalité', 'information', 'réparation', 'réemploi'], justificationRequired: false, points: 3 },
+            { questionId: 'L6', correctAnswer: 'B', acceptableAnswers: ['B', 'luxe', 'minorité'], justificationRequired: false, points: 2 },
+          ],
+        },
+        shortDocuments: [
+          {
+            transcript: `Une enquête européenne indique que 54 % des jeunes de 18 à 30 ans déclarent boycotter occasionnellement une marque pour des raisons éthiques.`,
+            questions: [
+              { id: 'S1', type: 'mcq', text: 'Quel pourcentage de jeunes boycotte occasionnellement une marque ?', points: 2, options: ['A. 45 %', 'B. 54 %', 'C. 64 %', 'D. 34 %'] },
+              { id: 'S2', type: 'open', text: 'Quelle tranche d\'âge est concernée ?', points: 2 },
+            ],
+            answerKey: [
+              { questionId: 'S1', correctAnswer: 'B', acceptableAnswers: ['B', '54'], justificationRequired: false, points: 2 },
+              { questionId: 'S2', correctAnswer: '18–30 ans', acceptableAnswers: ['18', '30'], justificationRequired: false, points: 2 },
+            ],
+          },
+          {
+            transcript: `Le gouvernement annonce un bonus réparation étendu aux smartphones et aux lave-linge dès l'automne prochain.`,
+            questions: [
+              { id: 'S3', type: 'tf', text: 'Le bonus réparation concernera notamment les smartphones.', points: 1 },
+              { id: 'S4', type: 'open', text: 'Quand le dispositif doit-il débuter ?', points: 2 },
+            ],
+            answerKey: [
+              { questionId: 'S3', correctAnswer: 'Vrai', acceptableAnswers: ['Vrai'], justificationRequired: false, points: 1 },
+              { questionId: 'S4', correctAnswer: 'Automne prochain', acceptableAnswers: ['automne'], justificationRequired: false, points: 2 },
+            ],
+          },
+        ],
+      },
+      reading: {
+        text: `La consommation éthique est devenue un argument commercial omniprésent. Labels, chartes, reports RSE : les entreprises multiplient les signes de vertu. Pourtant, derrière cette inflation discursive, la question demeure : qui peut réellement consommer autrement ?
+
+Les chercheurs en sociologie de la consommation soulignent que le « mieux consommer » suppose du temps, de l'information et souvent un surplus monétaire. Les ménages précaires, eux, optimisent le prix avant tout. Faire de l'éthique une responsabilité individuelle sans toucher aux structures de production revient donc à culpabiliser les uns et absoudre les autres.
+
+Une approche plus juste combinerait régulation (interdiction des pratiques les plus destructrices), transparence obligatoire, et démocratisation du durable par le prix. Sinon, le marché continuera de vendre de la bonne conscience à ceux qui peuvent se l'offrir.`,
+        questions: [
+          { id: 'R1', type: 'open', text: 'Quel paradoxe le texte met-il en lumière concernant la consommation éthique ?', points: 4 },
+          { id: 'R2', type: 'mcq', text: 'Selon les sociologues cités, consommer autrement suppose surtout :', points: 2, options: ['A. Uniquement de la volonté', 'B. Du temps, de l\'information et souvent un surplus monétaire', 'C. L\'interdiction de toute publicité', 'D. Un diplôme universitaire'] },
+          { id: 'R3', type: 'open', text: 'Pourquoi individualiser l\'éthique de consommation est-il critiqué ?', points: 4 },
+          { id: 'R4', type: 'tf', text: 'Le texte propose uniquement de laisser le marché s\'autoréguler.', points: 2 },
+          { id: 'R5', type: 'open', text: 'Quels leviers une approche plus juste combinerait-elle ?', points: 4 },
+        ],
+        answerKey: [
+          { questionId: 'R1', correctAnswer: 'Inflation de signes de vertu vs accessibilité réelle limitée', acceptableAnswers: ['paradoxe', 'accessib', 'labels', 'prix'], justificationRequired: false, points: 4 },
+          { questionId: 'R2', correctAnswer: 'B', acceptableAnswers: ['B', 'temps', 'information', 'prix'], justificationRequired: false, points: 2 },
+          { questionId: 'R3', correctAnswer: 'Culpabilise les ménages précaires sans toucher aux structures', acceptableAnswers: ['culpabil', 'structures', 'individuel'], justificationRequired: false, points: 4 },
+          { questionId: 'R4', correctAnswer: 'Faux', acceptableAnswers: ['Faux'], justificationRequired: false, points: 2 },
+          { questionId: 'R5', correctAnswer: 'Régulation, transparence, démocratisation du durable par le prix', acceptableAnswers: ['régulation', 'transparence', 'prix'], justificationRequired: false, points: 4 },
+        ],
+      },
+      writing: {
+        dossier: [
+          { title: 'Document 1', text: `Une étude montre que 70 % des consommateurs se disent prêts à payer plus pour un produit éthique, mais seuls 18 % le font régulièrement.` },
+          { title: 'Document 2', text: `Des associations dénoncent le greenwashing et demandent des labels officiels contrôlés.` },
+          { title: 'Document 3', text: `Des PME de l'économie circulaire peinent à concurrencer les prix des grands distributeurs.` },
+        ],
+        problematique: 'Comment rendre la consommation éthique accessible au plus grand nombre ?',
+        synthesisPrompt: 'Synthèse objective (200–240 mots) des documents.',
+        essayPrompt: 'Essai argumenté (250 mots min.) répondant à la problématique.',
+      },
+      speaking: {
+        dossier: [
+          { title: 'Document A', text: `Le bonus réparation vise à allonger la durée de vie des appareils, mais son montant reste limité.` },
+          { title: 'Document B', text: `Les campagnes de boycott sur les réseaux sociaux peuvent faire plier certaines marques en quelques jours.` },
+        ],
+        instructions: `Exposé 8–10 minutes sur la consommation éthique. Puis répondez aux questions à l'écran (pratique orale).`,
+        examinerQuestions: [
+          'Le consommateur est-il vraiment libre de ses choix ?',
+          'Faut-il interdire le greenwashing, et comment ?',
+          'La réparation peut-elle concurrencer le neuf à grande échelle ?',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'paper-06',
+    title: 'DALF C1 — Family & Education',
+    theme: 'Family and education',
+    audioKeys: audio('paper-06'),
+    content: {
+      listening: {
+        longDocument: {
+          transcript: `Grand entretien. Invité : Thomas Leroy, sociologue de la famille et de l'éducation.
+
+Thomas Leroy : La parentalité contemporaine est prise en tenaille entre deux injonctions : réussir l'enfant et respecter son autonomie. Les réseaux sociaux amplifient cette pression en exposant des modèles parentaux idéalisés.
+
+Présentatrice : Et l'école dans tout ça ?
+
+Thomas Leroy : L'école concentre les attentes de mobilité sociale. Or, les inégalités scolaires se forment très tôt, souvent avant même l'entrée en primaire. Les familles les mieux informées anticipent, choisissent, accompagent. Les autres subissent un système opaque.
+
+Présentatrice : Faut-il davantage de mixité sociale ?
+
+Thomas Leroy : Oui, mais pas seulement par la carte scolaire. Il faut aussi des moyens pour les établissements, une formation des enseignants aux biais, et une politique du logement qui évite la ségrégation urbaine. Sinon, la mixité reste un slogan.`,
+          questions: [
+            { id: 'L1', type: 'open', text: 'Quelles deux injonctions pèsent sur la parentalité selon Thomas Leroy ?', points: 3 },
+            { id: 'L2', type: 'mcq', text: 'Les réseaux sociaux, selon lui :', points: 2, options: ['A. Réduisent la pression parentale', 'B. Amplifient la pression via des modèles idéalisés', 'C. Remplacent l\'école', 'D. N\'ont aucun effet'] },
+            { id: 'L3', type: 'tf', text: 'Les inégalités scolaires ne commencent qu\'au collège.', points: 1 },
+            { id: 'L4', type: 'open', text: 'Comment les familles informées se distinguent-elles ?', points: 3 },
+            { id: 'L5', type: 'open', text: 'Outre la carte scolaire, que faut-il pour une vraie mixité ?', points: 3 },
+            { id: 'L6', type: 'mcq', text: 'Sans ces conditions, la mixité reste selon lui :', points: 2, options: ['A. Une réalité partout', 'B. Un slogan', 'C. Une interdiction', 'D. Un modèle unique'] },
+          ],
+          answerKey: [
+            { questionId: 'L1', correctAnswer: 'Réussir l\'enfant et respecter son autonomie', acceptableAnswers: ['réussir', 'autonomie'], justificationRequired: false, points: 3 },
+            { questionId: 'L2', correctAnswer: 'B', acceptableAnswers: ['B', 'pression', 'idéalisés'], justificationRequired: false, points: 2 },
+            { questionId: 'L3', correctAnswer: 'Faux', acceptableAnswers: ['Faux'], justificationRequired: false, points: 1 },
+            { questionId: 'L4', correctAnswer: 'Anticipent, choisissent, accompagnent', acceptableAnswers: ['anticip', 'choisissent', 'accompagn'], justificationRequired: false, points: 3 },
+            { questionId: 'L5', correctAnswer: 'Moyens, formation aux biais, politique du logement', acceptableAnswers: ['moyens', 'biais', 'logement'], justificationRequired: false, points: 3 },
+            { questionId: 'L6', correctAnswer: 'B', acceptableAnswers: ['B', 'slogan'], justificationRequired: false, points: 2 },
+          ],
+        },
+        shortDocuments: [
+          {
+            transcript: `Selon une étude du CNRS, le temps d'écran quotidien des enfants de 8 à 12 ans a augmenté de 40 minutes en moyenne depuis 2020.`,
+            questions: [
+              { id: 'S1', type: 'open', text: 'Quelle hausse du temps d\'écran est mesurée ?', points: 2 },
+              { id: 'S2', type: 'tf', text: 'L\'étude concerne les enfants de 8 à 12 ans.', points: 1 },
+            ],
+            answerKey: [
+              { questionId: 'S1', correctAnswer: '40 minutes en moyenne depuis 2020', acceptableAnswers: ['40', 'minutes'], justificationRequired: false, points: 2 },
+              { questionId: 'S2', correctAnswer: 'Vrai', acceptableAnswers: ['Vrai'], justificationRequired: false, points: 1 },
+            ],
+          },
+          {
+            transcript: `Une expérimentation dans douze collèges teste l'interdiction du téléphone portable pendant toute la journée scolaire, y compris la pause déjeuner.`,
+            questions: [
+              { id: 'S3', type: 'mcq', text: 'L\'expérimentation porte sur :', points: 2, options: ['A. Douze lycées', 'B. Douze collèges', 'C. Toute la France', 'D. Les universités'] },
+              { id: 'S4', type: 'open', text: 'La pause déjeuner est-elle concernée ?', points: 2 },
+            ],
+            answerKey: [
+              { questionId: 'S3', correctAnswer: 'B', acceptableAnswers: ['B', 'collèges'], justificationRequired: false, points: 2 },
+              { questionId: 'S4', correctAnswer: 'Oui, y compris la pause déjeuner', acceptableAnswers: ['oui', 'déjeuner'], justificationRequired: false, points: 2 },
+            ],
+          },
+        ],
+      },
+      reading: {
+        text: `L'égalité des chances scolaires demeure un horizon plus qu'une réalité. Malgré la massification de l'enseignement secondaire, les trajectoires restent fortement corrélées à l'origine sociale. Ce n'est pas seulement une question de « mérite » : c'est une question de ressources culturelles, de capital informationnel, et de capacité à naviguer dans un système complexe.
+
+Les politiques de discrimination positive ont produit des résultats mitigés. Certaines ouvrent des portes ; d'autres stigmatisent. Le débat actuel oppose ceux qui veulent recentrer l'école sur les fondamentaux et ceux qui insistent sur l'accompagnement global de l'élève. Or, ces deux exigences ne sont pas contradictoires : sans maîtrise langagière et numérique, l'autonomie promise reste fictive ; sans soutien social, le talent se perd.
+
+Une école juste doit donc combiner exigence intellectuelle et filet de sécurité — et reconnaître que la famille n'est pas un acteur neutre, mais un facteur décisif de réussite.`,
+        questions: [
+          { id: 'R1', type: 'open', text: 'Pourquoi l\'égalité des chances est-elle présentée comme un horizon plus qu\'une réalité ?', points: 4 },
+          { id: 'R2', type: 'mcq', text: 'Selon le texte, les trajectoires scolaires sont fortement liées :', points: 2, options: ['A. Au hasard', 'B. À l\'origine sociale', 'C. Uniquement au QI', 'D. Au sport'] },
+          { id: 'R3', type: 'open', text: 'Quel bilan est fait des politiques de discrimination positive ?', points: 4 },
+          { id: 'R4', type: 'tf', text: 'Le texte juge contradictoires fondamentaux et accompagnement global.', points: 2 },
+          { id: 'R5', type: 'open', text: 'Quel rôle la famille joue-t-elle selon l\'auteur ?', points: 4 },
+        ],
+        answerKey: [
+          { questionId: 'R1', correctAnswer: 'Trajectoires encore corrélées à l\'origine sociale malgré la massification', acceptableAnswers: ['origine sociale', 'corrél', 'massification'], justificationRequired: false, points: 4 },
+          { questionId: 'R2', correctAnswer: 'B', acceptableAnswers: ['B', 'origine sociale'], justificationRequired: false, points: 2 },
+          { questionId: 'R3', correctAnswer: 'Résultats mitigés : ouvrent des portes / stigmatisent', acceptableAnswers: ['mitigés', 'stigmat'], justificationRequired: false, points: 4 },
+          { questionId: 'R4', correctAnswer: 'Faux', acceptableAnswers: ['Faux'], justificationRequired: false, points: 2 },
+          { questionId: 'R5', correctAnswer: 'Facteur décisif de réussite, non neutre', acceptableAnswers: ['décisif', 'réussite', 'neutre'], justificationRequired: false, points: 4 },
+        ],
+      },
+      writing: {
+        dossier: [
+          { title: 'Document 1', text: `Les écarts de réussite entre élèves selon le milieu social restent stables depuis vingt ans dans plusieurs indicateurs nationaux.` },
+          { title: 'Document 2', text: `Des parents d'élèves demandent plus de transparence sur l'orientation et l'affectation.` },
+          { title: 'Document 3', text: `Des enseignants signalent un manque de moyens pour l'accompagnement personnalisé dans les établissements défavorisés.` },
+        ],
+        problematique: 'Comment réduire concrètement les inégalités scolaires sans baisser le niveau d\'exigence ?',
+        synthesisPrompt: 'Synthèse objective (200–240 mots) des documents.',
+        essayPrompt: 'Essai argumenté (250 mots min.) sur la problématique.',
+      },
+      speaking: {
+        dossier: [
+          { title: 'Document A', text: `L'interdiction du téléphone au collège est présentée comme un levier de concentration, mais son application varie fortement.` },
+          { title: 'Document B', text: `Le temps parental passé sur les devoirs est très inégal selon les milieux.` },
+        ],
+        instructions: `Exposé 8–10 minutes sur famille, école et inégalités. Puis questions à l'écran.`,
+        examinerQuestions: [
+          'La réussite scolaire est-elle encore un ascenseur social ?',
+          'Faut-il interdire les téléphones à l\'école ?',
+          'Quel rôle doivent jouer les parents sans aggraver les inégalités ?',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'paper-07',
+    title: 'DALF C1 — Urbanism & City Transformation',
+    theme: 'Urbanism and city transformation',
+    audioKeys: audio('paper-07'),
+    content: {
+      listening: {
+        longDocument: {
+          transcript: `Débat. Urbanisme et transformation des villes. Avec Léa Moretti, architecte, et Paul N'Guessan, élu local.
+
+Léa Moretti : Densifier les centres sans les asphyxier, voilà le défi. On construit trop souvent des tours sans services publics, sans espaces verts, sans commerces de proximité. Le résultat : des quartiers dortoirs.
+
+Paul N'Guessan : Je suis d'accord sur le diagnostic, mais les maires sont coincés entre la loi et le budget. On nous demande plus de logements sociaux, plus de mobilité douce, et moins d'impôts. Il faut des financements pluriannuels stables.
+
+Léa Moretti : Et la participation citoyenne ? Trop souvent, les concerts publics arrivent trop tard, quand le projet est déjà figé. Il faudrait co-concevoir dès l'esquisse.
+
+Paul N'Guessan : Nous testons des ateliers de quartier avec maquettes et budgets participatifs. Ce n'est pas magique, mais cela réduit les conflits plus tard.`,
+          questions: [
+            { id: 'L1', type: 'open', text: 'Quel défi Léa Moretti formule-t-elle au début ?', points: 3 },
+            { id: 'L2', type: 'mcq', text: 'Selon elle, construire des tours sans services produit :', points: 2, options: ['A. Des centres touristiques', 'B. Des quartiers dortoirs', 'C. Plus de mixité', 'D. Moins de densification'] },
+            { id: 'L3', type: 'open', text: 'Quelle contrainte Paul N\'Guessan met-il en avant pour les maires ?', points: 3 },
+            { id: 'L4', type: 'tf', text: 'Léa Moretti juge les concerts publics toujours trop tardives.', points: 1 },
+            { id: 'L5', type: 'open', text: 'Quelles pratiques Paul N\'Guessan dit tester ?', points: 3 },
+            { id: 'L6', type: 'mcq', text: 'Ces pratiques visent surtout à :', points: 2, options: ['A. Augmenter les impôts', 'B. Réduire les conflits plus tard', 'C. Supprimer les logements sociaux', 'D. Interdire les tours'] },
+          ],
+          answerKey: [
+            { questionId: 'L1', correctAnswer: 'Densifier les centres sans les asphyxier', acceptableAnswers: ['densifier', 'asphyx'], justificationRequired: false, points: 3 },
+            { questionId: 'L2', correctAnswer: 'B', acceptableAnswers: ['B', 'dortoirs'], justificationRequired: false, points: 2 },
+            { questionId: 'L3', correctAnswer: 'Coincés entre loi et budget / exigences contradictoires', acceptableAnswers: ['budget', 'loi', 'financements'], justificationRequired: false, points: 3 },
+            { questionId: 'L4', correctAnswer: 'Vrai', acceptableAnswers: ['Vrai'], justificationRequired: false, points: 1 },
+            { questionId: 'L5', correctAnswer: 'Ateliers de quartier, maquettes, budgets participatifs', acceptableAnswers: ['ateliers', 'maquettes', 'participatifs'], justificationRequired: false, points: 3 },
+            { questionId: 'L6', correctAnswer: 'B', acceptableAnswers: ['B', 'conflits'], justificationRequired: false, points: 2 },
+          ],
+        },
+        shortDocuments: [
+          {
+            transcript: `La ville de Lyon annonce la création de quinze kilomètres de pistes cyclables sécurisées d'ici 2027, financés en partie par l'État.`,
+            questions: [
+              { id: 'S1', type: 'open', text: 'Combien de kilomètres de pistes sont annoncés ?', points: 2 },
+              { id: 'S2', type: 'tf', text: 'Le financement est entièrement municipal.', points: 1 },
+            ],
+            answerKey: [
+              { questionId: 'S1', correctAnswer: '15 kilomètres', acceptableAnswers: ['15', 'quinze'], justificationRequired: false, points: 2 },
+              { questionId: 'S2', correctAnswer: 'Faux', acceptableAnswers: ['Faux'], justificationRequired: false, points: 1 },
+            ],
+          },
+          {
+            transcript: `Un rapport alerte sur la disparition progressive des commerces de proximité dans les centres-villes de moins de vingt mille habitants.`,
+            questions: [
+              { id: 'S3', type: 'mcq', text: 'Le rapport concerne surtout les villes de :', points: 2, options: ['A. Plus d\'un million d\'habitants', 'B. Moins de 20 000 habitants', 'C. Uniquement Paris', 'D. Zones rurales isolées seulement'] },
+              { id: 'S4', type: 'open', text: 'Quel phénomène est dénoncé ?', points: 2 },
+            ],
+            answerKey: [
+              { questionId: 'S3', correctAnswer: 'B', acceptableAnswers: ['B', '20 000', 'vingt mille'], justificationRequired: false, points: 2 },
+              { questionId: 'S4', correctAnswer: 'Disparition des commerces de proximité', acceptableAnswers: ['commerces', 'proximité', 'disparition'], justificationRequired: false, points: 2 },
+            ],
+          },
+        ],
+      },
+      reading: {
+        text: `La ville contemporaine est un champ de tensions : densifier pour limiter l'étalement urbain, tout en préservant la qualité de vie ; accueillir de nouveaux habitants, tout en évitant la gentrification ; accélérer la transition écologique, tout en respectant les temporalités démocratiques locales.
+
+Les grands projets d'aménagement échouent souvent non faute d'expertise technique, mais faute de légitimité sociale. Quand les riverains découvrent un chantier déjà décidé, la contestation devient le seul langage disponible. Inversement, des processus participatifs trop flous produisent de la frustration et ralentissent l'action.
+
+Une urbanité durable exige donc des instruments hybrides : règles claires, financements stables, et co-conception réelle — pas seulement de la communication. La ville n'est pas un décor ; c'est un bien commun conflictuel qu'il faut gouverner.`,
+        questions: [
+          { id: 'R1', type: 'open', text: 'Quelles tensions définissent la ville contemporaine selon le texte ?', points: 4 },
+          { id: 'R2', type: 'mcq', text: 'Les grands projets échouent souvent faute de :', points: 2, options: ['A. Logiciels de CAO', 'B. Légitimité sociale', 'C. Ciment', 'D. Touristes'] },
+          { id: 'R3', type: 'open', text: 'Que se passe-t-il lorsque les riverains découvrent un chantier déjà décidé ?', points: 4 },
+          { id: 'R4', type: 'tf', text: 'Le texte juge suffisante la seule communication autour des projets.', points: 2 },
+          { id: 'R5', type: 'open', text: 'Quels instruments hybrides sont recommandés ?', points: 4 },
+        ],
+        answerKey: [
+          { questionId: 'R1', correctAnswer: 'Densifier/qualité de vie ; accueillir/gentrification ; écologie/démocratie locale', acceptableAnswers: ['densif', 'gentrif', 'écolog', 'démocr'], justificationRequired: false, points: 4 },
+          { questionId: 'R2', correctAnswer: 'B', acceptableAnswers: ['B', 'légitimité'], justificationRequired: false, points: 2 },
+          { questionId: 'R3', correctAnswer: 'La contestation devient le seul langage disponible', acceptableAnswers: ['contestation'], justificationRequired: false, points: 4 },
+          { questionId: 'R4', correctAnswer: 'Faux', acceptableAnswers: ['Faux'], justificationRequired: false, points: 2 },
+          { questionId: 'R5', correctAnswer: 'Règles claires, financements stables, co-conception réelle', acceptableAnswers: ['règles', 'financements', 'co-conception'], justificationRequired: false, points: 4 },
+        ],
+      },
+      writing: {
+        dossier: [
+          { title: 'Document 1', text: `La loi impose aux communes des objectifs de densification, sous peine de sanctions financières.` },
+          { title: 'Document 2', text: `Des collectifs d'habitants contestent des tours de logements sans équipements publics prévus.` },
+          { title: 'Document 3', text: `Un observatoire montre que les budgets participatifs restent souvent inférieurs à 1 % du budget municipal.` },
+        ],
+        problematique: 'Comment densifier les villes tout en préservant la démocratie locale et la qualité de vie ?',
+        synthesisPrompt: 'Synthèse objective (200–240 mots) des documents.',
+        essayPrompt: 'Essai argumenté (250 mots min.) sur la problématique.',
+      },
+      speaking: {
+        dossier: [
+          { title: 'Document A', text: `Les pistes cyclables sécurisées réduisent les accidents, mais se heurtent parfois aux commerçants qui craignent la perte de places de stationnement.` },
+          { title: 'Document B', text: `La participation citoyenne est plus efficace lorsqu'elle intervient dès la phase d'esquisse.` },
+        ],
+        instructions: `Exposé 8–10 minutes sur l'urbanisme contemporain. Puis questions à l'écran.`,
+        examinerQuestions: [
+          'Densifier est-il compatible avec la qualité de vie ?',
+          'Comment éviter que la participation citoyenne reste cosmétique ?',
+          'Qui doit financer les équipements publics des nouveaux quartiers ?',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'paper-08',
+    title: 'DALF C1 — Science & Technology',
+    theme: 'Science and technology',
+    audioKeys: audio('paper-08'),
+    content: {
+      listening: {
+        longDocument: {
+          transcript: `Sciences et société. Invité : Docteur Amina Khelifi, chercheuse en biotechnologies.
+
+Amina Khelifi : Les thérapies géniques progressent rapidement, mais l'accès reste inégal. Les coûts de traitement peuvent dépasser plusieurs centaines de milliers d'euros par patient. Sans régulation, on risque une médecine à deux vitesses.
+
+Présentateur : Et la question éthique ?
+
+Amina Khelifi : Elle est centrale. Modifier le génome soulève des questions de consentement, de transmissibilité aux générations futures, et de définition du normal. Il faut des comités indépendants, une transparence des essais, et un débat public informé, pas seulement des décisions technocratiques.
+
+Présentateur : L'Europe est-elle en retard ?
+
+Amina Khelifi : Sur le financement de la recherche fondamentale, parfois. Sur le cadre éthique, elle est plutôt en avance. Le défi, c'est d'allier innovation et justice d'accès.`,
+          questions: [
+            { id: 'L1', type: 'open', text: 'Quel paradoxe Amina Khelifi décrit-elle concernant les thérapies géniques ?', points: 3 },
+            { id: 'L2', type: 'mcq', text: 'Sans régulation, elle craint :', points: 2, options: ['A. La fin de la recherche', 'B. Une médecine à deux vitesses', 'C. L\'interdiction totale', 'D. La baisse des coûts uniquement'] },
+            { id: 'L3', type: 'open', text: 'Quelles questions éthiques cite-t-elle ?', points: 3 },
+            { id: 'L4', type: 'tf', text: 'Elle juge suffisantes les seules décisions technocratiques.', points: 1 },
+            { id: 'L5', type: 'open', text: 'Comment situe-t-elle l\'Europe sur le financement et l\'éthique ?', points: 3 },
+            { id: 'L6', type: 'mcq', text: 'Le défi final qu\'elle formule est d\'allier :', points: 2, options: ['A. Marketing et brevets', 'B. Innovation et justice d\'accès', 'C. Tourisme et santé', 'D. Sport et science'] },
+          ],
+          answerKey: [
+            { questionId: 'L1', correctAnswer: 'Progrès rapide mais accès inégal / coûts très élevés', acceptableAnswers: ['accès', 'coûts', 'inégal'], justificationRequired: false, points: 3 },
+            { questionId: 'L2', correctAnswer: 'B', acceptableAnswers: ['B', 'deux vitesses'], justificationRequired: false, points: 2 },
+            { questionId: 'L3', correctAnswer: 'Consentement, transmissibilité, définition du normal', acceptableAnswers: ['consentement', 'transmiss', 'normal'], justificationRequired: false, points: 3 },
+            { questionId: 'L4', correctAnswer: 'Faux', acceptableAnswers: ['Faux'], justificationRequired: false, points: 1 },
+            { questionId: 'L5', correctAnswer: 'Financement parfois en retard ; cadre éthique plutôt en avance', acceptableAnswers: ['financement', 'éthique', 'avance'], justificationRequired: false, points: 3 },
+            { questionId: 'L6', correctAnswer: 'B', acceptableAnswers: ['B', 'innovation', 'justice'], justificationRequired: false, points: 2 },
+          ],
+        },
+        shortDocuments: [
+          {
+            transcript: `L'Agence européenne des médicaments a autorisé un nouveau traitement contre une maladie génétique rare touchant environ deux mille patients en Europe.`,
+            questions: [
+              { id: 'S1', type: 'open', text: 'Combien de patients approximativement sont concernés en Europe ?', points: 2 },
+              { id: 'S2', type: 'tf', text: 'Le traitement a été autorisé par l\'Agence européenne des médicaments.', points: 1 },
+            ],
+            answerKey: [
+              { questionId: 'S1', correctAnswer: 'Environ 2000', acceptableAnswers: ['2000', 'deux mille'], justificationRequired: false, points: 2 },
+              { questionId: 'S2', correctAnswer: 'Vrai', acceptableAnswers: ['Vrai'], justificationRequired: false, points: 1 },
+            ],
+          },
+          {
+            transcript: `Une pétition de scientifiques demande un moratoire sur certaines modifications germinales tant qu'un consensus international n'est pas atteint.`,
+            questions: [
+              { id: 'S3', type: 'mcq', text: 'La pétition demande :', points: 2, options: ['A. Une accélération des essais', 'B. Un moratoire', 'C. La privatisation de la recherche', 'D. L\'arrêt de toute médecine'] },
+              { id: 'S4', type: 'open', text: 'Quelle condition est mentionnée pour lever le moratoire ?', points: 2 },
+            ],
+            answerKey: [
+              { questionId: 'S3', correctAnswer: 'B', acceptableAnswers: ['B', 'moratoire'], justificationRequired: false, points: 2 },
+              { questionId: 'S4', correctAnswer: 'Un consensus international', acceptableAnswers: ['consensus', 'international'], justificationRequired: false, points: 2 },
+            ],
+          },
+        ],
+      },
+      reading: {
+        text: `La biotechnologie place les sociétés devant un dilemme classique accéléré : innover vite pour sauver des vies, ou ralentir pour garantir l'équité et la prudence. Historiquement, chaque rupture médicale a redistribué le pouvoir — entre patients, cliniciens, industriels et États.
+
+Aujourd'hui, le coût des thérapies avancées transforme l'accès aux soins en enjeu budgétaire majeur. Les assureurs et les systèmes publics doivent arbitrer entre rareté et universalité. Parallèlement, le débat éthique ne peut être confisqué par les seuls experts : la définition du « normal », du « pathologique » et du « perfectible » engage toute la cité.
+
+Une gouvernance responsable combinerait : évaluation indépendante des bénéfices/risques, plafonds de prix ou modèles de paiement à la performance, et forums citoyens permanents. L'innovation sans justice d'accès n'est qu'une promesse pour quelques-uns.`,
+        questions: [
+          { id: 'R1', type: 'open', text: 'Quel dilemme le texte attribue-t-il à la biotechnologie ?', points: 4 },
+          { id: 'R2', type: 'mcq', text: 'Le coût des thérapies avancées transforme surtout l\'accès aux soins en :', points: 2, options: ['A. Enjeu touristique', 'B. Enjeu budgétaire majeur', 'C. Sujet secondaire', 'D. Problème purement technique'] },
+          { id: 'R3', type: 'open', text: 'Pourquoi le débat éthique ne doit-il pas être confisqué par les seuls experts ?', points: 4 },
+          { id: 'R4', type: 'tf', text: 'Le texte propose uniquement de laisser les industriels fixer les prix.', points: 2 },
+          { id: 'R5', type: 'open', text: 'Quels éléments une gouvernance responsable combinerait-elle ?', points: 4 },
+        ],
+        answerKey: [
+          { questionId: 'R1', correctAnswer: 'Innover vite pour sauver des vies vs ralentir pour équité et prudence', acceptableAnswers: ['innover', 'équité', 'prudence'], justificationRequired: false, points: 4 },
+          { questionId: 'R2', correctAnswer: 'B', acceptableAnswers: ['B', 'budgétaire'], justificationRequired: false, points: 2 },
+          { questionId: 'R3', correctAnswer: 'Les notions de normal/pathologique/perfectible engagent toute la cité', acceptableAnswers: ['normal', 'cité', 'experts'], justificationRequired: false, points: 4 },
+          { questionId: 'R4', correctAnswer: 'Faux', acceptableAnswers: ['Faux'], justificationRequired: false, points: 2 },
+          { questionId: 'R5', correctAnswer: 'Évaluation indépendante, plafonds/paiement à la performance, forums citoyens', acceptableAnswers: ['évaluation', 'prix', 'citoyens'], justificationRequired: false, points: 4 },
+        ],
+      },
+      writing: {
+        dossier: [
+          { title: 'Document 1', text: `Le prix moyen de certaines thérapies géniques dépasse 300 000 euros par patient.` },
+          { title: 'Document 2', text: `Des associations de patients demandent un accès équitable et une transparence sur les essais cliniques.` },
+          { title: 'Document 3', text: `Des chercheurs plaident pour un financement public accru de la recherche fondamentale européenne.` },
+        ],
+        problematique: 'Comment concilier innovation biotechnologique et justice d\'accès aux soins ?',
+        synthesisPrompt: 'Synthèse objective (200–240 mots) des documents.',
+        essayPrompt: 'Essai argumenté (250 mots min.) sur la problématique.',
+      },
+      speaking: {
+        dossier: [
+          { title: 'Document A', text: `Les comités d'éthique accélèrent parfois trop lentement face à l'urgence clinique.` },
+          { title: 'Document B', text: `Sans débat public, les décisions technocratiques perdent en légitimité.` },
+        ],
+        instructions: `Exposé 8–10 minutes sur science, éthique et accès aux soins. Puis questions à l'écran.`,
+        examinerQuestions: [
+          'Faut-il un moratoire sur certaines modifications génétiques ?',
+          'Qui doit payer les thérapies extrêmement coûteuses ?',
+          'Comment associer les citoyens au débat scientifique ?',
         ],
       },
     },

@@ -5,7 +5,7 @@ import { exams, attempts } from '../db/schema';
 import { authMiddleware, isAdmin } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { Headphones, BookOpen, PenTool, Mic, ArrowRight } from '../components/Icons';
-import { ensureStaticPapers, displayExamTitle } from '../data/seed-papers';
+import { ensureStaticPapers, displayExamTitle, isStaticExamTitle } from '../data/seed-papers';
 import { computePassReadiness } from '../lib/pass-readiness';
 
 const examRoutes = new Hono<{ Bindings: CloudflareBindings }>();
@@ -40,7 +40,7 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
   // Prefer static curated papers; hide legacy AI-generated unless admin
   const visibleExams = isAdmin(user, c.env)
     ? allExams
-    : allExams.filter((e) => e.title.startsWith('[static]'));
+    : allExams.filter((e) => isStaticExamTitle(e.title));
 
   const userAttempts = await db
     .select()
