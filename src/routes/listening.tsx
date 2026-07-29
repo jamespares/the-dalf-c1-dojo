@@ -58,14 +58,15 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
   return c.html(
     <Layout title={`Listening Comprehension — DALF C1`}>
       <Navbar user={user} />
-      <h1>Listening Comprehension — {exam.title}</h1>
-      <p style="color:var(--muted);">Recommended time: ~40 minutes. Long document played twice. Short documents played once.</p>
+      <div class="container">
+      <h1>Listening Comprehension — {exam.title.replace(/^\[static:[^\]]+\]\s*/, '').replace(/^\[static\]\s*/, '')}</h1>
+      <p style="color:var(--muted);margin-bottom:var(--space-6);">Recommended time: ~40 minutes. Long document played twice. Short documents played once.</p>
 
       <form method="post" action={`/exams/${examId}/listening/save?attempt=${attempt.id}`}>
         <div class="card">
           <h2>Exercise 1 — Long Document</h2>
           {longAudioUrls.map((a) => (
-            <div style="margin-bottom:0.5rem;">
+            <div style="margin-bottom:var(--space-4);">
               {a.label && <span style="color:var(--muted);font-size:0.85rem;">{a.label}</span>}
               <audio controls preload="metadata">
                 <source src={a.url} type="audio/mpeg" />
@@ -73,7 +74,7 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
             </div>
           ))}
           {content.listening.longDocument.questions.map((q: any) => (
-            <div class="form-group" style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
+            <div class="form-group" style="margin-top:var(--space-5);border-top:1px solid var(--base-border);padding-top:var(--space-5);">
               <label>
                 <strong>{q.id}</strong> ({q.points} pt{q.points > 1 ? 's' : ''}) {q.text}
               </label>
@@ -109,17 +110,17 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
           {content.listening.shortDocuments.map((doc: any, idx: number) => {
             const a = shortAudioUrls[idx];
             return (
-              <div style="margin-bottom:1.5rem;">
+              <div style="margin-bottom:var(--space-6);">
                 <h3>Document {idx + 1}</h3>
                 {a && (
-                  <div style="margin-bottom:0.75rem;">
+                  <div style="margin-bottom:var(--space-4);">
                     <audio controls preload="metadata">
                       <source src={a.url} type="audio/mpeg" />
                     </audio>
                   </div>
                 )}
                 {doc.questions.map((q: any) => (
-                  <div class="form-group" style="margin-top:1rem;">
+                  <div class="form-group" style="margin-top:var(--space-4);">
                     <label>
                       <strong>{q.id}</strong> ({q.points} pt{q.points > 1 ? 's' : ''}) {q.text}
                     </label>
@@ -147,9 +148,10 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
         </div>
       </form>
 
-      <form method="post" action={`/exams/${examId}/listening/submit?attempt=${attempt.id}`}>
+      <form method="post" action={`/exams/${examId}/listening/submit?attempt=${attempt.id}`} class="exam-actions">
         <button type="submit" class="btn btn-success">Submit for Marking</button>
       </form>
+      </div>
     </Layout>
   );
 });

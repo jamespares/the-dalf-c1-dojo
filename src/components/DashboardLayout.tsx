@@ -23,7 +23,7 @@ export function DashboardLayout({ children, title = 'Dashboard', active, user }:
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{title} — The DALF Dojo</title>
         <link rel="icon" type="image/png" href="/logo.png" />
-        <link rel="stylesheet" href="/static/style.css" />
+        <link rel="stylesheet" href="/static/style.css?v=10" />
       </head>
       <body>
         <div class="dashboard-shell">
@@ -54,9 +54,9 @@ export function DashboardLayout({ children, title = 'Dashboard', active, user }:
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
               </button>
-              <button id="sign-out" class="btn btn-secondary btn-sm" style="width:100%;">
+              <button id="sign-out" class="btn btn-secondary btn-sm" style="width:100%;" aria-label="Sign out">
                 <LogOut size={16} />
-                <span>Sign out</span>
+                <span class="sidebar-signout-label">Sign out</span>
               </button>
               <script type="module" dangerouslySetInnerHTML={{
                 __html: `

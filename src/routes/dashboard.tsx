@@ -89,11 +89,11 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
       <div class="card" style="border-left:4px solid var(--accent);">
         <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start;justify-content:space-between;">
           <div style="flex:1;min-width:220px;">
-            <h2 style="margin:0 0 0.5rem;display:flex;align-items:center;gap:0.5rem;">
+            <h2 style="margin:0 0 var(--space-3);display:flex;align-items:center;gap:var(--space-3);">
               <Target size={22} style={{ color: 'var(--accent)' }} />
               Pass readiness
             </h2>
-            <p style="color:var(--muted);margin:0 0 0.75rem;font-size:0.95rem;">
+            <p style="color:var(--muted);margin:0 0 var(--space-3);font-size:0.95rem;line-height:1.55;">
               Likelihood of passing based on your recent drills (last 6 attempts per section) — not a guarantee.
             </p>
             <p style="margin:0;font-size:0.95rem;">{readiness.explanation}</p>
@@ -127,15 +127,15 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
 
       {/* How to use */}
       <div class="card">
-        <h2 style="margin-top:0;display:flex;align-items:center;gap:0.5rem;">
+        <h2 style="margin-top:0;display:flex;align-items:center;gap:var(--space-3);">
           <HelpCircle size={22} style={{ color: 'var(--accent)' }} />
           How to use this tool
         </h2>
         <p style="color:var(--muted);margin-top:0;">
           Free DALF C1 past-paper drilling for listening (CO), reading (CE), and writing (PE), plus optional oral practice (PO) with AI marking — not a live examiner session.
         </p>
-        <div style="display:grid;gap:0.75rem;margin:1rem 0;">
-          <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+        <div style="display:grid;gap:var(--space-4);margin:var(--space-5) 0;">
+          <div style="display:flex;gap:var(--space-3);align-items:flex-start;">
             <ListOrdered size={18} style={{ color: 'var(--accent)', flexShrink: '0', marginTop: '2px' }} />
             <div>
               <strong>Scoring:</strong> each section /25. Official pass needs ≥50/100 overall and ≥5/25 per section (eliminatory).
@@ -159,14 +159,14 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
       {/* Section averages */}
       <div class="card">
         <h2 style="margin-top:0;">Section averages</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.75rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-4);">
           {readiness.sections.map((s) => {
             const Icon = SECTION_ICONS[s.section];
             const avg = s.average != null ? s.average.toFixed(1) : null;
             const pass = s.average != null && s.average >= 5;
             return (
-              <div style="border:1px solid var(--base-border);border-radius:var(--radius-lg);padding:1rem;background:white;">
-                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+              <div style="border:1px solid var(--base-border);border-radius:var(--radius-lg);padding:var(--space-4);background:white;">
+                <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3);">
                   <Icon size={18} style={{ color: 'var(--accent)' }} />
                   <strong>{formatSection(s.section)}</strong>
                 </div>
@@ -175,7 +175,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
                 ) : (
                   <span style="color:var(--muted);">No attempts</span>
                 )}
-                <p style="margin:0.5rem 0 0;color:var(--muted);font-size:0.8rem;">
+                <p style="margin:var(--space-3) 0 0;color:var(--muted);font-size:0.8rem;">
                   {s.count} recent attempt{s.count === 1 ? '' : 's'}
                 </p>
               </div>
@@ -192,6 +192,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
             No attempts yet. <a href="/exams">Start a practice paper</a>.
           </p>
         ) : (
+          <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
@@ -256,11 +257,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
                     </td>
                     <td>
                       {actionLink ? (
-                        <a
-                          href={actionLink}
-                          class="btn btn-outline"
-                          style="padding:0.35rem 0.75rem;font-size:0.85rem;"
-                        >
+                        <a href={actionLink} class="btn btn-outline btn-sm">
                           {actionLabel}
                         </a>
                       ) : (
@@ -272,6 +269,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

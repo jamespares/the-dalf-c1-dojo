@@ -41,18 +41,19 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
   return c.html(
     <Layout title={`Writing Production — DALF C1`}>
       <Navbar user={user} />
-      <h1>Writing Production — {exam.title}</h1>
-      <p style="color:var(--muted);">Recommended time: 2h30</p>
+      <div class="container">
+      <h1>Writing Production — {exam.title.replace(/^\[static:[^\]]+\]\s*/, '').replace(/^\[static\]\s*/, '')}</h1>
+      <p style="color:var(--muted);margin-bottom:var(--space-6);">Recommended time: 2h30</p>
 
       <div class="card">
         <h2>Dossier</h2>
         {content.writing.dossier.map((doc: any, idx: number) => (
-          <div style="margin-bottom:1.5rem;">
+          <div class="dossier-doc">
             <h3>Document {idx + 1}: {doc.title}</h3>
-            <div style="white-space:pre-wrap;font-size:1rem;line-height:1.6;">{doc.text}</div>
+            <div class="reading-passage">{doc.text}</div>
           </div>
         ))}
-        <div style="margin-top:1rem;padding:1rem;background:#f1f3f5;border-radius:var(--radius);">
+        <div style="margin-top:var(--space-5);padding:var(--space-5);background:var(--base-bg);border-radius:var(--radius-lg);border:1px solid var(--base-border);line-height:1.6;">
           <strong>Problématique:</strong> {content.writing.problematique}
         </div>
       </div>
@@ -62,6 +63,7 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
           <h2>Part 1 — Synthèse (220-240 words)</h2>
           <p style="color:var(--muted);">{content.writing.synthesisPrompt}</p>
           <textarea
+            class="essay-area"
             name="q_synthese"
             id="synthese"
             oninput="document.getElementById('synCount').textContent = this.value.trim().split(/\\s+/).filter(Boolean).length + ' words'"
@@ -75,6 +77,7 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
           <h2>Part 2 — Essai argumenté (250+ words)</h2>
           <p style="color:var(--muted);">{content.writing.essayPrompt}</p>
           <textarea
+            class="essay-area"
             name="q_essai"
             id="essai"
             oninput="document.getElementById('essCount').textContent = this.value.trim().split(/\\s+/).filter(Boolean).length + ' words'"
@@ -87,9 +90,10 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
         <button type="submit" class="btn btn-secondary">Save</button>
       </form>
 
-      <form method="post" action={`/exams/${examId}/writing/submit?attempt=${attempt.id}`} style="margin-top:1rem;">
+      <form method="post" action={`/exams/${examId}/writing/submit?attempt=${attempt.id}`} class="exam-actions">
         <button type="submit" class="btn btn-success">Submit for Marking</button>
       </form>
+      </div>
     </Layout>
   );
 });

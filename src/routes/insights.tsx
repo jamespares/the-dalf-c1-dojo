@@ -92,11 +92,11 @@ insights.get('/insights', authMiddleware(), async (c) => {
   return c.html(
     <DashboardLayout title="Insights" active="insights" user={user}>
       <div class="card" style="border-left: 4px solid var(--accent);">
-        <h2 style="margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
+        <h2 style="margin-top: 0; display: flex; align-items: center; gap: var(--space-3);">
           <Target size={20} style={{ color: 'var(--accent)' }} />
           Pass readiness
         </h2>
-        <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:center;justify-content:space-between;">
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-5);align-items:center;justify-content:space-between;">
           <p style="margin:0;flex:1;min-width:200px;">{readiness.explanation}</p>
           <div style="text-align:center;">
             <div style="font-size:2.25rem;font-weight:700;color:var(--accent);">{readiness.readinessPct}%</div>
@@ -107,7 +107,7 @@ insights.get('/insights', authMiddleware(), async (c) => {
 
       {/* AI Insights card */}
       <div class="card" style="border-left: 4px solid var(--accent);">
-        <h2 style="margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
+        <h2 style="margin-top: 0; display: flex; align-items: center; gap: var(--space-3);">
           <Sparkles size={20} style={{ color: 'var(--accent)' }} />
           AI-Powered Insights
         </h2>

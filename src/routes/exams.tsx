@@ -92,15 +92,15 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
           <div class="card">
             <h3 style="margin-top:0;">{displayExamTitle(exam.title)}</h3>
             <p style="color:var(--muted);margin-bottom:var(--space-4);">Theme: {exam.theme}</p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-4);">
               {['CO', 'CE', 'PE', 'PO'].map((section) => {
                 const key = `${exam.id}-${section}`;
                 const attempt = attemptMap.get(key);
                 const cfg = sectionConfig[section];
                 const SectionIcon = cfg.icon;
                 return (
-                  <div style="border:1px solid var(--base-border);border-radius:var(--radius-lg);padding:0.85rem 1rem;background:white;display:flex;flex-direction:column;gap:0.5rem;">
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                  <div style="border:1px solid var(--base-border);border-radius:var(--radius-lg);padding:var(--space-4);background:white;display:flex;flex-direction:column;gap:var(--space-3);">
+                    <div style="display:flex;align-items:center;gap:var(--space-3);">
                       <SectionIcon size={18} style={{ color: 'var(--accent)' }} />
                       <strong>{cfg.label}</strong>
                       <span style="color:var(--muted);font-size:0.8rem;">{cfg.name}</span>

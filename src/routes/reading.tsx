@@ -41,19 +41,20 @@ reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
   return c.html(
     <Layout title={`Reading Comprehension — DALF C1`}>
       <Navbar user={user} />
-      <h1>Reading Comprehension — {exam.title}</h1>
-      <p style="color:var(--muted);">Recommended time: 50 minutes</p>
+      <div class="container">
+      <h1>Reading Comprehension — {exam.title.replace(/^\[static:[^\]]+\]\s*/, '').replace(/^\[static\]\s*/, '')}</h1>
+      <p style="color:var(--muted);margin-bottom:var(--space-6);">Recommended time: 50 minutes</p>
 
       <div class="card">
         <h2>Text</h2>
-        <div style="white-space:pre-wrap;font-size:1.05rem;line-height:1.7;">{content.reading.text}</div>
+        <div class="reading-passage">{content.reading.text}</div>
       </div>
 
       <div class="card">
         <h2>Questions</h2>
         <form method="post" action={`/exams/${examId}/reading/save?attempt=${attempt.id}`}>
           {content.reading.questions.map((q: any) => (
-            <div class="form-group" style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
+            <div class="form-group" style="margin-top:var(--space-5);border-top:1px solid var(--base-border);padding-top:var(--space-5);">
               <label>
                 <strong>{q.id}</strong> ({q.points} pt{q.points > 1 ? 's' : ''}) {q.text}
               </label>
@@ -85,9 +86,10 @@ reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
         </form>
       </div>
 
-      <form method="post" action={`/exams/${examId}/reading/submit?attempt=${attempt.id}`}>
+      <form method="post" action={`/exams/${examId}/reading/submit?attempt=${attempt.id}`} class="exam-actions">
         <button type="submit" class="btn btn-success">Submit for Marking</button>
       </form>
+      </div>
     </Layout>
   );
 });

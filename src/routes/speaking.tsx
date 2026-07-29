@@ -49,11 +49,11 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
     <Layout title={`Oral Practice — DALF C1`}>
       <Navbar user={user} />
       <div class="container">
-        <h1 style="display:flex;align-items:center;gap:0.5rem;">
+        <h1 style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3);">
           <Mic size={28} style={{ color: 'var(--accent)' }} />
-          Oral Practice — {exam.title.replace(/^\[static\]\s*/, '')}
+          Oral Practice — {exam.title.replace(/^\[static:[^\]]+\]\s*/, '').replace(/^\[static\]\s*/, '')}
         </h1>
-        <p style="color:var(--muted);">
+        <p style="color:var(--muted);margin-bottom:var(--space-6);line-height:1.6;">
           Self-study rehearsal: prepare an exposé, then record spoken answers to on-screen examiner questions.
           This is <strong>not</strong> a live examiner session.
         </p>
@@ -61,30 +61,30 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
         <div class="card">
           <h2>Dossier</h2>
           {content.speaking.dossier.map((doc: any, idx: number) => (
-            <div style="margin-bottom:1.5rem;">
+            <div class="dossier-doc">
               <h3>Document {idx + 1}: {doc.title}</h3>
-              <div style="white-space:pre-wrap;font-size:1rem;line-height:1.6;">{doc.text}</div>
+              <div class="reading-passage">{doc.text}</div>
             </div>
           ))}
-          <div style="margin-top:1rem;padding:1rem;background:#f1f3f5;border-radius:var(--radius-lg);">
+          <div style="margin-top:var(--space-5);padding:var(--space-5);background:var(--base-bg);border-radius:var(--radius-lg);border:1px solid var(--base-border);line-height:1.65;">
             <strong>Instructions:</strong>
-            <div style="white-space:pre-wrap;">{content.speaking.instructions}</div>
+            <div class="reading-passage" style="margin-top:var(--space-3);">{content.speaking.instructions}</div>
           </div>
         </div>
 
         <div class="card">
           <h2>1. Record your exposé</h2>
-          <p>Record your 8–10 minute exposé. You can stop and re-record if needed.</p>
+          <p style="line-height:1.6;">Record your 8–10 minute exposé. You can stop and re-record if needed.</p>
 
-          <div id="recorder-expose" style="text-align:center;padding:1.5rem;" data-question-id="speaking" data-upload-url={`/exams/${examId}/speaking/upload?attempt=${attempt.id}&qid=speaking`}>
-            <button type="button" class="btn btn-danger recording-btn record-toggle" style="display:inline-flex;align-items:center;gap:0.5rem;">
+          <div id="recorder-expose" style="text-align:center;padding:var(--space-6);" data-question-id="speaking" data-upload-url={`/exams/${examId}/speaking/upload?attempt=${attempt.id}&qid=speaking`}>
+            <button type="button" class="btn btn-danger recording-btn record-toggle">
               <span class="icon-start"><CirclePlay size={20} /></span>
               <span class="icon-stop" style="display:none;"><SquareStop size={20} /></span>
               <span class="record-label">Start Recording</span>
             </button>
-            <div class="record-status" style="margin-top:1rem;color:var(--muted);"></div>
-            <div class="record-timer timer" style="margin-top:0.5rem;">00:00</div>
-            <div class="record-error hidden alert alert-danger" style="margin-top:1rem;"></div>
+            <div class="record-status" style="margin-top:var(--space-4);color:var(--muted);"></div>
+            <div class="record-timer timer" style="margin-top:var(--space-2);">00:00</div>
+            <div class="record-error hidden alert alert-danger" style="margin-top:var(--space-4);"></div>
           </div>
 
           {hasExpose && (
@@ -105,26 +105,26 @@ speaking.get('/exams/:id/speaking', authMiddleware(), async (c) => {
               const qid = `speaking-q${i}`;
               const ans = answerByQ.get(qid);
               return (
-                <div style="border-top:1px solid var(--base-border);padding-top:1.25rem;margin-top:1.25rem;">
+                <div style="border-top:1px solid var(--base-border);padding-top:var(--space-5);margin-top:var(--space-5);">
                   <h3 style="margin-top:0;">Question {i + 1}</h3>
-                  <p style="font-size:1.05rem;">{q}</p>
+                  <p style="font-size:1.05rem;line-height:1.6;">{q}</p>
                   <div
                     class="recorder-block"
-                    style="text-align:center;padding:1rem;"
+                    style="text-align:center;padding:var(--space-5);"
                     data-question-id={qid}
                     data-upload-url={`/exams/${examId}/speaking/upload?attempt=${attempt.id}&qid=${qid}`}
                   >
-                    <button type="button" class="btn btn-danger recording-btn record-toggle" style="display:inline-flex;align-items:center;gap:0.5rem;">
+                    <button type="button" class="btn btn-danger recording-btn record-toggle">
                       <span class="icon-start"><CirclePlay size={18} /></span>
                       <span class="icon-stop" style="display:none;"><SquareStop size={18} /></span>
                       <span class="record-label">{ans?.audioKey ? 'Re-record' : 'Record answer'}</span>
                     </button>
-                    <div class="record-status" style="margin-top:0.75rem;color:var(--muted);"></div>
-                    <div class="record-timer timer" style="margin-top:0.35rem;">00:00</div>
-                    <div class="record-error hidden alert alert-danger" style="margin-top:0.75rem;"></div>
+                    <div class="record-status" style="margin-top:var(--space-3);color:var(--muted);"></div>
+                    <div class="record-timer timer" style="margin-top:var(--space-2);">00:00</div>
+                    <div class="record-error hidden alert alert-danger" style="margin-top:var(--space-3);"></div>
                   </div>
                   {ans?.audioKey && (
-                    <audio controls src={`/exams/${examId}/audio/${encodeURIComponent(ans.audioKey)}`} style="margin-top:0.5rem;" />
+                    <audio controls src={`/exams/${examId}/audio/${encodeURIComponent(ans.audioKey)}`} style="margin-top:var(--space-3);" />
                   )}
                 </div>
               );

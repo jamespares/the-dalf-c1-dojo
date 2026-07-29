@@ -65,15 +65,13 @@ landing.get('/', (c) => {
                   <select name="theme" id="topic-select" required>
                     <option value="" disabled selected>Select a topic...</option>
                     <option value="Environment and sustainable development">Environment & Sustainable Development</option>
-                    <option value="Urbanism and city transformation">Urbanism & City Transformation</option>
-                    <option value="Culture and arts">Culture & Arts</option>
-                    <option value="Social issues">Social Issues</option>
-                    <option value="Science and technology">Science & Technology</option>
-                    <option value="Economics and society">Economics & Society</option>
-                    <option value="Family and education">Family & Education</option>
-                    <option value="Work and wellbeing">Work & Wellbeing</option>
                     <option value="Digital society">Digital Society</option>
+                    <option value="Culture and arts">Culture & Arts</option>
+                    <option value="Work and wellbeing">Work & Wellbeing</option>
                     <option value="Consumption and ethics">Consumption & Ethics</option>
+                    <option value="Family and education">Family & Education</option>
+                    <option value="Urbanism and city transformation">Urbanism & City Transformation</option>
+                    <option value="Science and technology">Science & Technology</option>
                   </select>
                   <button type="submit" class="form-submit-btn">Start Practicing →</button>
                 </div>
