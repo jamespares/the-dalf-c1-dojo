@@ -95,7 +95,7 @@ landing.get('/', (c) => {
               <div class="stat-item reveal">
                 <span class="stat-number">3+1</span>
                 <span class="stat-label">Core sections + oral practice</span>
-                <span class="stat-detail">CO · CE · PE · optional PO</span>
+                <span class="stat-detail">Listening · Reading · Writing · Oral</span>
               </div>
               <div class="stat-item reveal">
                 <span class="stat-number">/100</span>
@@ -182,7 +182,7 @@ landing.get('/', (c) => {
               <div class="demo-card reveal">
                 <img src="/static/screenshots/demo-listening.png" alt="Listening Comprehension Exercise" class="demo-card-img" />
                 <div class="demo-card-body">
-                  <span class="demo-card-label label-blue">🎧 Compréhension Orale</span>
+                  <span class="demo-card-label label-blue">Listening</span>
                   <h3>Listening Comprehension</h3>
                   <p>Two AI-generated audio documents per paper — a ~6-minute long interview heard twice and short radio extracts heard once — with MCQ, true/false, and open-ended questions worth up to 25 points.</p>
                 </div>
@@ -204,7 +204,7 @@ landing.get('/', (c) => {
                   <div style="position:absolute; bottom:0; left:0; right:0; height:50px; background:linear-gradient(to bottom, rgba(249,250,251,0), #f9fafb); border-bottom: 1px solid var(--border);"></div>
                 </div>
                 <div class="demo-card-body">
-                  <span class="demo-card-label label-red">📖 Compréhension Écrite</span>
+                  <span class="demo-card-label label-red">Reading</span>
                   <h3>Reading Comprehension</h3>
                   <p>1,500–2,000 word texts at C1 register. Practice global thesis identification, implicit meaning analysis, and precise reformulation with accurate AI grading.</p>
                 </div>
@@ -213,7 +213,7 @@ landing.get('/', (c) => {
               <div class="demo-card reveal">
                 <img src="/static/screenshots/demo-writing.png" alt="Written Production Exercise" class="demo-card-img" />
                 <div class="demo-card-body">
-                  <span class="demo-card-label label-blue">✍️ Production Écrite</span>
+                  <span class="demo-card-label label-blue">Writing</span>
                   <h3>Written Production</h3>
                   <p>Synthèse (220–240 words, 12.5 pts) and essai argumenté (250+ words, 12.5 pts). Marked on 6 criteria: length compliance, objectivity, task realisation, coherence, lexique, and morphosyntaxe.</p>
                 </div>
@@ -222,8 +222,8 @@ landing.get('/', (c) => {
               <div class="demo-card reveal">
                 <img src="/static/screenshots/demo-speaking.png" alt="Oral Production Exercise" class="demo-card-img" />
                 <div class="demo-card-body">
-                  <span class="demo-card-label label-red">🎤 Production Orale</span>
-                  <h3>Oral Production</h3>
+                  <span class="demo-card-label label-red">Oral practice</span>
+                  <h3>Oral Practice</h3>
                   <p>Record your 10-minute exposé and 20-minute discussion simulation. AI feedback maps to the 5-criterion oral grid: task (exposé), task (entretien), lexique, morphosyntaxe, and phonological mastery.</p>
                 </div>
               </div>
@@ -248,7 +248,7 @@ landing.get('/', (c) => {
               <div class="feature-card reveal">
                 <div class="feature-icon icon-blue"><Headphones size={28} /></div>
                 <div class="feature-text">
-                  <h3>Compréhension Orale · /25</h3>
+                  <h3>Listening · /25</h3>
                   <p>Curated listening papers with long and short documents. Question types: MCQ, true/false, and open-ended — matching the official exam protocol. Practice transcripts included alongside audio.</p>
                 </div>
               </div>
@@ -256,7 +256,7 @@ landing.get('/', (c) => {
               <div class="feature-card reveal">
                 <div class="feature-icon icon-red"><BookOpen size={28} /></div>
                 <div class="feature-text">
-                  <h3>Compréhension Écrite · /25</h3>
+                  <h3>Reading · /25</h3>
                   <p>C1-register reading texts. Questions test global thesis identification, implicit meaning, argumentative structure analysis, and precise reformulation — scored to /25.</p>
                 </div>
               </div>
@@ -264,7 +264,7 @@ landing.get('/', (c) => {
               <div class="feature-card reveal">
                 <div class="feature-icon icon-blue"><PenTool size={28} /></div>
                 <div class="feature-text">
-                  <h3>Production Écrite · /25</h3>
+                  <h3>Writing · /25</h3>
                   <p>Synthèse and essai argumenté graded on official criteria: length, objectivity, task, coherence, lexique, morphosyntaxe, and sociolinguistic register.</p>
                 </div>
               </div>
@@ -349,7 +349,7 @@ landing.get('/', (c) => {
               </div>
               <div class="faq-item reveal">
                 <h3>What exam format do the papers follow?</h3>
-                <p>The post-2020 unified format — no domain specialisation. Papers cover listening (CO), reading (CE), writing (PE), and optional oral practice (PO), aligned with official timing and scoring.</p>
+                <p>The post-2020 unified format — no domain specialisation. Papers cover listening, reading, writing, and optional oral practice, aligned with official timing and scoring.</p>
               </div>
             </div>
           </div>

@@ -132,7 +132,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
           How to use this tool
         </h2>
         <p style="color:var(--muted);margin-top:0;">
-          Free DALF C1 past-paper drilling for listening (CO), reading (CE), and writing (PE), plus optional oral practice (PO) with AI marking — not a live examiner session.
+          Free DALF C1 past-paper drilling for listening, reading, and writing, plus optional oral practice with AI marking — not a live examiner session.
         </p>
         <div style="display:grid;gap:var(--space-4);margin:var(--space-5) 0;">
           <div style="display:flex;gap:var(--space-3);align-items:flex-start;">

@@ -57,11 +57,11 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
 
   const readiness = computePassReadiness(userAttempts);
 
-  const sectionConfig: Record<string, { label: string; icon: any; name: string }> = {
-    CO: { label: 'CO', icon: Headphones, name: 'Listening' },
-    CE: { label: 'CE', icon: BookOpen, name: 'Reading' },
-    PE: { label: 'PE', icon: PenTool, name: 'Writing' },
-    PO: { label: 'PO', icon: Mic, name: 'Oral practice' },
+  const sectionConfig: Record<string, { label: string; icon: any }> = {
+    CO: { label: 'Listening', icon: Headphones },
+    CE: { label: 'Reading', icon: BookOpen },
+    PE: { label: 'Writing', icon: PenTool },
+    PO: { label: 'Oral practice', icon: Mic },
   };
 
   return c.html(
@@ -103,7 +103,6 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
                     <div style="display:flex;align-items:center;gap:var(--space-3);">
                       <SectionIcon size={18} style={{ color: 'var(--accent)' }} />
                       <strong>{cfg.label}</strong>
-                      <span style="color:var(--muted);font-size:0.8rem;">{cfg.name}</span>
                     </div>
                     {section === 'PO' && (
                       <span style="font-size:0.75rem;color:var(--muted);">Self-study rehearsal — not a live examiner</span>

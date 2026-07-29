@@ -13,7 +13,7 @@ export const SECTION_MAP: Record<string, string> = {
   CO: 'Listening',
   CE: 'Reading',
   PE: 'Writing',
-  PO: 'Speaking',
+  PO: 'Oral practice',
 };
 
 export function formatSection(code: string) {
