@@ -10,7 +10,7 @@ interface DashboardLayoutProps {
 
 const navItems = [
   { key: 'home', label: 'Home', href: '/dashboard', icon: Home },
-  { key: 'exams', label: 'Exams', href: '/exams', icon: FileText },
+  { key: 'exams', label: 'Exam Practice', href: '/exams', icon: FileText },
   { key: 'insights', label: 'Insights', href: '/insights', icon: BarChart3 },
   { key: 'settings', label: 'Settings', href: '/settings', icon: Settings },
 ];

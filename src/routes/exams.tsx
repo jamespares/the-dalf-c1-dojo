@@ -65,7 +65,7 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
   };
 
   return c.html(
-    <DashboardLayout title="Exams" active="exams" user={user}>
+    <DashboardLayout title="Exam Practice" active="exams" user={user}>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:var(--space-6);">
         <div>
           <h2 style="margin:0 0 0.35rem;">Practice Papers</h2>

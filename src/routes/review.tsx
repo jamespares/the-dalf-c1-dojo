@@ -234,7 +234,7 @@ review.get('/review/:attemptId', authMiddleware(), async (c) => {
         )}
 
         <div class="card" style="display:flex;gap:var(--space-4);flex-wrap:wrap;">
-          <a href="/exams" class="btn btn-primary">Back to Exams</a>
+          <a href="/exams" class="btn btn-primary">Back to Exam Practice</a>
           <a href="/dashboard" class="btn btn-secondary">Dashboard</a>
         </div>
       </div>
