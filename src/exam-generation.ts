@@ -160,19 +160,18 @@ export async function generateAndStoreAudio(
   );
   audioKeys.listeningLong = longKeys.length === 1 ? longKeys[0] : longKeys;
 
-  const shortTexts = content.listening.shortDocuments
-    .map((d: any) => d.transcript)
-    .join('\n\n---\n\n');
-  const shortChunks = splitTextForTTS(shortTexts);
-  const shortBuffers = await Promise.all(
-    shortChunks.map((chunk) => generateTTS(c, chunk, 'alloy', { timeoutMs: 30000 }))
-  );
-  const shortKeys = await Promise.all(
-    shortBuffers.map((buf, i) =>
-      uploadAudio(c, audioKey(examId, 'listening', `short-${i + 1}.mp3`), buf)
-    )
-  );
-  audioKeys.listeningShort = shortKeys.length === 1 ? shortKeys[0] : shortKeys;
+  const shortKeys: string[] = [];
+  for (let i = 0; i < content.listening.shortDocuments.length; i++) {
+    const doc = content.listening.shortDocuments[i];
+    const chunks = splitTextForTTS(doc.transcript);
+    if (chunks.length > 1) {
+      console.warn(`Short document ${i + 1} exceeded TTS chunk size; using first chunk.`);
+    }
+    const buf = await generateTTS(c, chunks[0], 'alloy', { timeoutMs: 30000 });
+    const key = await uploadAudio(c, audioKey(examId, 'listening', `short-${i + 1}.mp3`), buf);
+    shortKeys.push(key);
+  }
+  audioKeys.listeningShort = shortKeys;
 
   return audioKeys;
 }

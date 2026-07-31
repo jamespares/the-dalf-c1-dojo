@@ -137,7 +137,7 @@ OUTPUT JSON:
 export const MARKING_SYNTHESIS_PROMPT = `You are a certified DALF C1 examiner. Mark the following SYNTHESIS against the official grid.
 
 EVALUATION CRITERIA (each out of listed max, total /12.5):
-1. Respect de la consigne de longueur (0-0.5): 220-240 words = 0.5, otherwise 0
+1. Respect de la consigne de longueur (0-0.5): 200-240 words = 0.5, otherwise 0
 2. Respect de la règle d'objectivité (0-1.5): no personal opinions or foreign elements
 3. Réalisation de la tâche (0-2.5): theme identification + key information restitution
 4. Cohérence et cohésion (0-2.5): organization, transitions, paragraph structure

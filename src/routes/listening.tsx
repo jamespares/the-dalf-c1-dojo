@@ -136,6 +136,13 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
                           {opt}
                         </label>
                       ))
+                    ) : q.type === 'tf' ? (
+                      <select name={`q_${q.id}`}>
+                        <option value="">Select...</option>
+                        <option value="Vrai" selected={answerMap.get(q.id) === 'Vrai'}>Vrai</option>
+                        <option value="Faux" selected={answerMap.get(q.id) === 'Faux'}>Faux</option>
+                        <option value="Non mentionné" selected={answerMap.get(q.id) === 'Non mentionné'}>Non mentionné</option>
+                      </select>
                     ) : (
                       <textarea name={`q_${q.id}`}>{answerMap.get(q.id) || ''}</textarea>
                     )}

@@ -16,6 +16,54 @@ import { Navbar } from '../components/Navbar';
 
 const marking = new Hono<{ Bindings: CloudflareBindings }>();
 
+function clamp(num: any, min: number, max: number): number {
+  const n = typeof num === 'number' && Number.isFinite(num) ? num : 0;
+  return Math.max(min, Math.min(max, n));
+}
+
+function clampSyntheseScores(s: any) {
+  const length = clamp(s?.length, 0, 0.5);
+  const objectivity = clamp(s?.objectivity, 0, 1.5);
+  const taskCompletion = clamp(s?.taskCompletion, 0, 2.5);
+  const coherence = clamp(s?.coherence, 0, 2.5);
+  const lexique = clamp(s?.lexique, 0, 3);
+  const morphosyntaxe = clamp(s?.morphosyntaxe, 0, 2.5);
+  const total = length + objectivity + taskCompletion + coherence + lexique + morphosyntaxe;
+  return { length, objectivity, taskCompletion, coherence, lexique, morphosyntaxe, total: Math.round(total * 10) / 10 };
+}
+
+function clampEssaiScores(s: any) {
+  const taskCompletion = clamp(s?.taskCompletion, 0, 2.5);
+  const coherence = clamp(s?.coherence, 0, 2.5);
+  const sociolinguistic = clamp(s?.sociolinguistic, 0, 2.5);
+  const lexique = clamp(s?.lexique, 0, 2.5);
+  const morphosyntaxe = clamp(s?.morphosyntaxe, 0, 2.5);
+  const total = taskCompletion + coherence + sociolinguistic + lexique + morphosyntaxe;
+  return { taskCompletion, coherence, sociolinguistic, lexique, morphosyntaxe, total: Math.round(total * 10) / 10 };
+}
+
+function clampSpeakingScores(s: any) {
+  const expose = clamp(s?.expose, 0, 5);
+  const entretien = clamp(s?.entretien, 0, 5);
+  const lexique = clamp(s?.lexique, 0, 5);
+  const morphosyntaxe = clamp(s?.morphosyntaxe, 0, 5);
+  const phonologie = clamp(s?.phonologie, 0, 5);
+  const total = expose + entretien + lexique + morphosyntaxe + phonologie;
+  return { expose, entretien, lexique, morphosyntaxe, phonologie, total: Math.round(total * 10) / 10 };
+}
+
+function normalizeErrorTags(tags: any) {
+  const validTypes = new Set(['grammar', 'vocabulary', 'pronunciation', 'register', 'structure']);
+  return (Array.isArray(tags) ? tags : [])
+    .filter((t: any) => t && typeof t === 'object')
+    .map((t: any) => ({
+      type: validTypes.has(t.type) ? t.type : 'grammar',
+      original: String(t.original ?? ''),
+      correction: String(t.correction ?? ''),
+      explanation: String(t.explanation ?? ''),
+    }));
+}
+
 async function runMarking(c: any, attemptId: number, userId: number) {
   const db = getDb(c.env.DB);
   const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
@@ -52,15 +100,26 @@ async function runMarking(c: any, attemptId: number, userId: number) {
         ).map((ak: any) => [ak.questionId, ak])
       );
 
+      const sourceTextMap = isListening
+        ? new Map<string, string>([
+            ...content.listening.longDocument.questions.map((q: any) => [
+              q.id,
+              content.listening.longDocument.transcript,
+            ]),
+            ...content.listening.shortDocuments.flatMap((d: any) =>
+              d.questions.map((q: any) => [q.id, d.transcript])
+            ),
+          ])
+        : new Map<string, string>(
+            content.reading.questions.map((q: any) => [q.id, content.reading.text])
+          );
+
       for (const ans of userAnswers) {
         const q = allQuestions.find((qq: any) => qq.id === ans.questionId);
         const ak = answerKeyMap.get(ans.questionId);
         if (!q || !ak) continue;
 
-        const sourceText =
-          attempt.section === 'CO'
-            ? content.listening.longDocument.transcript
-            : content.reading.text;
+        const sourceText = sourceTextMap.get(ans.questionId) ?? '';
 
         const resultJson = await chatCompletion(
           c,
@@ -74,25 +133,25 @@ async function runMarking(c: any, attemptId: number, userId: number) {
           { temperature: 0.3, max_tokens: 800, jsonMode: true, timeoutMs: 30000 }
         );
 
-        const result = JSON.parse(extractJson(resultJson));
-        totalScore += result.score;
+        const rawResult = JSON.parse(extractJson(resultJson));
+        const score = clamp(rawResult.score, 0, ak.points);
+        const feedbackText = typeof rawResult.feedback === 'string' ? rawResult.feedback : '';
+        totalScore += score;
 
         await db
           .update(answers)
-          .set({ aiScore: result.score, aiFeedback: result.feedback })
+          .set({ aiScore: score, aiFeedback: feedbackText })
           .where(eq(answers.id, ans.id));
 
-        if (result.errorTags?.length) {
-          for (const tag of result.errorTags) {
-            await db.insert(errorLogs).values({
-              userId,
-              attemptId,
-              errorType: tag.type,
-              originalText: tag.original,
-              correction: tag.correction,
-              explanation: tag.explanation,
-            });
-          }
+        for (const tag of normalizeErrorTags(rawResult.errorTags)) {
+          await db.insert(errorLogs).values({
+            userId,
+            attemptId,
+            errorType: tag.type,
+            originalText: tag.original,
+            correction: tag.correction,
+            explanation: tag.explanation,
+          });
         }
       }
 
@@ -125,14 +184,23 @@ async function runMarking(c: any, attemptId: number, userId: number) {
         { temperature: 0.3, max_tokens: 1500, jsonMode: true, timeoutMs: 45000 }
       );
 
-      const synResult = JSON.parse(extractJson(synResultJson));
-      const essResult = JSON.parse(extractJson(essResultJson));
+      const synRaw = JSON.parse(extractJson(synResultJson));
+      const essRaw = JSON.parse(extractJson(essResultJson));
 
-      scores = { synthese: synResult.scores, essai: essResult.scores };
-      totalScore = synResult.scores.total + essResult.scores.total;
-      feedback = { synthese: synResult.feedback, essai: essResult.feedback };
+      const synScores = clampSyntheseScores(synRaw.scores);
+      const essScores = clampEssaiScores(essRaw.scores);
 
-      for (const tag of [...(synResult.errorTags || []), ...(essResult.errorTags || [])]) {
+      scores = { synthese: synScores, essai: essScores };
+      totalScore = synScores.total + essScores.total;
+      feedback = {
+        synthese: typeof synRaw.feedback === 'string' ? synRaw.feedback : '',
+        essai: typeof essRaw.feedback === 'string' ? essRaw.feedback : '',
+      };
+
+      for (const tag of normalizeErrorTags([
+        ...(Array.isArray(synRaw.errorTags) ? synRaw.errorTags : []),
+        ...(Array.isArray(essRaw.errorTags) ? essRaw.errorTags : []),
+      ])) {
         await db.insert(errorLogs).values({
           userId,
           attemptId,
@@ -145,8 +213,8 @@ async function runMarking(c: any, attemptId: number, userId: number) {
 
       const synAns = userAnswers.find((a) => a.questionId === 'synthese');
       const essAns = userAnswers.find((a) => a.questionId === 'essai');
-      if (synAns) await db.update(answers).set({ aiScore: synResult.scores.total, aiFeedback: synResult.feedback }).where(eq(answers.id, synAns.id));
-      if (essAns) await db.update(answers).set({ aiScore: essResult.scores.total, aiFeedback: essResult.feedback }).where(eq(answers.id, essAns.id));
+      if (synAns) await db.update(answers).set({ aiScore: synScores.total, aiFeedback: feedback.synthese }).where(eq(answers.id, synAns.id));
+      if (essAns) await db.update(answers).set({ aiScore: essScores.total, aiFeedback: feedback.essai }).where(eq(answers.id, essAns.id));
     } else if (attempt.section === 'PO') {
       const speakingAnswers = userAnswers.filter((a) => a.audioKey && a.questionId.startsWith('speaking'));
       const transcripts: string[] = [];
@@ -186,12 +254,17 @@ async function runMarking(c: any, attemptId: number, userId: number) {
           { temperature: 0.3, max_tokens: 1500, jsonMode: true, timeoutMs: 45000 }
         );
 
-        const result = JSON.parse(extractJson(resultJson));
-        scores = result.scores;
-        totalScore = result.scores.total;
-        feedback = { general: result.feedback, transcription: transcripts.join('\n\n') };
+        const rawResult = JSON.parse(extractJson(resultJson));
+        const speakingScores = clampSpeakingScores(rawResult.scores);
 
-        for (const tag of result.errorTags || []) {
+        scores = speakingScores;
+        totalScore = speakingScores.total;
+        feedback = {
+          general: typeof rawResult.feedback === 'string' ? rawResult.feedback : '',
+          transcription: transcripts.join('\n\n'),
+        };
+
+        for (const tag of normalizeErrorTags(rawResult.errorTags)) {
           await db.insert(errorLogs).values({
             userId,
             attemptId,
@@ -206,7 +279,7 @@ async function runMarking(c: any, attemptId: number, userId: number) {
         if (exposeAns) {
           await db
             .update(answers)
-            .set({ aiScore: result.scores.total, aiFeedback: result.feedback })
+            .set({ aiScore: speakingScores.total, aiFeedback: feedback.general })
             .where(eq(answers.id, exposeAns.id));
         }
       }
