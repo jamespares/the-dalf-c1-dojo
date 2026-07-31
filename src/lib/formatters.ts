@@ -10,10 +10,10 @@ export function formatStatus(status: string) {
 }
 
 export const SECTION_MAP: Record<string, string> = {
-  CO: 'Listening',
-  CE: 'Reading',
-  PE: 'Writing',
-  PO: 'Oral practice',
+  CO: 'Compréhension orale',
+  CE: 'Compréhension écrite',
+  PE: 'Production écrite',
+  PO: 'Production orale',
 };
 
 export function formatSection(code: string) {

@@ -13,6 +13,7 @@ import review from './routes/review';
 import insights from './routes/insights';
 import settings from './routes/settings';
 import terms from './routes/terms';
+import privacy from './routes/privacy';
 import { createAuth, adminMiddleware } from './auth';
 import { getDb } from './db';
 import { sendEmailViaCloudflare } from './email';
@@ -116,5 +117,6 @@ app.route('/', review);
 app.route('/', insights);
 app.route('/', settings);
 app.route('/', terms);
+app.route('/', privacy);
 
 export default app;

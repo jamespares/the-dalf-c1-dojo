@@ -91,7 +91,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
           <div style="flex:1;min-width:220px;">
             <h2 style="margin:0 0 var(--space-3);display:flex;align-items:center;gap:var(--space-3);">
               <Target size={22} style={{ color: 'var(--accent)' }} />
-              Pass readiness
+              Pass readiness (Préparation)
             </h2>
             <p style="color:var(--muted);margin:0 0 var(--space-3);font-size:0.95rem;line-height:1.55;">
               Likelihood of passing based on your recent drills (last 6 attempts per section) — not a guarantee.
@@ -129,7 +129,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
       <div class="card">
         <h2 style="margin-top:0;display:flex;align-items:center;gap:var(--space-3);">
           <HelpCircle size={22} style={{ color: 'var(--accent)' }} />
-          How to use this tool
+          How to use this tool (Mode d'emploi)
         </h2>
         <p style="color:var(--muted);margin-top:0;">
           Free DALF C1 past-paper drilling for listening, reading, and writing, plus optional oral practice with AI marking — not a live examiner session.
@@ -158,7 +158,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
 
       {/* Section averages */}
       <div class="card">
-        <h2 style="margin-top:0;">Section averages</h2>
+        <h2 style="margin-top:0;">Section averages (Moyennes par épreuve)</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-4);">
           {readiness.sections.map((s) => {
             const Icon = SECTION_ICONS[s.section];
@@ -186,7 +186,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
 
       {/* Recent attempts */}
       <div class="card">
-        <h2 style="margin-top:0;">Recent attempts</h2>
+        <h2 style="margin-top:0;">Recent attempts (Tentatives récentes)</h2>
         {recentAttempts.length === 0 ? (
           <p>
             No attempts yet. <a href="/exams">Start a practice paper</a>.
@@ -275,7 +275,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
 
       <div class="grid-2">
         <div class="card">
-          <h2 style="margin-top:0;">Focus area</h2>
+          <h2 style="margin-top:0;">Focus area (Point à travailler)</h2>
           {focusArea ? (
             <>
               <p style="font-size:1.25rem;font-weight:600;margin:0;">{focusArea}</p>
@@ -288,7 +288,7 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
           )}
         </div>
         <div class="card">
-          <h2 style="margin-top:0;">Continue</h2>
+          <h2 style="margin-top:0;">Continue (Continuer)</h2>
           <p style="color:var(--muted);margin-bottom:var(--space-4);">
             Drill curated papers and build an evidence-based readiness rating.
           </p>
