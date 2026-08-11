@@ -1052,3 +1052,92 @@ textarea.essay-area { min-height: 280px; }
     display: none;
   }
 }
+
+/* ============================================
+   Practice Levels — CEFR stories
+   ============================================ */
+
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: white;
+  background: var(--accent);
+}
+
+.level-badge.level-a1 { background: #16a34a; }
+.level-badge.level-a2 { background: #65a30d; }
+.level-badge.level-b1 { background: #0891b2; }
+.level-badge.level-b2 { background: #2563eb; }
+.level-badge.level-c1 { background: #7c3aed; }
+.level-badge.level-c2 { background: #be123c; }
+
+.practice-instructions {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  background: var(--accent-bg-light);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  color: var(--base-text);
+}
+
+.practice-instructions svg {
+  flex-shrink: 0;
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+.practice-instructions p {
+  margin: 0;
+}
+
+.vocab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+.vocab-card {
+  background: var(--base-bg);
+  border: 1px solid var(--base-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+.vocab-french {
+  font-weight: 600;
+  color: var(--accent-dark);
+  font-size: 1rem;
+  margin-bottom: 0.15rem;
+}
+
+.vocab-english {
+  color: var(--base-text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+}
+
+.vocab-example {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .vocab-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .practice-instructions {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+}

@@ -1,15 +1,16 @@
 import { jsx } from 'hono/jsx';
-import { Home, FileText, BarChart3, Settings, LogOut, Menu } from './Icons';
+import { Home, BookOpen, FileText, BarChart3, Settings, LogOut, Menu } from './Icons';
 
 interface DashboardLayoutProps {
   children: any;
   title?: string;
-  active: 'home' | 'exams' | 'insights' | 'settings';
+  active: 'home' | 'practice' | 'exams' | 'insights' | 'settings';
   user?: { email: string } | null;
 }
 
 const navItems = [
   { key: 'home', label: 'Home', href: '/dashboard', icon: Home },
+  { key: 'practice', label: 'Practice', href: '/practice', icon: BookOpen },
   { key: 'exams', label: 'Exam Practice', href: '/exams', icon: FileText },
   { key: 'insights', label: 'Insights', href: '/insights', icon: BarChart3 },
   { key: 'settings', label: 'Settings', href: '/settings', icon: Settings },
@@ -23,7 +24,7 @@ export function DashboardLayout({ children, title = 'Dashboard', active, user }:
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{title} — The DALF Dojo</title>
         <link rel="icon" type="image/png" href="/logo.png" />
-        <link rel="stylesheet" href="/static/style.css?v=10" />
+        <link rel="stylesheet" href="/static/style.css?v=11" />
       </head>
       <body>
         <div class="dashboard-shell">

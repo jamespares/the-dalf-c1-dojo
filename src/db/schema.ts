@@ -123,3 +123,13 @@ export const usageEvents = sqliteTable('usage_events', {
   metadata: text('metadata', { mode: 'json' }).$defaultFn(() => ({})),
   createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
+
+export const practiceProgress = sqliteTable('practice_progress', {
+  id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull(),
+  level: text('level').notNull(), // A1 | A2 | B1 | B2 | C1 | C2
+  mastered: integer('mastered', { mode: 'boolean' }).notNull().default(false),
+  masteredAt: integer('mastered_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});

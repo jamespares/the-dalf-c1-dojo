@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import landing from './routes/landing';
 import auth from './routes/auth';
 import dashboard from './routes/dashboard';
+import practice from './routes/practice';
 import exams from './routes/exams';
 import admin from './routes/admin';
 import listening from './routes/listening';
@@ -106,6 +107,7 @@ app.route('/', landing);
 // Routes
 app.route('/', auth);
 app.route('/', dashboard);
+app.route('/', practice);
 app.route('/', exams);
 app.route('/', admin);
 app.route('/', listening);

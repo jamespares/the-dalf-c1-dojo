@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import { eq, desc, count } from 'drizzle-orm';
+import { eq, desc, count, and } from 'drizzle-orm';
 import { getDb } from '../db';
-import { attempts, exams, errorLogs } from '../db/schema';
+import { attempts, exams, errorLogs, practiceProgress } from '../db/schema';
 import { authMiddleware, getCurrentUser } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
 import {
@@ -17,6 +17,7 @@ import {
   Target,
   HelpCircle,
   ListOrdered,
+  GraduationCap,
 } from '../components/Icons';
 import { formatStatus, formatSection, formatErrorType } from '../lib/formatters';
 import { computePassReadiness, type SectionCode } from '../lib/pass-readiness';
@@ -65,6 +66,17 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
     .from(errorLogs)
     .where(eq(errorLogs.userId, user.id))
     .groupBy(errorLogs.errorType);
+
+  const practiceRows = await db
+    .select()
+    .from(practiceProgress)
+    .where(and(eq(practiceProgress.userId, user.id), eq(practiceProgress.mastered, true)));
+  const masteredLevels = new Set(practiceRows.map((r) => r.level));
+  const practiceCount = masteredLevels.size;
+  const practiceTotal = 6;
+  const nextPracticeLevel = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].find(
+    (lvl) => !masteredLevels.has(lvl)
+  );
 
   const sortedErrors = errorStats.sort((a, b) => b.count - a.count);
   const topError = sortedErrors[0];
@@ -288,19 +300,30 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
           )}
         </div>
         <div class="card">
-          <h2 style="margin-top:0;">Continue (Continuer)</h2>
+          <h2 style="margin-top:0;display:flex;align-items:center;gap:var(--space-3);">
+            <GraduationCap size={22} style={{ color: 'var(--accent)' }} />
+            Practice levels (Niveaux CECR)
+          </h2>
           <p style="color:var(--muted);margin-bottom:var(--space-4);">
-            Drill curated papers and build an evidence-based readiness rating.
+            Master one story per CEFR level. {practiceCount} of {practiceTotal} mastered.
           </p>
-          <p>
-            <a href="/exams" class="btn btn-primary">
-              <FileText size={18} /> Browse papers
-            </a>
-          </p>
-          <p>
-            <a href="/insights" class="btn btn-outline">
-              <BarChart3 size={18} /> View insights
-            </a>
+          <div style="margin-bottom:var(--space-4);">
+            <div style="background:var(--base-border);border-radius:var(--radius-full);height:8px;overflow:hidden;">
+              <div
+                style={`width:${Math.round((practiceCount / practiceTotal) * 100)}%;background:var(--accent);height:100%;border-radius:var(--radius-full);transition:width 0.3s ease;`}
+              />
+            </div>
+          </div>
+          <p style="margin:0;">
+            {nextPracticeLevel ? (
+              <a href={`/practice/${nextPracticeLevel}`} class="btn btn-primary">
+                <BookOpen size={18} /> Continue {nextPracticeLevel}
+              </a>
+            ) : (
+              <a href="/practice" class="btn btn-primary">
+                <BookOpen size={18} /> View practice
+              </a>
+            )}
           </p>
         </div>
       </div>

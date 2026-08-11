@@ -1,0 +1,473 @@
+export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+
+export interface VocabItem {
+  french: string;
+  english: string;
+  example?: string;
+}
+
+export interface CEFRStory {
+  level: CEFRLevel;
+  title: string;
+  englishTitle: string;
+  story: string;
+  englishSummary: string;
+  vocab: VocabItem[];
+  audioPath: string;
+  estimatedTime: string;
+}
+
+export const CEFR_STORIES: CEFRStory[] = [
+  {
+    level: 'A1',
+    title: 'Une journée à Paris',
+    englishTitle: 'A Day in Paris',
+    story: `Bonjour ! Je m'appelle Marie. J'habite à Paris avec ma famille. Chaque matin, je prends le métro pour aller au travail. J'aime beaucoup marcher dans les petites rues de la ville.
+
+Aujourd'hui, il fait beau. Le soleil brille et les oiseaux chantent. Je vais au marché pour acheter des fruits et des légumes frais. Le vendeur est très sympathique. Il me donne une pomme gratuite.
+
+Après le marché, je rentre à la maison. Je prépare un déjeuner simple : du pain, du fromage et une salade verte. Ma sœur vient manger avec moi. Nous parlons de nos vacances. Nous voulons aller à la mer cet été.
+
+L'après-midi, je lis un livre dans le parc. Un chien joue avec une balle. Les enfants rient et courent. C'est une journée tranquille et heureuse.
+
+Le soir, je regarde la télévision avec mes parents. Nous buvons du thé et nous mangeons un gâteau. Je me couche tôt parce que demain est un nouveau jour.`,
+    englishSummary: 'Marie describes a simple, pleasant day in Paris: taking the metro, visiting a friendly market vendor, sharing lunch with her sister, relaxing in the park, and spending the evening with her parents.',
+    vocab: [
+      { french: `bonjour`, english: 'hello' },
+      { french: `habiter`, english: 'to live', example: "J'habite à Paris." },
+      { french: `prendre`, english: 'to take', example: `Je prends le métro.` },
+      { french: `marcher`, english: 'to walk' },
+      { french: `aujourd\'hui`, english: 'today' },
+      { french: `beau`, english: 'beautiful / nice (weather)' },
+      { french: `soleil`, english: 'sun' },
+      { french: `marché`, english: 'market' },
+      { french: `acheter`, english: 'to buy' },
+      { french: `frais`, english: 'fresh' },
+      { french: `vendeur`, english: 'seller / vendor' },
+      { french: `sympathique`, english: 'nice / friendly' },
+      { french: `gratuit`, english: 'free (no cost)' },
+      { french: `rentrer`, english: 'to go back home' },
+      { french: `préparer`, english: 'to prepare' },
+      { french: `déjeuner`, english: 'lunch' },
+      { french: `pain`, english: 'bread' },
+      { french: `fromage`, english: 'cheese' },
+      { french: `salade`, english: 'salad' },
+      { french: `sœur`, english: 'sister' },
+      { french: `parler`, english: 'to speak / talk' },
+      { french: `vacances`, english: 'holidays / vacation' },
+      { french: `mer`, english: 'sea' },
+      { french: `été`, english: 'summer' },
+      { french: `après-midi`, english: 'afternoon' },
+      { french: `lire`, english: 'to read' },
+      { french: `parc`, english: 'park' },
+      { french: `chien`, english: 'dog' },
+      { french: `jouer`, english: 'to play' },
+      { french: `balle`, english: 'ball' },
+      { french: `enfants`, english: 'children' },
+      { french: `rire`, english: 'to laugh' },
+      { french: `courir`, english: 'to run' },
+      { french: `tranquille`, english: 'calm / peaceful' },
+      { french: `heureux`, english: 'happy' },
+      { french: `soir`, english: 'evening' },
+      { french: `télévision`, english: 'television' },
+      { french: `parents`, english: 'parents' },
+      { french: `boire`, english: 'to drink' },
+      { french: `thé`, english: 'tea' },
+      { french: `gâteau`, english: 'cake' },
+      { french: `se coucher`, english: 'to go to bed' },
+      { french: `tôt`, english: 'early' },
+      { french: `demain`, english: 'tomorrow' },
+    ],
+    audioPath: '/static/audio/practice/a1-une-journee-a-paris.mp3',
+    estimatedTime: '2 min',
+  },
+  {
+    level: 'A2',
+    title: 'Mon premier voyage en France',
+    englishTitle: 'My First Trip to France',
+    story: `L'année dernière, j'ai fait mon premier voyage en France. Je suis allé à Lyon avec mon meilleur ami. Nous avons voyagé en train pendant trois heures. Le paysage était magnifique.
+
+À Lyon, nous avons loué un petit appartement près de la rivière. Chaque matin, nous prenions un café dans une boulangerie du quartier. Le croissant était délicieux et le serveur nous connaissait déjà.
+
+Nous avons visité de vieux quartiers et de belles églises. Nous avons aussi pris beaucoup de photos. Un jour, il a plu, alors nous sommes allés au musée de la soie. J'ai appris beaucoup de choses sur l'histoire de la ville.
+
+Le soir, nous mangions dans des restaurants typiques. J'ai goûté la salade lyonnaise et une quenelle. C'était un peu salé pour moi, mais très bon. Mon ami préférait la tarte aux pommes.
+
+Nous avons rencontré des gens charmants. Un vieux monsieur nous a raconté des histoires sur Lyon il y a cinquante ans. Je n'ai pas tout compris, mais j'ai aimé écouter sa voix.
+
+Ce voyage m'a donné envie de découvrir d'autres villes françaises. La prochaine fois, je voudrais visiter Bordeaux ou Strasbourg.`,
+    englishSummary: 'A traveller recounts a first trip to Lyon by train, staying in a riverside apartment, visiting old districts and museums, tasting local dishes, and chatting with friendly locals.',
+    vocab: [
+      { french: `l'année dernière`, english: 'last year' },
+      { french: `voyage`, english: 'trip / journey' },
+      { french: `meilleur ami`, english: 'best friend' },
+      { french: `voyager`, english: 'to travel' },
+      { french: `train`, english: 'train' },
+      { french: `paysage`, english: 'landscape' },
+      { french: `magnifique`, english: 'magnificent' },
+      { french: `louer`, english: 'to rent' },
+      { french: `appartement`, english: 'apartment' },
+      { french: `rivière`, english: 'river' },
+      { french: `boulangerie`, english: 'bakery' },
+      { french: `quartier`, english: 'neighbourhood' },
+      { french: `croissant`, english: 'croissant' },
+      { french: `délicieux`, english: 'delicious' },
+      { french: `serveur`, english: 'waiter' },
+      { french: `connaître`, english: 'to know (someone)' },
+      { french: `visiter`, english: 'to visit' },
+      { french: `vieux`, english: 'old' },
+      { french: `église`, english: 'church' },
+      { french: `prendre des photos`, english: 'to take photos' },
+      { french: `pleuvoir`, english: 'to rain' },
+      { french: `musée`, english: 'museum' },
+      { french: `soie`, english: 'silk' },
+      { french: `apprendre`, english: 'to learn' },
+      { french: `histoire`, english: 'history / story' },
+      { french: `restaurant typique`, english: 'typical restaurant' },
+      { french: `goûter`, english: 'to taste' },
+      { french: `salade lyonnaise`, english: 'Lyonnaise salad' },
+      { french: `quenelle`, english: 'quenelle (dumpling)' },
+      { french: `salé`, english: 'salty' },
+      { french: `tarte aux pommes`, english: 'apple tart' },
+      { french: `rencontrer`, english: 'to meet' },
+      { french: `charmant`, english: 'charming' },
+      { french: `monsieur`, english: 'gentleman / sir' },
+      { french: `raconter`, english: 'to tell (a story)' },
+      { french: `il y a cinquante ans`, english: 'fifty years ago' },
+      { french: `comprendre`, english: 'to understand' },
+      { french: `écouter`, english: 'to listen' },
+      { french: `voix`, english: 'voice' },
+      { french: `donner envie de`, english: 'to make one want to' },
+      { french: `découvrir`, english: 'to discover' },
+      { french: `prochaine fois`, english: 'next time' },
+      { french: `voudrais`, english: 'would like' },
+    ],
+    audioPath: '/static/audio/practice/a2-mon-premier-voyage-en-france.mp3',
+    estimatedTime: '2–3 min',
+  },
+  {
+    level: 'B1',
+    title: 'Une nouvelle vie à la campagne',
+    englishTitle: 'A New Life in the Countryside',
+    story: `Après dix ans à travailler dans une grande entreprise à Londres, Julie a décidé de tout changer. Elle a démissionné, vendu son appartement et acheté une petite maison à la campagne, dans le sud-ouest de la France. Ses amis pensaient qu'elle était folle, mais elle se sentait fatiguée et avait besoin de calme.
+
+Les premiers mois n'ont pas été faciles. Il fallait réparer le toit, apprendre à entretenir le jardin et trouver de nouvelles habitudes. Le village était tranquille, presque trop tranquille. Les commerces fermaient tôt et le supermarché le plus proche se trouvait à vingt minutes en voiture.
+
+Petit à petit, Julie s'est adaptée. Elle a commencé à cuisiner avec des produits locaux : fromage de chèvre, miel, légumes du marché. Elle a pris des cours de poterie et a rencontré des voisins très accueillants. Le dimanche, elle allait au café du village pour lire le journal et discuter de la pluie et du beau temps.
+
+Un jour, elle a eu une idée : pourquoi ne pas transformer une partie de sa maison en chambre d'hôtes ? Elle a fait quelques travaux, acheté des meubles anciens et ouvert son gîte au printemps suivant. Les premiers clients étaient un couple d'Allemands. Ils ont adoré le lieu et ont laissé un commentaire très positif sur Internet.
+
+Aujourd'hui, Julie gagne moins d'argent qu'avant, mais elle vit plus sainement. Elle a appris que le bonheur ne vient pas toujours d'une promotion ou d'un salaire élevé. Parfois, il suffit d'avoir du temps, des amis sincères et un jardin à arroser le matin.`,
+    englishSummary: 'Julie leaves her corporate job in London for a quiet house in rural France. After a difficult start, she adapts, makes friends, and eventually opens a small bed-and-breakfast, finding a slower, healthier life.',
+    vocab: [
+      { french: `entreprise`, english: 'company / business' },
+      { french: `décider`, english: 'to decide' },
+      { french: `démissionner`, english: 'to resign / quit' },
+      { french: `vendre`, english: 'to sell' },
+      { french: `acheter`, english: 'to buy' },
+      { french: `campagne`, english: 'countryside' },
+      { french: `sud-ouest`, english: 'south-west' },
+      { french: `folle`, english: 'crazy (f.)' },
+      { french: `fatigué`, english: 'tired' },
+      { french: `avoir besoin de`, english: 'to need' },
+      { french: `réparer`, english: 'to repair' },
+      { french: `toit`, english: 'roof' },
+      { french: `entretenir`, english: 'to maintain / look after' },
+      { french: `jardin`, english: 'garden' },
+      { french: `habitudes`, english: 'habits' },
+      { french: `village`, english: 'village' },
+      { french: `commerces`, english: 'shops / businesses' },
+      { french: `fermer`, english: 'to close' },
+      { french: `supermarché`, english: 'supermarket' },
+      { french: `proche`, english: 'near / close' },
+      { french: `s'adapter`, english: 'to adapt' },
+      { french: `cuisiner`, english: 'to cook' },
+      { french: `produits locaux`, english: 'local products' },
+      { french: `chèvre`, english: 'goat' },
+      { french: `miel`, english: 'honey' },
+      { french: `poterie`, english: 'pottery' },
+      { french: `voisins`, english: 'neighbours' },
+      { french: `accueillant`, english: 'welcoming' },
+      { french: `discuter`, english: 'to discuss / chat' },
+      { french: `pluie et beau temps`, english: 'small talk / weather' },
+      { french: `transformer`, english: 'to transform / convert' },
+      { french: `chambre d'hôtes`, english: 'bed and breakfast' },
+      { french: `travaux`, english: 'work / renovations' },
+      { french: `meubles anciens`, english: 'antique furniture' },
+      { french: `gîte`, english: 'holiday cottage' },
+      { french: `printemps`, english: 'spring' },
+      { french: `clients`, english: 'customers / guests' },
+      { french: `couple`, english: 'couple' },
+      { french: `adorer`, english: 'to love / adore' },
+      { french: `commentaire`, english: 'review / comment' },
+      { french: `positif`, english: 'positive' },
+      { french: `gagner`, english: 'to earn' },
+      { french: `sainement`, english: 'healthily' },
+      { french: `bonheur`, english: 'happiness' },
+      { french: `promotion`, english: 'promotion' },
+      { french: `salaire`, english: 'salary' },
+      { french: `suffire`, english: 'to be enough' },
+      { french: `sincères`, english: 'sincere' },
+      { french: `arroser`, english: 'to water' },
+    ],
+    audioPath: '/static/audio/practice/b1-une-nouvelle-vie-a-la-campagne.mp3',
+    estimatedTime: '3 min',
+  },
+  {
+    level: 'B2',
+    title: 'Le mystère du vieux phare',
+    englishTitle: 'The Mystery of the Old Lighthouse',
+    story: `Depuis des générations, les habitants de Port-Rochelle racontaient la même histoire : le soir de certaines tempêtes, on entendait une chanson ancienne sortir du phare abandonné. Personne n'y habitait plus depuis la guerre, pourtant la lumière s'allumait parfois, pendant quelques secondes, avant de disparaître.
+
+Thomas, journaliste pour un magazine régional, avait décidé d'enquêter. Il ne croyait pas aux fantômes, mais il admettait que l'endroit avait une atmosphère étrange. Il passa trois nuits dans le village, interrogea les pêcheurs, consulta les archives municipales et finit par obtenir la clé du phare.
+
+L'intérieur était plus grand qu'il ne l'imaginait. Les murs étaient couverts de gravures : des bateaux, des étoiles, des dates. Au deuxième étage, il trouva une malle poussiéreuse contenant des lettres et des photographies jaunies. Elles racontaient l'histoire d'un gardien et de sa fille, une chanteuse qui avait refusé de quitter l'île pendant l'occupation.
+
+En lisant ces lettres, Thomas comprit que la chanson n'était pas un signe surnaturel. Elle était transmise par les vents, à travers une ouverture spéciale du phare, créant une illusion acoustique parfaite. Quant à la lumière, elle provenait d'un ancien mécanisme alimenté par des batteries solaires, installé par un club d'archéologues amateurs dans les années quatre-vingt.
+
+Thomas publia son article sans détruire le mystère. Il écrivit que certaines légendes méritent d'être préservées, même quand la science leur trouve une explication. Le village, depuis, reçoit encore plus de visiteurs l'hiver. Et parfois, quand le vent souffle dans la bonne direction, on entend toujours cette chanson lointaine.`,
+    englishSummary: 'A journalist investigates a haunted lighthouse in Port-Rochelle. He discovers that the “ghost song” is an acoustic illusion and the light comes from old solar batteries, but chooses to let the legend live on.',
+    vocab: [
+      { french: `générations`, english: 'generations' },
+      { french: `habitants`, english: 'inhabitants' },
+      { french: `raconter`, english: 'to tell' },
+      { french: `tempête`, english: 'storm' },
+      { french: `chanson ancienne`, english: 'old song' },
+      { french: `phare abandonné`, english: 'abandoned lighthouse' },
+      { french: `guerre`, english: 'war' },
+      { french: `toutefois`, english: 'however / yet' },
+      { french: `lumière`, english: 'light' },
+      { french: `s'allumer`, english: 'to light up' },
+      { french: `disparaître`, english: 'to disappear' },
+      { french: `journaliste`, english: 'journalist' },
+      { french: `magazine régional`, english: 'regional magazine' },
+      { french: `enquêter`, english: 'to investigate' },
+      { french: `fantômes`, english: 'ghosts' },
+      { french: `admettre`, english: 'to admit' },
+      { french: `atmosphère étrange`, english: 'strange atmosphere' },
+      { french: `interroger`, english: 'to question / interview' },
+      { french: `pêcheurs`, english: 'fishermen' },
+      { french: `archives municipales`, english: 'municipal archives' },
+      { french: `finir par`, english: 'to finally' },
+      { french: `obtenir`, english: 'to obtain' },
+      { french: `intérieur`, english: 'interior' },
+      { french: `murs`, english: 'walls' },
+      { french: `gravures`, english: 'carvings / engravings' },
+      { french: `bateaux`, english: 'boats' },
+      { french: `étoiles`, english: 'stars' },
+      { french: `malle poussiéreuse`, english: 'dusty trunk' },
+      { french: `lettres`, english: 'letters' },
+      { french: `photographies jaunies`, english: 'yellowed photographs' },
+      { french: `gardien`, english: 'keeper / guardian' },
+      { french: `refuser`, english: 'to refuse' },
+      { french: `quitter`, english: 'to leave' },
+      { french: `occupation`, english: 'occupation' },
+      { french: `surnaturel`, english: 'supernatural' },
+      { french: `transmettre`, english: 'to transmit / pass on' },
+      { french: `vents`, english: 'winds' },
+      { french: `ouverture`, english: 'opening' },
+      { french: `illusion acoustique`, english: 'acoustic illusion' },
+      { french: `provenir`, english: 'to come from' },
+      { french: `mécanisme`, english: 'mechanism' },
+      { french: `batteries solaires`, english: 'solar batteries' },
+      { french: `archéologues amateurs`, english: 'amateur archaeologists' },
+      { french: `publier`, english: 'to publish' },
+      { french: `détruire`, english: 'to destroy' },
+      { french: `légendes`, english: 'legends' },
+      { french: `mériter`, english: 'to deserve' },
+      { french: `préservées`, english: 'preserved' },
+      { french: `explication`, english: 'explanation' },
+      { french: `visiteurs`, english: 'visitors' },
+      { french: `lointaine`, english: 'distant / faraway' },
+    ],
+    audioPath: '/static/audio/practice/b2-le-mystere-du-vieux-phare.mp3',
+    estimatedTime: '3–4 min',
+  },
+  {
+    level: 'C1',
+    title: 'La fracture numérique : une illusion de progrès ?',
+    englishTitle: 'The Digital Divide: An Illusion of Progress?',
+    story: `À première vue, la révolution numérique semble avoir démocratisé l'accès au savoir. En quelques clics, on peut consulter des encyclopédies entières, suivre des cours universitaires ou dialoguer avec des experts du monde entier. Pourtant, sous cette apparente égalité se cache une fracture profonde qui menace de reproduire, voire d'accentuer, les inégalités sociales.
+
+Cette fracture ne se limite pas à l'accès matériel. Posséder un smartphone ou une connexion Internet ne suffit plus. Il s'agit désormais de savoir comment trier l'information, identifier les biais, protéger ses données et maîtriser les codes culturels des plateformes. Autrement dit, la fracture numérique s'est muée en fracture cognitive et symbolique.
+
+Les conséquences sont particulièrement visibles dans le domaine éducatif. Des élèves dotés des mêmes outils n'en tirent pas tous le même parti. Certains bénéficient d'un environnement familial qui valorise la curiosité intellectuelle, tandis que d'autres restent prisonniers d'une consommation passive de contenus, souvent algorithmiquement prédéterminée. L'école, censée compenser ces disparités, peine parfois à former ses enseignants aux enjeux réels du numérique.
+
+Par ailleurs, la question du travail ne peut être éludée. L'automatisation promet de libérer l'humanité de tâches répétitives, mais elle exclut aussi ceux dont les compétences ne correspondent plus aux besoins du marché. La transformation digitale exige une adaptabilité constante, une qualité que tout le monde n'a pas les moyens de développer.
+
+Face à ces défis, il ne suffit pas de distribuer des appareils. Il faut repenser l'éducation, renforcer la littératie numérique et réguler les géants de la technologie pour qu'ils servent l'intérêt général. Le progrès technologique n'est ni bon ni mauvais en soi ; il devient ce que la société choisit d'en faire.`,
+    englishSummary: 'A C1-level essay argues that the digital divide is no longer just about access to devices, but about cognitive and symbolic skills. It explores educational and labour-market consequences and calls for broader digital literacy.',
+    vocab: [
+      { french: `à première vue`, english: 'at first sight' },
+      { french: `révolution numérique`, english: 'digital revolution' },
+      { french: `démocratiser`, english: 'to democratise' },
+      { french: `accès au savoir`, english: 'access to knowledge' },
+      { french: `encyclopédies`, english: 'encyclopaedias' },
+      { french: `dialoguer`, english: 'to converse' },
+      { french: `apparente égalité`, english: 'apparent equality' },
+      { french: `fracture profonde`, english: 'deep divide' },
+      { french: `menacer`, english: 'to threaten' },
+      { french: `reproduire`, english: 'to reproduce' },
+      { french: `accentuer`, english: 'to intensify' },
+      { french: `inégalités sociales`, english: 'social inequalities' },
+      { french: `accès matériel`, english: 'material access' },
+      { french: `posséder`, english: 'to own / possess' },
+      { french: `connexion Internet`, english: 'internet connection' },
+      { french: `trier`, english: 'to sort / filter' },
+      { french: `information`, english: 'information' },
+      { french: `biais`, english: 'bias' },
+      { french: `protéger ses données`, english: 'to protect one\'s data' },
+      { french: `maîtriser`, english: 'to master / control' },
+      { french: `codes culturels`, english: 'cultural codes' },
+      { french: `plateformes`, english: 'platforms' },
+      { french: `se muer`, english: 'to turn into / become' },
+      { french: `fracture cognitive`, english: 'cognitive divide' },
+      { french: `symbolique`, english: 'symbolic' },
+      { french: `conséquences`, english: 'consequences' },
+      { french: `domaine éducatif`, english: 'educational field' },
+      { french: `élèves`, english: 'students' },
+      { french: `dotés de`, english: 'equipped with' },
+      { french: `tirer parti de`, english: 'to make the most of' },
+      { french: `environnement familial`, english: 'family environment' },
+      { french: `valoriser`, english: 'to value / promote' },
+      { french: `curiosité intellectuelle`, english: 'intellectual curiosity' },
+      { french: `prisonniers`, english: 'prisoners / trapped' },
+      { french: `consommation passive`, english: 'passive consumption' },
+      { french: `algorithmiquement prédéterminée`, english: 'algorithmically predetermined' },
+      { french: `censée`, english: 'supposed to' },
+      { french: `compenser`, english: 'to compensate for' },
+      { french: `disparités`, english: 'disparities' },
+      { french: `peiner à`, english: 'to struggle to' },
+      { french: `enseignants`, english: 'teachers' },
+      { french: `enjeux`, english: 'issues / stakes' },
+      { french: `éluder`, english: 'to evade / avoid' },
+      { french: `automatisation`, english: 'automation' },
+      { french: `libérer`, english: 'to free' },
+      { french: `tâches répétitives`, english: 'repetitive tasks' },
+      { french: `exclure`, english: 'to exclude' },
+      { french: `compétences`, english: 'skills' },
+      { french: `marché`, english: 'market' },
+      { french: `transformation digitale`, english: 'digital transformation' },
+      { french: `adaptabilité`, english: 'adaptability' },
+      { french: `moyens`, english: 'means / resources' },
+      { french: `défis`, english: 'challenges' },
+      { french: `distribuer`, english: 'to distribute' },
+      { french: `appareils`, english: 'devices' },
+      { french: `repenser`, english: 'to rethink' },
+      { french: `littératie numérique`, english: 'digital literacy' },
+      { french: `réguler`, english: 'to regulate' },
+      { french: `géants de la technologie`, english: 'tech giants' },
+      { french: `intérêt général`, english: 'public interest' },
+      { french: `progrès technologique`, english: 'technological progress' },
+      { french: `en soi`, english: 'in itself' },
+      { french: `société`, english: 'society' },
+    ],
+    audioPath: '/static/audio/practice/c1-la-fracture-numerique.mp3',
+    estimatedTime: '4 min',
+  },
+  {
+    level: 'C2',
+    title: `L'art de l'essai : penser par l'écriture`,
+    englishTitle: 'The Art of the Essay: Thinking Through Writing',
+    story: `L'essai, dans sa forme la plus accomplie, est bien plus qu'un exercice scolaire ou un genre littéraire convenu : c'est une manière de penser à haute voix, une exploration sans fin où l'esprit se met à l'épreuve devant les contradictions du monde. Dès ses origines, avec Montaigne, il a revendiqué cette liberté de tourner autour d'une question sans prétendre l'épuiser. Le titre des premiers essais, tout simplement « Essais », porte en lui cette humilité fondatrice : tenter, vérifier, tâtonner.
+
+Ce qui distingue l'essai d'autres formes d'argumentation, c'est sa subjectivité assumée. L'essayiste ne cherche pas à dissimuler sa présence derrière une façade d'objectivité scientifique. Au contraire, il met en scène son propre parcours intellectuel, ses hésitations, ses retournements. Le lecteur n'est pas seulement convaincu ; il est invité à partager une aventure de la pensée. C'est peut-être pourquoi l'essai résiste si bien à l'époque des réponses immédiates et des opinions tranchées : il affirme la valeur intrinsèque du doute.
+
+Pourtant, cette liberté n'implique pas le laisser-aller. Un bon essai exige une rigueur implicite, une architecture discrète qui soutient la réflexion sans l'écraser. Chaque digression doit sembler nécessaire, chaque exemple choisi avec soin, chaque transition préparer subtilement la suite. L'art de l'essayiste consiste à faire paraître le hasard comme inévitable et la construction comme spontanée.
+
+Dans le contexte actuel, où l'information circule à une vitesse vertigineuse et où le débat public privilégie souvent l'affect à l'analyse, l'essai offre une contre-mesure précieuse. Il demande du temps, de la distance et une certaine forme de courage : celui de ne pas savoir d'avance où l'on aboutira. C'est peut-être là son enseignement le plus précieux : apprendre à penser, c'est accepter que la pensée soit un mouvement, et non une possession.
+
+Ainsi, l'essai ne nous donne pas de vérités closes. Il nous offre des outils pour habiter le monde avec plus de nuance. À l'heure où tant de discours prétendent tout expliquer, il rappelle que la sagesse commence souvent par une question bien posée.`,
+    englishSummary: 'A C2-level reflective essay on the literary essay as a way of thinking. It discusses Montaigne, the value of doubt, the balance between freedom and rigour, and the essay\'s relevance in an age of instant opinions.',
+    vocab: [
+      { french: `essai`, english: 'essay' },
+      { french: `accomplie`, english: 'accomplished / perfected' },
+      { french: `exercice scolaire`, english: 'school exercise' },
+      { french: `genre littéraire convenu`, english: 'conventional literary genre' },
+      { french: `penser à haute voix`, english: 'to think out loud' },
+      { french: `exploration sans fin`, english: 'endless exploration' },
+      { french: `esprit`, english: 'mind / spirit' },
+      { french: `se mettre à l'épreuve`, english: 'to test oneself' },
+      { french: `contradictions`, english: 'contradictions' },
+      { french: `origines`, english: 'origins' },
+      { french: `revendiquer`, english: 'to claim / assert' },
+      { french: `liberté`, english: 'freedom' },
+      { french: `tourner autour de`, english: 'to revolve around' },
+      { french: `prétendre`, english: 'to claim / pretend' },
+      { french: `épuiser`, english: 'to exhaust' },
+      { french: `humilité fondatrice`, english: 'founding humility' },
+      { french: `tenter`, english: 'to attempt' },
+      { french: `vérifier`, english: 'to verify' },
+      { french: `tâtonner`, english: 'to grope / fumble (one\'s way)' },
+      { french: `distinguer`, english: 'to distinguish' },
+      { french: `formes d'argumentation`, english: 'forms of argumentation' },
+      { french: `subjectivité assumée`, english: 'assumed subjectivity' },
+      { french: `essayiste`, english: 'essayist' },
+      { french: `dissimuler`, english: 'to hide / conceal' },
+      { french: `façade d'objectivité`, english: 'façade of objectivity' },
+      { french: `mettre en scène`, english: 'to stage / showcase' },
+      { french: `parcours intellectuel`, english: 'intellectual journey' },
+      { french: `hésitations`, english: 'hesitations' },
+      { french: `retournements`, english: 'reversals / turnarounds' },
+      { french: `convaincre`, english: 'to convince' },
+      { french: `inviter`, english: 'to invite' },
+      { french: `aventure de la pensée`, english: 'adventure of thought' },
+      { french: `résister`, english: 'to resist' },
+      { french: `époque`, english: 'era / age' },
+      { french: `réponses immédiates`, english: 'immediate answers' },
+      { french: `opinions tranchées`, english: 'firm opinions' },
+      { french: `affirmer`, english: 'to affirm' },
+      { french: `valeur intrinsèque`, english: 'intrinsic value' },
+      { french: `doute`, english: 'doubt' },
+      { french: `laisser-aller`, english: 'carelessness / laxity' },
+      { french: `rigueur implicite`, english: 'implicit rigour' },
+      { french: `architecture discrète`, english: 'discreet structure' },
+      { french: `soutenir`, english: 'to support' },
+      { french: `écraser`, english: 'to crush / overwhelm' },
+      { french: `digression`, english: 'digression' },
+      { french: `nécessaire`, english: 'necessary' },
+      { french: `transition`, english: 'transition' },
+      { french: `subtilement`, english: 'subtly' },
+      { french: `paraître`, english: 'to appear / seem' },
+      { french: `inévitable`, english: 'inevitable' },
+      { french: `construction`, english: 'construction' },
+      { french: `spontanée`, english: 'spontaneous' },
+      { french: `contexte actuel`, english: 'current context' },
+      { french: `circuler`, english: 'to circulate' },
+      { french: `vitesse vertigineuse`, english: 'dizzying speed' },
+      { french: `débat public`, english: 'public debate' },
+      { french: `privilégier`, english: 'to favour / prioritize' },
+      { french: `affect`, english: 'emotion / affect' },
+      { french: `analyse`, english: 'analysis' },
+      { french: `contre-mesure`, english: 'countermeasure' },
+      { french: `précieux`, english: 'precious / valuable' },
+      { french: `distance`, english: 'distance / detachment' },
+      { french: `courage`, english: 'courage' },
+      { french: `aboutir`, english: 'to end up / lead to' },
+      { french: `enseignement`, english: 'teaching / lesson' },
+      { french: `précieux`, english: 'precious' },
+      { french: `mouvement`, english: 'movement' },
+      { french: `possession`, english: 'possession' },
+      { french: `vérités closes`, english: 'closed truths' },
+      { french: `outils`, english: 'tools' },
+      { french: `habiter le monde`, english: 'to inhabit the world' },
+      { french: `nuance`, english: 'nuance' },
+      { french: `discours`, english: 'speeches / discourse' },
+      { french: `prétendent`, english: 'claim' },
+      { french: `sagesse`, english: 'wisdom' },
+      { french: `question bien posée`, english: 'well-posed question' },
+    ],
+    audioPath: '/static/audio/practice/c2-l-art-de-l-essai.mp3',
+    estimatedTime: '4–5 min',
+  },
+];
+
+export function getStoryByLevel(level: string): CEFRStory | undefined {
+  return CEFR_STORIES.find((s) => s.level.toLowerCase() === level.toLowerCase());
+}
+
+export function getNextLevel(current: CEFRLevel): CEFRLevel | null {
+  const order: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  const idx = order.indexOf(current);
+  return order[idx + 1] ?? null;
+}
