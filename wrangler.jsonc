@@ -11,7 +11,8 @@
     "ADMIN_EMAILS": "[EMAIL_ADDRESS]",
     "BETTER_AUTH_URL": "https://thedalfdojo.com",
     "CF_ACCOUNT_ID": "",
-    "DEFAULT_FROM_EMAIL": "noreply@thedalfdojo.com"
+    "DEFAULT_FROM_EMAIL": "noreply@thedalfdojo.com",
+    "MARKING_MODEL": "@cf/moonshotai/kimi-k2.7-code"
   },
   "d1_databases": [
     {
@@ -32,8 +33,7 @@
     "logs": {
       "enabled": true,
       "head_sampling_rate": 1,
-      "persist": true,
-      "invocation_logs": true
+      "persist": true
     },
     "traces": {
       "enabled": false,
