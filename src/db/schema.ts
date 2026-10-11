@@ -134,3 +134,11 @@ export const practiceProgress = sqliteTable('practice_progress', {
   createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
+
+// Cached AI insights payloads — one row per user, refreshed when stale
+export const insightsCache = sqliteTable('insights_cache', {
+  userId: integer('user_id').primaryKey(),
+  payload: text('payload').notNull(),
+  attemptsCount: integer('attempts_count').notNull().default(0),
+  generatedAt: integer('generated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
