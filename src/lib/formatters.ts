@@ -1,6 +1,7 @@
 export const STATUS_MAP: Record<string, { label: string; variant: 'info' | 'warning' | 'success' | 'danger' }> = {
   in_progress: { label: 'In Progress', variant: 'info' },
   pending_marking: { label: 'Pending Marking', variant: 'warning' },
+  marking: { label: 'Marking…', variant: 'warning' },
   completed: { label: 'Completed', variant: 'success' },
   marking_failed: { label: 'Marking Failed', variant: 'danger' },
 };

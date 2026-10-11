@@ -1,7 +1,7 @@
 import { eq, and } from 'drizzle-orm';
 import { getDb } from './db';
 import { exams, attempts } from './db/schema';
-import { chatCompletion, generateTTS, splitTextForTTS } from './ai';
+import { chatCompletion, generateTTS, splitTextForTTS, extractJson } from './ai';
 import { uploadAudio, audioKey } from './storage';
 import {
   LISTENING_SYSTEM_PROMPT,
@@ -103,7 +103,7 @@ export async function generateExamContent(
       return null;
     }
     try {
-      return JSON.parse(result.value);
+      return JSON.parse(extractJson(result.value));
     } catch {
       failedSections.push(sectionNames[index]);
       return null;

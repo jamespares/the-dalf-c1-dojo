@@ -235,9 +235,14 @@ dashboard.get('/dashboard', authMiddleware(), async (c) => {
                 } else if (row.attempt.status === 'completed') {
                   actionLink = `/review/${row.attempt.id}`;
                   actionLabel = 'View';
-                } else if (row.attempt.status === 'marking_failed' || row.attempt.status === 'pending_marking') {
+                } else if (row.attempt.status === 'marking_failed' || row.attempt.status === 'pending_marking' || row.attempt.status === 'marking') {
                   actionLink = `/marking/${row.attempt.id}`;
-                  actionLabel = row.attempt.status === 'pending_marking' ? 'Check' : 'Retry';
+                  actionLabel =
+                    row.attempt.status === 'marking_failed'
+                      ? 'Retry'
+                      : row.attempt.status === 'marking'
+                        ? 'Marking…'
+                        : 'Check';
                 }
                 return (
                   <tr>

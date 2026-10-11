@@ -164,6 +164,7 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
 });
 
 listening.post('/exams/:id/listening/save', authMiddleware(), async (c) => {
+  const user = c.get('user');
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
   const body = await c.req.parseBody();
@@ -172,6 +173,9 @@ listening.post('/exams/:id/listening/save', authMiddleware(), async (c) => {
   const [exam] = await db.select().from(exams).where(eq(exams.id, examId));
   if (!exam) return c.notFound();
 
+  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
+  if (!attempt || attempt.userId !== user.id || attempt.examId !== examId) return c.notFound();
+
   const content = exam.generatedContent as any;
   const allQuestions = [
     ...content.listening.longDocument.questions,
@@ -179,21 +183,21 @@ listening.post('/exams/:id/listening/save', authMiddleware(), async (c) => {
   ];
 
   for (const q of allQuestions) {
-    const val = body[`q_${q.id}`] as string;
-    if (val) {
-      const [existing] = await db
-        .select()
-        .from(answers)
-        .where(and(eq(answers.attemptId, attemptId), eq(answers.questionId, q.id)));
+    const key = `q_${q.id}`;
+    if (!(key in body)) continue;
+    const val = typeof body[key] === 'string' ? (body[key] as string) : '';
+    const [existing] = await db
+      .select()
+      .from(answers)
+      .where(and(eq(answers.attemptId, attemptId), eq(answers.questionId, q.id)));
 
-      if (existing) {
-        await db
-          .update(answers)
-          .set({ userAnswer: val })
-          .where(eq(answers.id, existing.id));
-      } else {
-        await db.insert(answers).values({ attemptId, questionId: q.id, userAnswer: val });
-      }
+    if (existing) {
+      await db
+        .update(answers)
+        .set({ userAnswer: val })
+        .where(eq(answers.id, existing.id));
+    } else if (val) {
+      await db.insert(answers).values({ attemptId, questionId: q.id, userAnswer: val });
     }
   }
 
@@ -201,10 +205,19 @@ listening.post('/exams/:id/listening/save', authMiddleware(), async (c) => {
 });
 
 listening.post('/exams/:id/listening/submit', authMiddleware(), async (c) => {
+  const user = c.get('user');
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
 
   const db = getDb(c.env.DB);
+  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
+  if (!attempt || attempt.userId !== user.id || attempt.examId !== examId) return c.notFound();
+
+  if (attempt.status === 'completed') return c.redirect(`/review/${attemptId}`);
+  if (attempt.status === 'pending_marking' || attempt.status === 'marking') {
+    return c.redirect(`/marking/${attemptId}`);
+  }
+
   await db
     .update(attempts)
     .set({ status: 'pending_marking', submittedAt: new Date() })

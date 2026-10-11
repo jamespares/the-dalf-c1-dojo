@@ -266,13 +266,19 @@ speaking.post('/exams/:id/speaking/upload', authMiddleware(), async (c) => {
 });
 
 speaking.post('/exams/:id/speaking/submit', authMiddleware(), async (c) => {
+  const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
   const user = c.get('user');
   const db = getDb(c.env.DB);
 
   const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
-  if (!attempt || attempt.userId !== user.id) {
+  if (!attempt || attempt.userId !== user.id || attempt.examId !== examId) {
     return c.text('Forbidden', 403);
+  }
+
+  if (attempt.status === 'completed') return c.redirect(`/review/${attemptId}`);
+  if (attempt.status === 'pending_marking' || attempt.status === 'marking') {
+    return c.redirect(`/marking/${attemptId}`);
   }
 
   await db

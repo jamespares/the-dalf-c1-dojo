@@ -77,7 +77,8 @@ export const attempts = sqliteTable('attempts', {
   scores: text('scores', { mode: 'json' }).$defaultFn(() => ({})).notNull(),
   totalScore: real('total_score'),
   aiFeedback: text('ai_feedback', { mode: 'json' }).$defaultFn(() => ({})).notNull(),
-  status: text('status').$defaultFn(() => 'in_progress').notNull(), // in_progress | completed | pending_marking
+  status: text('status').$defaultFn(() => 'in_progress').notNull(), // in_progress | pending_marking | marking | completed | marking_failed
+  markingStartedAt: integer('marking_started_at', { mode: 'timestamp' }),
 });
 
 export const answers = sqliteTable('answers', {
@@ -132,4 +133,12 @@ export const practiceProgress = sqliteTable('practice_progress', {
   masteredAt: integer('mastered_at', { mode: 'timestamp' }),
   createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
+// Cached AI insights payloads — one row per user, refreshed when stale
+export const insightsCache = sqliteTable('insights_cache', {
+  userId: integer('user_id').primaryKey(),
+  payload: text('payload').notNull(),
+  attemptsCount: integer('attempts_count').notNull().default(0),
+  generatedAt: integer('generated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });

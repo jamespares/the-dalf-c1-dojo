@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { eq, count, sql } from 'drizzle-orm';
 import { getDb } from '../db';
-import { attempts, errorLogs } from '../db/schema';
+import { attempts, errorLogs, insightsCache } from '../db/schema';
 import { authMiddleware } from '../auth';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { Sparkles, TrendingUp, TrendingDown, Minus, Headphones, BookOpen, PenTool, Mic, Target } from '../components/Icons';
@@ -10,6 +10,10 @@ import { generateAiInsights, type AiInsightsPayload } from '../ai';
 import { computePassReadiness } from '../lib/pass-readiness';
 
 const insights = new Hono<{ Bindings: CloudflareBindings }>();
+
+// Regenerate the AI payload at most once per day, and only when the user's
+// completed-attempt count changed since the cached copy was written.
+const INSIGHTS_TTL_MS = 24 * 3600 * 1000;
 
 insights.get('/insights', authMiddleware(), async (c) => {
   const user = c.get('user');
@@ -73,7 +77,9 @@ insights.get('/insights', authMiddleware(), async (c) => {
     })),
   };
 
-  // Fetch AI insights with fallback
+  // Fetch AI insights: serve the cached payload when fresh (instant page load),
+  // otherwise regenerate synchronously and store. No AI call at all until the
+  // user has completed at least one attempt.
   let aiInsights: {
     summary: string;
     focusAreas: string[];
@@ -83,10 +89,48 @@ insights.get('/insights', authMiddleware(), async (c) => {
   } | null = null;
   let aiError = false;
 
-  try {
-    aiInsights = await generateAiInsights(c, aiPayload);
-  } catch {
-    aiError = true;
+  const [cached] = await db
+    .select()
+    .from(insightsCache)
+    .where(eq(insightsCache.userId, user.id))
+    .limit(1);
+
+  const cacheFresh =
+    cached &&
+    cached.attemptsCount === completedCount &&
+    cached.generatedAt &&
+    Date.now() - new Date(cached.generatedAt).getTime() < INSIGHTS_TTL_MS;
+
+  if (cacheFresh) {
+    try {
+      aiInsights = JSON.parse(cached.payload);
+    } catch {
+      // Corrupt cache row — fall through and regenerate below
+    }
+  }
+
+  if (!aiInsights && completedCount > 0) {
+    try {
+      aiInsights = await generateAiInsights(c, aiPayload);
+      await db
+        .insert(insightsCache)
+        .values({
+          userId: user.id,
+          payload: JSON.stringify(aiInsights),
+          attemptsCount: completedCount,
+          generatedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: insightsCache.userId,
+          set: {
+            payload: JSON.stringify(aiInsights),
+            attemptsCount: completedCount,
+            generatedAt: new Date(),
+          },
+        });
+    } catch {
+      aiError = true;
+    }
   }
 
   return c.html(

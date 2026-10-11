@@ -18,7 +18,7 @@ export function Navbar({ user }: NavbarProps) {
             <button id="sign-out" class="btn btn-secondary btn-sm">Sign out</button>
             <script type="module" dangerouslySetInnerHTML={{
               __html: `
-              import { createAuthClient } from "https://esm.sh/better-auth@latest/client";
+              import { createAuthClient } from "https://esm.sh/better-auth@1.6.9/client";
               const client = createAuthClient({ baseURL: window.location.origin });
               document.getElementById('sign-out').addEventListener('click', async () => {
                 await client.signOut();

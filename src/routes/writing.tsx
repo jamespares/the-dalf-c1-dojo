@@ -99,28 +99,32 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
 });
 
 writing.post('/exams/:id/writing/save', authMiddleware(), async (c) => {
+  const user = c.get('user');
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
   const body = await c.req.parseBody();
 
   const db = getDb(c.env.DB);
+  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
+  if (!attempt || attempt.userId !== user.id || attempt.examId !== examId) return c.notFound();
+
   const fields = [
-    { id: 'synthese', val: body.q_synthese as string },
-    { id: 'essai', val: body.q_essai as string },
+    { id: 'synthese', key: 'q_synthese' },
+    { id: 'essai', key: 'q_essai' },
   ];
 
   for (const f of fields) {
-    if (f.val) {
-      const [existing] = await db
-        .select()
-        .from(answers)
-        .where(and(eq(answers.attemptId, attemptId), eq(answers.questionId, f.id)));
+    if (!(f.key in body)) continue;
+    const val = typeof body[f.key] === 'string' ? (body[f.key] as string) : '';
+    const [existing] = await db
+      .select()
+      .from(answers)
+      .where(and(eq(answers.attemptId, attemptId), eq(answers.questionId, f.id)));
 
-      if (existing) {
-        await db.update(answers).set({ userAnswer: f.val }).where(eq(answers.id, existing.id));
-      } else {
-        await db.insert(answers).values({ attemptId, questionId: f.id, userAnswer: f.val });
-      }
+    if (existing) {
+      await db.update(answers).set({ userAnswer: val }).where(eq(answers.id, existing.id));
+    } else if (val) {
+      await db.insert(answers).values({ attemptId, questionId: f.id, userAnswer: val });
     }
   }
 
@@ -128,8 +132,19 @@ writing.post('/exams/:id/writing/save', authMiddleware(), async (c) => {
 });
 
 writing.post('/exams/:id/writing/submit', authMiddleware(), async (c) => {
+  const user = c.get('user');
+  const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
   const db = getDb(c.env.DB);
+
+  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
+  if (!attempt || attempt.userId !== user.id || attempt.examId !== examId) return c.notFound();
+
+  if (attempt.status === 'completed') return c.redirect(`/review/${attemptId}`);
+  if (attempt.status === 'pending_marking' || attempt.status === 'marking') {
+    return c.redirect(`/marking/${attemptId}`);
+  }
+
   await db
     .update(attempts)
     .set({ status: 'pending_marking', submittedAt: new Date() })
