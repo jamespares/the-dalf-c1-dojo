@@ -114,7 +114,7 @@ export const subscriptions = sqliteTable('subscriptions', {
   currentPeriodEnd: integer('current_period_end', { mode: 'timestamp' }).notNull(),
   cancelAtPeriodEnd: integer('cancel_at_period_end', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
 
 export const usageEvents = sqliteTable('usage_events', {

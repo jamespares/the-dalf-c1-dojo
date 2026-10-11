@@ -33,7 +33,8 @@
     "logs": {
       "enabled": true,
       "head_sampling_rate": 1,
-      "persist": true
+      "persist": true,
+      "invocation_logs": true
     },
     "traces": {
       "enabled": false,
