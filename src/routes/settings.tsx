@@ -48,7 +48,7 @@ settings.get('/settings', authMiddleware(), async (c) => {
         <button id="sign-out-settings" class="btn btn-danger"><LogOut size={18} /> Sign Out</button>
         <script type="module" dangerouslySetInnerHTML={{
           __html: `
-          import { createAuthClient } from "https://esm.sh/better-auth@latest/client";
+          import { createAuthClient } from "https://esm.sh/better-auth@1.6.9/client";
           const client = createAuthClient({ baseURL: window.location.origin });
           document.getElementById('sign-out-settings').addEventListener('click', async () => {
             await client.signOut();
