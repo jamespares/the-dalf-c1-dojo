@@ -321,23 +321,33 @@ async function runMarking(c: any, attemptId: number, userId: number) {
       if (essAns) writes.push(db.update(answers).set({ aiScore: essScores.total, aiFeedback: feedback.essai }).where(eq(answers.id, essAns.id)));
     } else if (attempt.section === 'PO') {
       const speakingAnswers = userAnswers.filter((a) => a.audioKey && a.questionId.startsWith('speaking'));
-      const transcripts: string[] = [];
 
-      for (const speakingAns of speakingAnswers) {
-        const obj = await getAudio(c, speakingAns.audioKey!);
-        if (!obj) continue;
-        const buffer = await obj.arrayBuffer();
-        const transcription = await transcribeAudio(c, buffer, `${speakingAns.questionId}.webm`, 'audio/webm', {
-          timeoutMs: 45000,
-        });
+      // Transcribe in parallel and persist each transcript immediately, so a
+      // crashed or timed-out run keeps its progress and retries stay cheap.
+      const transcribed = await Promise.all(
+        speakingAnswers.map(async (speakingAns) => {
+          if (speakingAns.userAnswer) {
+            return { ans: speakingAns, transcription: speakingAns.userAnswer }; // already transcribed
+          }
+          const obj = await getAudio(c, speakingAns.audioKey!);
+          if (!obj) return { ans: speakingAns, transcription: '' };
+          const buffer = await obj.arrayBuffer();
+          const transcription = await transcribeAudio(c, buffer, `${speakingAns.questionId}.webm`, 'audio/webm', {
+            timeoutMs: 45000,
+          });
+          await db.update(answers).set({ userAnswer: transcription }).where(eq(answers.id, speakingAns.id));
+          return { ans: speakingAns, transcription };
+        })
+      );
+
+      const transcripts: string[] = [];
+      for (const { ans, transcription } of transcribed) {
+        if (!transcription) continue;
         const label =
-          speakingAns.questionId === 'speaking'
+          ans.questionId === 'speaking'
             ? 'EXPOSÉ'
-            : `QUESTION ${speakingAns.questionId.replace('speaking-q', '')}`;
+            : `QUESTION ${ans.questionId.replace('speaking-q', '')}`;
         transcripts.push(`[${label}]\n${transcription}`);
-        writes.push(
-          db.update(answers).set({ userAnswer: transcription }).where(eq(answers.id, speakingAns.id))
-        );
       }
 
       if (transcripts.length > 0) {
