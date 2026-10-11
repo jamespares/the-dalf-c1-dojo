@@ -31,12 +31,13 @@ WHERE user_id = (SELECT id FROM users WHERE lower(email) = lower('USER_EMAIL_HER
     GROUP BY attempt_id, error_type, original_text, correction, explanation
   );
 
--- 3. Unstick attempts abandoned mid-marking (older than 10 minutes):
+-- 3. Unstick attempts abandoned mid-marking (older than 10 minutes).
+--    NB: drizzle 'timestamp' columns store unix seconds, not ms.
 UPDATE attempts
 SET status = 'pending_marking'
 WHERE user_id = (SELECT id FROM users WHERE lower(email) = lower('USER_EMAIL_HERE'))
   AND status = 'marking'
-  AND (marking_started_at IS NULL OR marking_started_at < (unixepoch() * 1000) - 600000);
+  AND (marking_started_at IS NULL OR marking_started_at < unixepoch() - 600);
 
 -- 4. Verify:
 -- SELECT attempt_id, error_type, COUNT(*) FROM error_logs
