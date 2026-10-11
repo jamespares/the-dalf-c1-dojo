@@ -1,7 +1,10 @@
 import { Context } from 'hono';
 import { z } from 'zod';
 
-export const MARKING_MODEL = '@cf/moonshotai/kimi-k2.6';
+// Default marking model. kimi-k2.6 is deprecated on Workers AI; k2.7-code is
+// the drop-in successor (identical API per Cloudflare changelog). Override with
+// the MARKING_MODEL var in wrangler.jsonc if needed.
+export const DEFAULT_MARKING_MODEL = '@cf/moonshotai/kimi-k2.7-code';
 export const WHISPER_MODEL = '@cf/openai/whisper-large-v3-turbo';
 
 export interface AiBindings {
@@ -11,6 +14,7 @@ export interface AiBindings {
   OPENAI_API_KEY?: string;
   CF_GATEWAY_TOKEN?: string;
   INSIGHTS_MODEL?: string;
+  MARKING_MODEL?: string;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -29,7 +33,7 @@ export async function chatCompletion(
     timeoutMs?: number;
   }
 ) {
-  const model = opts?.model || MARKING_MODEL;
+  const model = opts?.model || (c.env as any).MARKING_MODEL || DEFAULT_MARKING_MODEL;
   const ai = c.env.AI as Ai | undefined;
   if (!ai) {
     throw new Error('Workers AI binding (env.AI) is not configured');

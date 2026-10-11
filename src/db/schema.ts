@@ -77,7 +77,8 @@ export const attempts = sqliteTable('attempts', {
   scores: text('scores', { mode: 'json' }).$defaultFn(() => ({})).notNull(),
   totalScore: real('total_score'),
   aiFeedback: text('ai_feedback', { mode: 'json' }).$defaultFn(() => ({})).notNull(),
-  status: text('status').$defaultFn(() => 'in_progress').notNull(), // in_progress | completed | pending_marking
+  status: text('status').$defaultFn(() => 'in_progress').notNull(), // in_progress | pending_marking | marking | completed | marking_failed
+  markingStartedAt: integer('marking_started_at', { mode: 'timestamp' }),
 });
 
 export const answers = sqliteTable('answers', {
@@ -113,7 +114,7 @@ export const subscriptions = sqliteTable('subscriptions', {
   currentPeriodEnd: integer('current_period_end', { mode: 'timestamp' }).notNull(),
   cancelAtPeriodEnd: integer('cancel_at_period_end', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
 export const usageEvents = sqliteTable('usage_events', {
