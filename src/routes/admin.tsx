@@ -256,7 +256,8 @@ admin.post('/admin/repair-user', adminMiddleware(), async (c) => {
   `);
 
   // 3. Unstick attempts abandoned mid-marking (older than 10 minutes, or no timestamp).
-  const staleBefore = Date.now() - 10 * 60 * 1000;
+  //    NB: drizzle 'timestamp' columns store unix seconds.
+  const staleBefore = Math.floor(Date.now() / 1000) - 10 * 60;
   const unstuck = await db
     .update(attempts)
     .set({ status: 'pending_marking' })
