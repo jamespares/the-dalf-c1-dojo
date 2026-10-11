@@ -17,6 +17,8 @@ import terms from './routes/terms';
 import privacy from './routes/privacy';
 import { createAuth, adminMiddleware } from './auth';
 import { getDb } from './db';
+import { attempts } from './db/schema';
+import { sql } from 'drizzle-orm';
 import { sendEmailViaCloudflare } from './email';
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
@@ -100,6 +102,40 @@ app.post('/api/debug/send-test-email', adminMiddleware(), async (c) => {
 
 // Redirect old /profile to /settings
 app.get('/profile', (c) => c.redirect('/settings', 301));
+
+// Token-gated health endpoint for external monitoring. Returns aggregate
+// marking-health counts only — no user data.
+app.get('/api/health', async (c) => {
+  const token = (c.env as any).HEALTH_TOKEN;
+  if (!token || c.req.header('authorization') !== `Bearer ${token}`) {
+    return c.notFound();
+  }
+  const db = getDb(c.env.DB);
+  // Drizzle 'timestamp' mode stores unix seconds
+  const dayAgo = Math.floor(Date.now() / 1000) - 24 * 3600;
+  const stuckBefore = Math.floor(Date.now() / 1000) - 30 * 60;
+
+  const [failed] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(attempts)
+    .where(sql`${attempts.status} = 'marking_failed' AND COALESCE(${attempts.submittedAt}, ${attempts.startedAt}) > ${dayAgo}`);
+  const [stuck] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(attempts)
+    .where(sql`${attempts.status} IN ('pending_marking', 'marking') AND COALESCE(${attempts.submittedAt}, ${attempts.startedAt}) < ${stuckBefore}`);
+  const [pending] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(attempts)
+    .where(sql`${attempts.status} IN ('pending_marking', 'marking')`);
+
+  return c.json({
+    ok: true,
+    markingFailed24h: failed?.n ?? 0,
+    stuckMarking: stuck?.n ?? 0,
+    markingInFlight: pending?.n ?? 0,
+    checkedAt: new Date().toISOString(),
+  });
+});
 
 // Landing page (must be before auth to handle '/' first)
 app.route('/', landing);
