@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { getDb } from '../db';
 import { attempts, exams, answers, errorLogs } from '../db/schema';
 import { authMiddleware } from '../auth';
 import { chatCompletion, transcribeAudio, extractJson } from '../ai';
 import { getAudio } from '../storage';
 import {
-  MARKING_COMPREHENSION_PROMPT,
+  MARKING_COMPREHENSION_BATCH_PROMPT,
   MARKING_SYNTHESIS_PROMPT,
   MARKING_ESSAY_PROMPT,
   MARKING_SPEAKING_PROMPT,
@@ -15,6 +15,10 @@ import { Layout } from '../components/Layout';
 import { Navbar } from '../components/Navbar';
 
 const marking = new Hono<{ Bindings: CloudflareBindings }>();
+
+// A 'marking' attempt older than this is considered abandoned (its worker died
+// mid-flight) and may be reclaimed and re-run.
+const STALE_MARKING_MS = 10 * 60 * 1000;
 
 function clamp(num: any, min: number, max: number): number {
   const n = typeof num === 'number' && Number.isFinite(num) ? num : 0;
@@ -54,6 +58,7 @@ function clampSpeakingScores(s: any) {
 
 function normalizeErrorTags(tags: any) {
   const validTypes = new Set(['grammar', 'vocabulary', 'pronunciation', 'register', 'structure']);
+  const seen = new Set<string>();
   return (Array.isArray(tags) ? tags : [])
     .filter((t: any) => t && typeof t === 'object')
     .map((t: any) => ({
@@ -61,103 +66,200 @@ function normalizeErrorTags(tags: any) {
       original: String(t.original ?? ''),
       correction: String(t.correction ?? ''),
       explanation: String(t.explanation ?? ''),
-    }));
+    }))
+    .filter((t) => {
+      const key = `${t.type}|${t.original}|${t.correction}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+type ComprehensionItem = {
+  questionId: string;
+  questionText: string;
+  maxPoints: number;
+  correctAnswer: string;
+  acceptableAnswers: string[];
+  studentAnswer: string;
+  sourceLabel: string;
+  answerRowId: number;
+};
+
+/**
+ * Mark a listening (CO) or reading (CE) attempt with ONE batched AI call.
+ * The old implementation made one sequential AI call per question (10-13 calls,
+ * several minutes wall-clock), which routinely outlived the worker and left
+ * attempts stuck in pending_marking. One call finishes in well under a minute.
+ */
+async function markComprehension(
+  c: any,
+  db: any,
+  attempt: any,
+  content: any,
+  userAnswers: any[]
+): Promise<{ totalScore: number; scores: Record<string, any>; writes: any[] }> {
+  const isListening = attempt.section === 'CO';
+
+  const docs: { label: string; text: string; questions: any[]; answerKey: any[] }[] = isListening
+    ? [
+        {
+          label: 'LONG DOCUMENT',
+          text: content.listening.longDocument.transcript,
+          questions: content.listening.longDocument.questions,
+          answerKey: content.listening.longDocument.answerKey,
+        },
+        ...content.listening.shortDocuments.map((d: any, i: number) => ({
+          label: `SHORT DOCUMENT ${i + 1}`,
+          text: d.transcript,
+          questions: d.questions,
+          answerKey: d.answerKey,
+        })),
+      ]
+    : [
+        {
+          label: 'TEXT',
+          text: content.reading.text,
+          questions: content.reading.questions,
+          answerKey: content.reading.answerKey,
+        },
+      ];
+
+  const allQuestions = docs.flatMap((d) => d.questions);
+  const maxScore = allQuestions.reduce((sum: number, q: any) => sum + (q.points || 0), 0);
+
+  const answerByQ = new Map(userAnswers.map((a: any) => [a.questionId, a]));
+  const items: ComprehensionItem[] = [];
+  const usedSources = new Map<string, string>();
+
+  for (const doc of docs) {
+    const akMap = new Map((doc.answerKey || []).map((ak: any) => [ak.questionId, ak]));
+    for (const q of doc.questions) {
+      const ak = akMap.get(q.id);
+      const ans = answerByQ.get(q.id);
+      if (!ak || !ans) continue; // unanswered questions simply score 0
+      usedSources.set(doc.label, doc.text);
+      items.push({
+        questionId: q.id,
+        questionText: q.text,
+        maxPoints: ak.points ?? q.points ?? 0,
+        correctAnswer: String(ak.correctAnswer ?? ''),
+        acceptableAnswers: Array.isArray(ak.acceptableAnswers) ? ak.acceptableAnswers : [],
+        studentAnswer: ans.userAnswer || '',
+        sourceLabel: doc.label,
+        answerRowId: ans.id,
+      });
+    }
+  }
+
+  let resultsByQ = new Map<string, any>();
+  if (items.length > 0) {
+    const sourcesBlock = [...usedSources.entries()]
+      .map(([label, text]) => `=== ${label} ===\n${text}`)
+      .join('\n\n');
+    const questionsBlock = items
+      .map(
+        (it) =>
+          `QUESTION ID: ${it.questionId} | SOURCE: ${it.sourceLabel} | MAX POINTS: ${it.maxPoints}\n` +
+          `QUESTION: ${it.questionText}\n` +
+          `CORRECT ANSWER: ${it.correctAnswer}\n` +
+          `ACCEPTABLE ANSWERS: ${it.acceptableAnswers.join(', ')}\n` +
+          `STUDENT ANSWER: ${it.studentAnswer}`
+      )
+      .join('\n\n');
+
+    const raw = await chatCompletion(
+      c,
+      [
+        { role: 'system', content: MARKING_COMPREHENSION_BATCH_PROMPT },
+        { role: 'user', content: `SOURCE TEXTS:\n${sourcesBlock}\n\nQUESTIONS AND STUDENT ANSWERS:\n${questionsBlock}` },
+      ],
+      { temperature: 0.3, max_tokens: 6144, jsonMode: true, timeoutMs: 90000 }
+    );
+
+    const parsed = JSON.parse(extractJson(raw));
+    const results = Array.isArray(parsed?.results) ? parsed.results : [];
+    resultsByQ = new Map(results.filter((r: any) => r && r.questionId != null).map((r: any) => [String(r.questionId), r]));
+  }
+
+  const writes: any[] = [];
+  let totalScore = 0;
+
+  for (const it of items) {
+    const r = resultsByQ.get(it.questionId);
+    const score = clamp(r?.score, 0, it.maxPoints);
+    const feedbackText = typeof r?.feedback === 'string' ? r.feedback : '';
+    totalScore += score;
+
+    writes.push(
+      db.update(answers).set({ aiScore: score, aiFeedback: feedbackText }).where(eq(answers.id, it.answerRowId))
+    );
+
+    for (const tag of normalizeErrorTags(r?.errorTags)) {
+      writes.push(
+        db.insert(errorLogs).values({
+          userId: attempt.userId,
+          attemptId: attempt.id,
+          errorType: tag.type,
+          originalText: tag.original,
+          correction: tag.correction,
+          explanation: tag.explanation,
+        })
+      );
+    }
+  }
+
+  const scaled = maxScore > 0 ? (totalScore / maxScore) * 25 : 0;
+  return { totalScore: scaled, scores: { raw: totalScore, max: maxScore, scaled }, writes };
 }
 
 async function runMarking(c: any, attemptId: number, userId: number) {
   const db = getDb(c.env.DB);
-  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
-  if (!attempt || attempt.userId !== userId) return;
-  if (attempt.status !== 'pending_marking') return;
 
-  const [exam] = await db.select().from(exams).where(eq(exams.id, attempt.examId));
-  if (!exam) return;
+  // Single-flight claim: only one run may transition pending_marking -> marking.
+  // Page reloads (the marking page polls every few seconds) can no longer spawn
+  // duplicate runs that each append another copy of the error logs.
+  const claimed = await db
+    .update(attempts)
+    .set({ status: 'marking', markingStartedAt: new Date() })
+    .where(and(eq(attempts.id, attemptId), eq(attempts.status, 'pending_marking')))
+    .returning();
 
-  const content = exam.generatedContent as any;
-  const userAnswers = await db.select().from(answers).where(eq(answers.attemptId, attemptId));
+  if (claimed.length === 0) return; // already claimed, completed, or gone
+  const attempt = claimed[0];
+  if (attempt.userId !== userId) return;
+
+  const fail = async (message: string) => {
+    await db
+      .update(attempts)
+      .set({ status: 'marking_failed', aiFeedback: { error: message } as any })
+      .where(eq(attempts.id, attemptId));
+  };
 
   try {
+    const [exam] = await db.select().from(exams).where(eq(exams.id, attempt.examId));
+    if (!exam) {
+      await fail('Exam not found for this attempt');
+      return;
+    }
+
+    // Idempotency: drop error logs written by earlier partial/duplicate runs of
+    // this attempt before writing the fresh set below.
+    await db.delete(errorLogs).where(eq(errorLogs.attemptId, attemptId));
+
+    const content = exam.generatedContent as any;
+    const userAnswers = await db.select().from(answers).where(eq(answers.attemptId, attemptId));
+
     let totalScore = 0;
     let scores: Record<string, any> = {};
     let feedback: Record<string, string> = {};
+    const writes: any[] = [];
 
     if (attempt.section === 'CO' || attempt.section === 'CE') {
-      const sectionKey = attempt.section === 'CO' ? 'listening' : 'reading';
-      const isListening = attempt.section === 'CO';
-      const allQuestions = isListening
-        ? [
-            ...content.listening.longDocument.questions,
-            ...content.listening.shortDocuments.flatMap((d: any) => d.questions),
-          ]
-        : [...content.reading.questions];
-      const answerKeyMap = new Map(
-        (isListening
-          ? [
-              ...content.listening.longDocument.answerKey,
-              ...content.listening.shortDocuments.flatMap((d: any) => d.answerKey),
-            ]
-          : [...content.reading.answerKey]
-        ).map((ak: any) => [ak.questionId, ak])
-      );
-
-      const sourceTextMap = isListening
-        ? new Map<string, string>([
-            ...content.listening.longDocument.questions.map((q: any) => [
-              q.id,
-              content.listening.longDocument.transcript,
-            ]),
-            ...content.listening.shortDocuments.flatMap((d: any) =>
-              d.questions.map((q: any) => [q.id, d.transcript])
-            ),
-          ])
-        : new Map<string, string>(
-            content.reading.questions.map((q: any) => [q.id, content.reading.text])
-          );
-
-      for (const ans of userAnswers) {
-        const q = allQuestions.find((qq: any) => qq.id === ans.questionId);
-        const ak = answerKeyMap.get(ans.questionId);
-        if (!q || !ak) continue;
-
-        const sourceText = sourceTextMap.get(ans.questionId) ?? '';
-
-        const resultJson = await chatCompletion(
-          c,
-          [
-            { role: 'system', content: MARKING_COMPREHENSION_PROMPT },
-            {
-              role: 'user',
-              content: `SOURCE TEXT:\n${sourceText}\n\nQUESTION: ${q.text}\nCORRECT ANSWER: ${ak.correctAnswer}\nACCEPTABLE ANSWERS: ${(ak.acceptableAnswers || []).join(', ')}\nMAX POINTS: ${ak.points}\n\nSTUDENT ANSWER:\n${ans.userAnswer || ''}`,
-            },
-          ],
-          { temperature: 0.3, max_tokens: 800, jsonMode: true, timeoutMs: 30000 }
-        );
-
-        const rawResult = JSON.parse(extractJson(resultJson));
-        const score = clamp(rawResult.score, 0, ak.points);
-        const feedbackText = typeof rawResult.feedback === 'string' ? rawResult.feedback : '';
-        totalScore += score;
-
-        await db
-          .update(answers)
-          .set({ aiScore: score, aiFeedback: feedbackText })
-          .where(eq(answers.id, ans.id));
-
-        for (const tag of normalizeErrorTags(rawResult.errorTags)) {
-          await db.insert(errorLogs).values({
-            userId,
-            attemptId,
-            errorType: tag.type,
-            originalText: tag.original,
-            correction: tag.correction,
-            explanation: tag.explanation,
-          });
-        }
-      }
-
-      const maxScore = allQuestions.reduce((sum: number, q: any) => sum + q.points, 0);
-      scores = { raw: totalScore, max: maxScore, scaled: (totalScore / maxScore) * 25 };
-      totalScore = scores.scaled;
+      const result = await markComprehension(c, db, attempt, content, userAnswers);
+      totalScore = result.totalScore;
+      scores = result.scores;
+      writes.push(...result.writes);
     } else if (attempt.section === 'PE') {
       const synthese = userAnswers.find((a) => a.questionId === 'synthese')?.userAnswer || '';
       const essai = userAnswers.find((a) => a.questionId === 'essai')?.userAnswer || '';
@@ -201,20 +303,22 @@ async function runMarking(c: any, attemptId: number, userId: number) {
         ...(Array.isArray(synRaw.errorTags) ? synRaw.errorTags : []),
         ...(Array.isArray(essRaw.errorTags) ? essRaw.errorTags : []),
       ])) {
-        await db.insert(errorLogs).values({
-          userId,
-          attemptId,
-          errorType: tag.type,
-          originalText: tag.original,
-          correction: tag.correction,
-          explanation: tag.explanation,
-        });
+        writes.push(
+          db.insert(errorLogs).values({
+            userId,
+            attemptId,
+            errorType: tag.type,
+            originalText: tag.original,
+            correction: tag.correction,
+            explanation: tag.explanation,
+          })
+        );
       }
 
       const synAns = userAnswers.find((a) => a.questionId === 'synthese');
       const essAns = userAnswers.find((a) => a.questionId === 'essai');
-      if (synAns) await db.update(answers).set({ aiScore: synScores.total, aiFeedback: feedback.synthese }).where(eq(answers.id, synAns.id));
-      if (essAns) await db.update(answers).set({ aiScore: essScores.total, aiFeedback: feedback.essai }).where(eq(answers.id, essAns.id));
+      if (synAns) writes.push(db.update(answers).set({ aiScore: synScores.total, aiFeedback: feedback.synthese }).where(eq(answers.id, synAns.id)));
+      if (essAns) writes.push(db.update(answers).set({ aiScore: essScores.total, aiFeedback: feedback.essai }).where(eq(answers.id, essAns.id)));
     } else if (attempt.section === 'PO') {
       const speakingAnswers = userAnswers.filter((a) => a.audioKey && a.questionId.startsWith('speaking'));
       const transcripts: string[] = [];
@@ -231,10 +335,9 @@ async function runMarking(c: any, attemptId: number, userId: number) {
             ? 'EXPOSÉ'
             : `QUESTION ${speakingAns.questionId.replace('speaking-q', '')}`;
         transcripts.push(`[${label}]\n${transcription}`);
-        await db
-          .update(answers)
-          .set({ userAnswer: transcription })
-          .where(eq(answers.id, speakingAns.id));
+        writes.push(
+          db.update(answers).set({ userAnswer: transcription }).where(eq(answers.id, speakingAns.id))
+        );
       }
 
       if (transcripts.length > 0) {
@@ -265,42 +368,72 @@ async function runMarking(c: any, attemptId: number, userId: number) {
         };
 
         for (const tag of normalizeErrorTags(rawResult.errorTags)) {
-          await db.insert(errorLogs).values({
-            userId,
-            attemptId,
-            errorType: tag.type,
-            originalText: tag.original,
-            correction: tag.correction,
-            explanation: tag.explanation,
-          });
+          writes.push(
+            db.insert(errorLogs).values({
+              userId,
+              attemptId,
+              errorType: tag.type,
+              originalText: tag.original,
+              correction: tag.correction,
+              explanation: tag.explanation,
+            })
+          );
         }
 
         const exposeAns = speakingAnswers.find((a) => a.questionId === 'speaking');
         if (exposeAns) {
-          await db
-            .update(answers)
-            .set({ aiScore: speakingScores.total, aiFeedback: feedback.general })
-            .where(eq(answers.id, exposeAns.id));
+          writes.push(
+            db.update(answers).set({ aiScore: speakingScores.total, aiFeedback: feedback.general }).where(eq(answers.id, exposeAns.id))
+          );
         }
       }
+    } else {
+      await fail(`Unknown section: ${attempt.section}`);
+      return;
     }
 
-    await db
-      .update(attempts)
-      .set({
-        status: 'completed',
-        totalScore: Math.round(totalScore * 10) / 10,
-        scores: scores as any,
-        aiFeedback: feedback as any,
-      })
-      .where(eq(attempts.id, attemptId));
+    // Final attempt update is part of the same atomic batch as the answer/error
+    // writes, so an attempt can never be half-written.
+    writes.push(
+      db
+        .update(attempts)
+        .set({
+          status: 'completed',
+          totalScore: Math.round(totalScore * 10) / 10,
+          scores: scores as any,
+          aiFeedback: feedback as any,
+        })
+        .where(eq(attempts.id, attemptId))
+    );
+
+    if (writes.length > 0) {
+      await db.batch(writes as [any, ...any[]]);
+    }
   } catch (err: any) {
     console.error('Background marking failed:', err);
-    await db
-      .update(attempts)
-      .set({ status: 'marking_failed', aiFeedback: { error: err.message } as any })
-      .where(eq(attempts.id, attemptId));
+    try {
+      await fail(err?.message || 'Unknown marking error');
+    } catch (failErr: any) {
+      console.error('Failed to record marking failure:', failErr);
+    }
   }
+}
+
+function MarkingSpinner({ attemptId }: { attemptId: number }) {
+  return (
+    <div class="card" style="max-width:480px;margin:var(--space-12) auto;text-align:center;">
+      <div class="marking-spinner"></div>
+      <h1 style="font-family:var(--font-fun);font-size:1.5rem;margin-bottom:var(--space-3);">Marking your answers…</h1>
+      <p style="color:var(--base-text-secondary);margin:0;">
+        This usually takes under a minute. The page refreshes itself — no need to reload.
+      </p>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `setTimeout(() => window.location.reload(), 5000);`,
+        }}
+      />
+    </div>
+  );
 }
 
 marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
@@ -316,12 +449,18 @@ marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
   }
 
   if (attempt.status === 'marking_failed') {
+    const errMsg = (attempt.aiFeedback as any)?.error;
     return c.html(
       <Layout title="Marking Failed">
         <Navbar user={user} />
         <div class="container">
-          <div class="card">
-            <div class="alert alert-danger">Marking failed. Please try submitting again.</div>
+          <div class="card" style="max-width:520px;margin:var(--space-12) auto;">
+            <div class="alert alert-danger">
+              Marking failed{errMsg ? `: ${errMsg}` : ''}. Your answers are saved — retrying is safe and won't duplicate anything.
+            </div>
+            <form method="post" action={`/marking/${attemptId}/retry`} style="display:inline;">
+              <button type="submit" class="btn btn-primary">Retry marking</button>
+            </form>{' '}
             <a href={`/exams/${attempt.examId}/${attempt.section.toLowerCase()}?attempt=${attemptId}`} class="btn btn-secondary">
               Back to exam
             </a>
@@ -331,29 +470,63 @@ marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
     );
   }
 
-  if (attempt.status !== 'pending_marking') {
+  // Reclaim abandoned marking runs (worker killed mid-flight left status stuck).
+  if (attempt.status === 'marking') {
+    const started = attempt.markingStartedAt ? new Date(attempt.markingStartedAt).getTime() : 0;
+    if (!started || Date.now() - started > STALE_MARKING_MS) {
+      await db
+        .update(attempts)
+        .set({ status: 'pending_marking' })
+        .where(and(eq(attempts.id, attemptId), eq(attempts.status, 'marking')));
+      attempt.status = 'pending_marking';
+    }
+  }
+
+  if (attempt.status === 'pending_marking') {
+    // Kick off background marking. runMarking claims the attempt atomically, so
+    // concurrent reloads can't start duplicate runs.
+    c.executionCtx.waitUntil(runMarking(c, attemptId, user.id));
+  } else if (attempt.status !== 'marking') {
     return c.redirect(`/exams/${attempt.examId}/${attempt.section.toLowerCase()}?attempt=${attemptId}`);
   }
 
-  // Kick off background marking
-  c.executionCtx.waitUntil(runMarking(c, attemptId, user.id));
-
-  // Return loading page immediately
   return c.html(
     <Layout title="Marking…">
       <Navbar user={user} />
       <div class="container">
-        <div class="card" style="max-width:480px;margin:var(--space-12) auto;text-align:center;">
-          <div class="marking-spinner"></div>
-          <h1 style="font-family:var(--font-fun);font-size:1.5rem;margin-bottom:var(--space-3);">Marking your answers…</h1>
-          <p style="color:var(--base-text-secondary);margin:0;">This may take 30–60 seconds. Please don't close this page.</p>
-          <script dangerouslySetInnerHTML={{ __html: `
-            setTimeout(() => window.location.reload(), 4000);
-          `}} />
-        </div>
+        <MarkingSpinner attemptId={attemptId} />
       </div>
     </Layout>
   );
+});
+
+marking.post('/marking/:attemptId/retry', authMiddleware(), async (c) => {
+  const user = c.get('user');
+  const attemptId = Number(c.req.param('attemptId'));
+  const db = getDb(c.env.DB);
+
+  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
+  if (!attempt || attempt.userId !== user.id) return c.notFound();
+
+  // Retry is allowed from a failed run, or a stale in-progress run.
+  const retryable =
+    attempt.status === 'marking_failed' ||
+    (attempt.status === 'marking' &&
+      (!attempt.markingStartedAt || Date.now() - new Date(attempt.markingStartedAt).getTime() > STALE_MARKING_MS));
+
+  if (retryable) {
+    await db
+      .update(attempts)
+      .set({ status: 'pending_marking' })
+      .where(
+        and(
+          eq(attempts.id, attemptId),
+          inArray(attempts.status, ['marking_failed', 'marking'])
+        )
+      );
+  }
+
+  return c.redirect(`/marking/${attemptId}`);
 });
 
 export default marking;
