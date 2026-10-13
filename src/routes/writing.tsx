@@ -127,7 +127,9 @@ async function saveWritingAnswers(
         .where(and(eq(answers.attemptId, attemptId), eq(answers.questionId, f.id)));
 
       if (existing) {
-        await db.update(answers).set({ userAnswer: f.val }).where(eq(answers.id, existing.id));
+        // Clear any prior mark when the answer text changes, so a resubmit
+        // re-marks it instead of resuming with a stale score.
+        await db.update(answers).set({ userAnswer: f.val, aiScore: null, aiFeedback: null }).where(eq(answers.id, existing.id));
       } else {
         await db.insert(answers).values({ attemptId, questionId: f.id, userAnswer: f.val });
       }

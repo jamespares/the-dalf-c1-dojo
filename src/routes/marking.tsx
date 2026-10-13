@@ -6,7 +6,7 @@ import { authMiddleware } from '../auth';
 import { chatCompletion, transcribeAudio, extractJson } from '../ai';
 import { getAudio } from '../storage';
 import {
-  MARKING_COMPREHENSION_PROMPT,
+  MARKING_COMPREHENSION_BATCH_PROMPT,
   MARKING_SYNTHESIS_PROMPT,
   MARKING_ESSAY_PROMPT,
   MARKING_SPEAKING_PROMPT,
@@ -109,10 +109,12 @@ async function runMarking(c: any, attemptId: number, userId: number) {
   if (attempt.status !== 'pending_marking') return;
 
   // Atomically claim the attempt so concurrent /marking page reloads don't
-  // start duplicate marking runs against Workers AI.
+  // start duplicate marking runs against Workers AI. Refreshing submittedAt
+  // marks when THIS run started, so the stale-run detector doesn't thrash
+  // while a legitimate run is still working.
   const claimed = await db
     .update(attempts)
-    .set({ status: 'marking' })
+    .set({ status: 'marking', submittedAt: new Date() })
     .where(and(eq(attempts.id, attemptId), eq(attempts.status, 'pending_marking')))
     .returning({ id: attempts.id });
   if (claimed.length === 0) return;
@@ -135,7 +137,6 @@ async function runMarking(c: any, attemptId: number, userId: number) {
     let feedback: Record<string, string> = {};
 
     if (attempt.section === 'CO' || attempt.section === 'CE') {
-      const sectionKey = attempt.section === 'CO' ? 'listening' : 'reading';
       const isListening = attempt.section === 'CO';
       const allQuestions = isListening
         ? [
@@ -153,20 +154,6 @@ async function runMarking(c: any, attemptId: number, userId: number) {
         ).map((ak: any) => [ak.questionId, ak])
       );
 
-      const sourceTextMap = isListening
-        ? new Map<string, string>([
-            ...content.listening.longDocument.questions.map((q: any) => [
-              q.id,
-              content.listening.longDocument.transcript,
-            ]),
-            ...content.listening.shortDocuments.flatMap((d: any) =>
-              d.questions.map((q: any) => [q.id, d.transcript])
-            ),
-          ])
-        : new Map<string, string>(
-            content.reading.questions.map((q: any) => [q.id, content.reading.text])
-          );
-
       // Only mark rows that actually contain an answer; unanswered questions
       // score 0 (as in the real exam) without burning an AI call.
       const answeredRows = userAnswers.filter((a) => a.userAnswer && a.userAnswer.trim());
@@ -174,57 +161,124 @@ async function runMarking(c: any, attemptId: number, userId: number) {
         throw new Error('No answers found for this attempt — nothing to mark.');
       }
 
-      const unmatchedIds: string[] = [];
-      for (const ans of answeredRows) {
-        const q = allQuestions.find((qq: any) => qq.id === ans.questionId);
-        const ak = answerKeyMap.get(ans.questionId);
-        if (!q || !ak) {
-          // A saved answer that doesn't match the paper's questions/answer key is
-          // data corruption — fail loudly rather than silently dropping the score.
-          unmatchedIds.push(ans.questionId);
-          continue;
-        }
-
-        const sourceText = sourceTextMap.get(ans.questionId) ?? '';
-
-        const resultJson = await chatCompletionWithRetry(
-          c,
-          [
-            { role: 'system', content: MARKING_COMPREHENSION_PROMPT },
-            {
-              role: 'user',
-              content: `SOURCE TEXT:\n${sourceText}\n\nQUESTION: ${q.text}\nCORRECT ANSWER: ${ak.correctAnswer}\nACCEPTABLE ANSWERS: ${(ak.acceptableAnswers || []).join(', ')}\nMAX POINTS: ${ak.points}\n\nSTUDENT ANSWER:\n${ans.userAnswer || ''}`,
-            },
-          ],
-          { temperature: 0.3, max_tokens: 800, jsonMode: true, timeoutMs: 30000 }
-        );
-
-        const rawResult = JSON.parse(extractJson(resultJson));
-        const score = clamp(rawResult.score, 0, ak.points);
-        const feedbackText = typeof rawResult.feedback === 'string' ? rawResult.feedback : '';
-        totalScore += score;
-
-        await db
-          .update(answers)
-          .set({ aiScore: score, aiFeedback: feedbackText })
-          .where(eq(answers.id, ans.id));
-
-        for (const tag of normalizeErrorTags(rawResult.errorTags)) {
-          await db.insert(errorLogs).values({
-            userId,
-            attemptId,
-            errorType: tag.type,
-            originalText: tag.original,
-            correction: tag.correction,
-            explanation: tag.explanation,
-          });
-        }
-      }
-
+      // A saved answer that doesn't match the paper's questions/answer key is
+      // data corruption — fail loudly rather than silently dropping the score.
+      const unmatchedIds = answeredRows
+        .filter(
+          (a) => !allQuestions.some((q: any) => q.id === a.questionId) || !answerKeyMap.has(a.questionId)
+        )
+        .map((a) => a.questionId);
       if (unmatchedIds.length > 0) {
         throw new Error(
           `Could not mark ${unmatchedIds.length} answer(s): unknown question id(s) ${unmatchedIds.join(', ')}`
         );
+      }
+
+      // Resume support: answers already marked by an earlier interrupted run
+      // keep their scores and are not re-marked.
+      const markedRowIds = new Set<number>(
+        answeredRows.filter((a) => a.aiScore != null).map((a) => a.id)
+      );
+      totalScore += answeredRows
+        .filter((a) => a.aiScore != null)
+        .reduce((sum, a) => sum + (a.aiScore ?? 0), 0);
+      const pendingRows = answeredRows.filter((a) => a.aiScore == null);
+
+      // Group pending answers by source document, so each AI call carries the
+      // transcript/text once and marks a batch of questions. A full section is
+      // ~4-5 calls instead of one call per question — sequential per-question
+      // calls exceeded the worker's post-response lifetime and left attempts
+      // stuck in 'marking' forever.
+      interface MarkTask {
+        qid: string;
+        q: any;
+        ak: any;
+        row: (typeof answeredRows)[number];
+      }
+      const taskFor = (row: (typeof answeredRows)[number]): MarkTask => ({
+        qid: row.questionId,
+        q: allQuestions.find((qq: any) => qq.id === row.questionId),
+        ak: answerKeyMap.get(row.questionId)!,
+        row,
+      });
+
+      const groups: { sourceText: string; tasks: MarkTask[] }[] = [];
+      if (isListening) {
+        const longIds = new Set(
+          content.listening.longDocument.questions.map((q: any) => q.id)
+        );
+        const longTasks = pendingRows.filter((r) => longIds.has(r.questionId)).map(taskFor);
+        if (longTasks.length) {
+          groups.push({ sourceText: content.listening.longDocument.transcript, tasks: longTasks });
+        }
+        for (const d of content.listening.shortDocuments) {
+          const docIds = new Set(d.questions.map((q: any) => q.id));
+          const docTasks = pendingRows.filter((r) => docIds.has(r.questionId)).map(taskFor);
+          if (docTasks.length) groups.push({ sourceText: d.transcript, tasks: docTasks });
+        }
+      } else {
+        // Reading shares one long text — batch in chunks of 5 questions.
+        const pending = pendingRows.map(taskFor);
+        for (let i = 0; i < pending.length; i += 5) {
+          groups.push({ sourceText: content.reading.text, tasks: pending.slice(i, i + 5) });
+        }
+      }
+
+      for (const group of groups) {
+        const resultJson = await chatCompletionWithRetry(
+          c,
+          [
+            { role: 'system', content: MARKING_COMPREHENSION_BATCH_PROMPT },
+            {
+              role: 'user',
+              content: `SOURCE TEXT:\n${group.sourceText}\n\nQUESTIONS, ANSWER KEYS AND STUDENT ANSWERS:\n\n${group.tasks
+                .map(
+                  (t) =>
+                    `[${t.qid}] MAX POINTS: ${t.ak.points}\nQUESTION: ${t.q.text}\nCORRECT ANSWER: ${t.ak.correctAnswer}\nACCEPTABLE ANSWERS: ${(t.ak.acceptableAnswers || []).join(', ')}\nSTUDENT ANSWER:\n${t.row.userAnswer}`
+                )
+                .join('\n\n')}`,
+            },
+          ],
+          { temperature: 0.3, max_tokens: 4000, jsonMode: true, timeoutMs: 60000 }
+        );
+
+        const parsed = JSON.parse(extractJson(resultJson));
+        const results: any[] = Array.isArray(parsed?.results) ? parsed.results : [];
+        const resultMap = new Map(results.map((r: any) => [String(r?.questionId ?? ''), r]));
+
+        for (const t of group.tasks) {
+          const r = resultMap.get(t.qid);
+          if (!r) continue; // integrity check below turns this into a loud failure
+          const score = clamp(r.score, 0, t.ak.points);
+          const feedbackText = typeof r.feedback === 'string' ? r.feedback : '';
+          totalScore += score;
+          markedRowIds.add(t.row.id);
+
+          await db
+            .update(answers)
+            .set({ aiScore: score, aiFeedback: feedbackText })
+            .where(eq(answers.id, t.row.id));
+
+          for (const tag of normalizeErrorTags(r.errorTags)) {
+            await db.insert(errorLogs).values({
+              userId,
+              attemptId,
+              errorType: tag.type,
+              originalText: tag.original,
+              correction: tag.correction,
+              explanation: tag.explanation,
+            });
+          }
+        }
+      }
+
+      // Integrity: every answered question must have a score before the attempt
+      // completes — never present a partial mark as final.
+      const missingIds = answeredRows
+        .filter((a) => !markedRowIds.has(a.id))
+        .map((a) => a.questionId);
+      if (missingIds.length > 0) {
+        throw new Error(`Marking incomplete — no result for question(s): ${missingIds.join(', ')}`);
       }
 
       const maxScore = allQuestions.reduce((sum: number, q: any) => sum + q.points, 0);

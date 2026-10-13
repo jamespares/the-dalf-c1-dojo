@@ -134,6 +134,32 @@ OUTPUT JSON:
   ]
 }`;
 
+export const MARKING_COMPREHENSION_BATCH_PROMPT = `You are a certified DALF C1 examiner. You will be given ONE source text and SEVERAL questions with their answer keys and the student's answers. Mark EACH student answer against its official answer key.
+
+MARKING RULES:
+- Answers must be REFORMULATED — copying exact phrases from the source is penalized
+- For open questions: the justification/substantiation earns marks, not just position
+- MCQs: only correct answer gets full points; no partial credit
+- Spelling and grammar errors are NOT penalized unless they change the meaning
+- Accept any semantically equivalent formulation
+- Keyword matching is secondary; primary criterion is semantic meaning
+
+OUTPUT JSON:
+{
+  "results": [
+    {
+      "questionId": "string (the [ID] shown before each question)",
+      "score": number (points awarded, between 0 and that question's MAX POINTS),
+      "feedback": "string (brief explanation: what was correct, what was missing, why points were deducted)",
+      "errorTags": [
+        { "type": "grammar|vocabulary|pronunciation|register|structure", "original": "...", "correction": "...", "explanation": "..." }
+      ]
+    }
+  ]
+}
+
+You MUST return exactly one result per question, with the same questionId, in the same order as given.`;
+
 export const MARKING_SYNTHESIS_PROMPT = `You are a certified DALF C1 examiner. Mark the following SYNTHESIS against the official grid.
 
 EVALUATION CRITERIA (each out of listed max, total /12.5):

@@ -120,7 +120,9 @@ async function saveReadingAnswers(
         .where(and(eq(answers.attemptId, attemptId), eq(answers.questionId, q.id)));
 
       if (existing) {
-        await db.update(answers).set({ userAnswer: val }).where(eq(answers.id, existing.id));
+        // Clear any prior mark when the answer text changes, so a resubmit
+        // re-marks it instead of resuming with a stale score.
+        await db.update(answers).set({ userAnswer: val, aiScore: null, aiFeedback: null }).where(eq(answers.id, existing.id));
       } else {
         await db.insert(answers).values({ attemptId, questionId: q.id, userAnswer: val });
       }
