@@ -461,11 +461,12 @@ marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
   }
 
   if (attempt.status === 'marking') {
-    // A marking run is already in progress (started by an earlier page load), so
-    // don't start a duplicate. If it's stale — the worker died mid-run — reset it
-    // to pending so a fresh run can pick it up below.
+    // A marking run is already in progress (started by another page load), so
+    // don't start a duplicate. Live runs heartbeat submittedAt every 10s, so a
+    // timestamp older than ~75s means the run died (tab closed / invocation
+    // killed) and a fresh run should take over below.
     const submittedAtMs = attempt.submittedAt ? new Date(attempt.submittedAt).getTime() : 0;
-    const isStale = submittedAtMs > 0 && Date.now() - submittedAtMs > 5 * 60 * 1000;
+    const isStale = submittedAtMs > 0 && Date.now() - submittedAtMs > 75 * 1000;
     if (isStale) {
       await db
         .update(attempts)
@@ -476,7 +477,7 @@ marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
   }
 
   if (attempt.status === 'marking') {
-    // Fresh run in progress elsewhere — just show the spinner.
+    // Fresh run in progress elsewhere — just show the spinner; it reloads until done.
     return markingSpinner(c, user);
   }
 
@@ -484,12 +485,78 @@ marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
     return c.redirect(`/exams/${attempt.examId}/${sectionRoute(attempt.section)}?attempt=${attemptId}`);
   }
 
-  // Kick off background marking
-  c.executionCtx.waitUntil(runMarking(c, attemptId, user.id));
+  // Stream the spinner page, then run marking INSIDE this request: a connected,
+  // streaming response has no wall-time limit, whereas ctx.waitUntil is capped
+  // at 30s after the response is sent — which is what used to kill long marking
+  // runs mid-question and leave attempts stuck. Heartbeats keep the connection
+  // alive and the attempt's timestamp fresh. If the user closes the tab, the run
+  // dies but already-marked answers persist and the next visit resumes.
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (s: string) => {
+        try {
+          controller.enqueue(encoder.encode(s));
+        } catch {
+          // client disconnected
+        }
+      };
+      send(markingStreamPageHtml());
 
-  // Return loading page immediately
-  return markingSpinner(c, user);
+      const heartbeat = setInterval(() => {
+        send('\n<!-- marking -->\n');
+        db.update(attempts)
+          .set({ submittedAt: new Date() })
+          .where(and(eq(attempts.id, attemptId), eq(attempts.status, 'marking')))
+          .catch(() => {});
+      }, 10000);
+
+      try {
+        await runMarking(c, attemptId, user.id);
+      } catch (err) {
+        console.error('Marking run error:', err);
+      } finally {
+        clearInterval(heartbeat);
+      }
+
+      // Review page shows the score on success or a retry banner on failure.
+      send(`<script>window.location.replace('/review/${attemptId}');</script>`);
+      try {
+        controller.close();
+      } catch {}
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store',
+    },
+  });
 });
+
+/** Spinner page for the streaming marking runner (plain HTML so it can stream). */
+function markingStreamPageHtml(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Marking…</title>
+<link rel="icon" type="image/png" href="/logo.png" />
+<link rel="stylesheet" href="/static/style.css?v=11" />
+</head>
+<body>
+<div class="container">
+  <div class="card" style="max-width:480px;margin:var(--space-12) auto;text-align:center;">
+    <div class="marking-spinner"></div>
+    <h1 style="font-family:var(--font-fun);font-size:1.5rem;margin-bottom:var(--space-3);">Marking your answers…</h1>
+    <p style="color:var(--base-text-secondary);margin:0;">This usually takes 1–3 minutes. Keep this page open — you'll be sent to your results automatically.</p>
+  </div>
+</div>
+</body>
+</html>`;
+}
 
 function markingSpinner(c: any, user: any) {
   return c.html(
@@ -499,7 +566,7 @@ function markingSpinner(c: any, user: any) {
         <div class="card" style="max-width:480px;margin:var(--space-12) auto;text-align:center;">
           <div class="marking-spinner"></div>
           <h1 style="font-family:var(--font-fun);font-size:1.5rem;margin-bottom:var(--space-3);">Marking your answers…</h1>
-          <p style="color:var(--base-text-secondary);margin:0;">This may take 30–60 seconds. Please don't close this page.</p>
+          <p style="color:var(--base-text-secondary);margin:0;">This usually takes 1–3 minutes. Keep this page open.</p>
           <script dangerouslySetInnerHTML={{ __html: `
             setTimeout(() => window.location.reload(), 4000);
           `}} />
