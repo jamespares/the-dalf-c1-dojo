@@ -109,9 +109,22 @@ examRoutes.get('/exams', authMiddleware(), async (c) => {
                     )}
                     {attempt ? (
                       attempt.status === 'completed' ? (
-                        <span class={`score-badge ${((attempt.totalScore ?? 0) >= 5) ? 'score-pass' : 'score-fail'}`}>
-                          {attempt.totalScore?.toFixed(1) || '-'} / 25
-                        </span>
+                        <div style="display:flex;flex-direction:column;gap:var(--space-2);align-items:flex-start;">
+                          <span class={`score-badge ${((attempt.totalScore ?? 0) >= 5) ? 'score-pass' : 'score-fail'}`}>
+                            {attempt.totalScore?.toFixed(1) || '-'} / 25
+                          </span>
+                          <div style="display:flex;gap:var(--space-2);">
+                            <a href={`/review/${attempt.id}`} class="btn btn-secondary" style="font-size:0.85rem;">
+                              Review
+                            </a>
+                            <form method="post" action={`/exams/${exam.id}/start`} style="margin:0;">
+                              <input type="hidden" name="section" value={section} />
+                              <button type="submit" class="btn btn-secondary" style="font-size:0.85rem;">
+                                Retake
+                              </button>
+                            </form>
+                          </div>
+                        </div>
                       ) : (
                         <a
                           href={`/exams/${exam.id}/${sectionRoute(section)}?attempt=${attempt.id}`}
@@ -148,6 +161,8 @@ examRoutes.post('/exams/:id/start', authMiddleware(), async (c) => {
 
   const db = getDb(c.env.DB);
 
+  // Reuse the latest attempt only if it's still active; completed or failed
+  // attempts stay in history and a fresh attempt is created (retake).
   const [existing] = await db
     .select()
     .from(attempts)
@@ -158,9 +173,10 @@ examRoutes.post('/exams/:id/start', authMiddleware(), async (c) => {
         eq(attempts.section, section)
       )
     )
+    .orderBy(desc(attempts.startedAt))
     .limit(1);
 
-  if (existing) {
+  if (existing && existing.status !== 'completed' && existing.status !== 'marking_failed') {
     return c.redirect(`/exams/${examId}/${sectionRoute(section)}?attempt=${existing.id}`);
   }
 

@@ -54,6 +54,7 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
 
   const longAudioUrls = toAudioUrls(audioKeys.listeningLong);
   const shortAudioUrls = toAudioUrls(audioKeys.listeningShort);
+  const formError = c.req.query('error');
 
   return c.html(
     <Layout title={`Listening Comprehension — DALF C1`}>
@@ -61,6 +62,12 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
       <div class="container">
       <h1>Listening Comprehension — {exam.title.replace(/^\[static:[^\]]+\]\s*/, '').replace(/^\[static\]\s*/, '')}</h1>
       <p style="color:var(--muted);margin-bottom:var(--space-6);">Recommended time: ~40 minutes. Long document played twice. Short documents played once.</p>
+
+      {formError === 'empty' && (
+        <div class="alert alert-danger">
+          No answers were found for this attempt. Please answer at least one question before submitting for marking.
+        </div>
+      )}
 
       <form method="post" action={`/exams/${examId}/listening/save?attempt=${attempt.id}`}>
         <div class="card">
@@ -151,36 +158,37 @@ listening.get('/exams/:id/listening', authMiddleware(), async (c) => {
               </div>
             );
           })}
-          <button type="submit" class="btn btn-secondary">Save Answers</button>
+          <div class="exam-actions" style="display:flex;gap:var(--space-4);justify-content:flex-end;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-secondary">Save Answers</button>
+            <button
+              type="submit"
+              class="btn btn-success"
+              formaction={`/exams/${examId}/listening/submit?attempt=${attempt.id}`}
+            >
+              Submit for Marking
+            </button>
+          </div>
         </div>
-      </form>
-
-      <form method="post" action={`/exams/${examId}/listening/submit?attempt=${attempt.id}`} class="exam-actions">
-        <button type="submit" class="btn btn-success">Submit for Marking</button>
       </form>
       </div>
     </Layout>
   );
 });
 
-listening.post('/exams/:id/listening/save', authMiddleware(), async (c) => {
-  const examId = Number(c.req.param('id'));
-  const attemptId = Number(c.req.query('attempt'));
-  const body = await c.req.parseBody();
-
-  const db = getDb(c.env.DB);
-  const [exam] = await db.select().from(exams).where(eq(exams.id, examId));
-  if (!exam) return c.notFound();
-
-  const content = exam.generatedContent as any;
+async function saveListeningAnswers(
+  db: ReturnType<typeof getDb>,
+  content: any,
+  attemptId: number,
+  body: Record<string, unknown>
+): Promise<void> {
   const allQuestions = [
     ...content.listening.longDocument.questions,
     ...content.listening.shortDocuments.flatMap((d: any) => d.questions),
   ];
 
-  for (const q of allQuestions) {
-    const val = body[`q_${q.id}`] as string;
-    if (val) {
+  for (const q of allQuestions as any[]) {
+    const val = body[`q_${q.id}`];
+    if (typeof val === 'string' && val.trim()) {
       const [existing] = await db
         .select()
         .from(answers)
@@ -196,15 +204,52 @@ listening.post('/exams/:id/listening/save', authMiddleware(), async (c) => {
       }
     }
   }
+}
+
+async function countSavedAnswers(db: ReturnType<typeof getDb>, attemptId: number): Promise<number> {
+  const saved = await db.select().from(answers).where(eq(answers.attemptId, attemptId));
+  return saved.filter((a) => a.userAnswer && a.userAnswer.trim()).length;
+}
+
+listening.post('/exams/:id/listening/save', authMiddleware(), async (c) => {
+  const user = c.get('user');
+  const examId = Number(c.req.param('id'));
+  const attemptId = Number(c.req.query('attempt'));
+
+  const db = getDb(c.env.DB);
+  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
+  if (!attempt || attempt.userId !== user.id) return c.notFound();
+
+  const [exam] = await db.select().from(exams).where(eq(exams.id, examId));
+  if (!exam) return c.notFound();
+
+  const body = await c.req.parseBody();
+  await saveListeningAnswers(db, exam.generatedContent, attemptId, body);
 
   return c.redirect(`/exams/${examId}/listening?attempt=${attemptId}`);
 });
 
 listening.post('/exams/:id/listening/submit', authMiddleware(), async (c) => {
+  const user = c.get('user');
   const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
 
   const db = getDb(c.env.DB);
+  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
+  if (!attempt || attempt.userId !== user.id) return c.notFound();
+
+  const [exam] = await db.select().from(exams).where(eq(exams.id, examId));
+  if (!exam) return c.notFound();
+
+  // The submit button posts the full answer form (formaction), so persist
+  // everything first — answers entered since the last manual save must not be lost.
+  const body = await c.req.parseBody();
+  await saveListeningAnswers(db, exam.generatedContent, attemptId, body);
+
+  if ((await countSavedAnswers(db, attemptId)) === 0) {
+    return c.redirect(`/exams/${examId}/listening?attempt=${attemptId}&error=empty`);
+  }
+
   await db
     .update(attempts)
     .set({ status: 'pending_marking', submittedAt: new Date() })

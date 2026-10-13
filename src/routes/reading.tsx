@@ -45,6 +45,12 @@ reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
       <h1>Reading Comprehension — {exam.title.replace(/^\[static:[^\]]+\]\s*/, '').replace(/^\[static\]\s*/, '')}</h1>
       <p style="color:var(--muted);margin-bottom:var(--space-6);">Recommended time: 50 minutes</p>
 
+      {c.req.query('error') === 'empty' && (
+        <div class="alert alert-danger">
+          No answers were found for this attempt. Please answer at least one question before submitting for marking.
+        </div>
+      )}
+
       <div class="card">
         <h2>Text</h2>
         <div class="reading-passage">{content.reading.text}</div>
@@ -82,32 +88,32 @@ reading.get('/exams/:id/reading', authMiddleware(), async (c) => {
               )}
             </div>
           ))}
-          <button type="submit" class="btn btn-secondary">Save Answers</button>
+          <div class="exam-actions" style="display:flex;gap:var(--space-4);justify-content:flex-end;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-secondary">Save Answers</button>
+            <button
+              type="submit"
+              class="btn btn-success"
+              formaction={`/exams/${examId}/reading/submit?attempt=${attempt.id}`}
+            >
+              Submit for Marking
+            </button>
+          </div>
         </form>
       </div>
-
-      <form method="post" action={`/exams/${examId}/reading/submit?attempt=${attempt.id}`} class="exam-actions">
-        <button type="submit" class="btn btn-success">Submit for Marking</button>
-      </form>
       </div>
     </Layout>
   );
 });
 
-reading.post('/exams/:id/reading/save', authMiddleware(), async (c) => {
-  const examId = Number(c.req.param('id'));
-  const attemptId = Number(c.req.query('attempt'));
-  const body = await c.req.parseBody();
-
-  const db = getDb(c.env.DB);
-  const [exam] = await db.select().from(exams).where(eq(exams.id, examId));
-  if (!exam) return c.notFound();
-
-  const content = exam.generatedContent as any;
-
-  for (const q of content.reading.questions) {
-    const val = body[`q_${q.id}`] as string;
-    if (val) {
+async function saveReadingAnswers(
+  db: ReturnType<typeof getDb>,
+  content: any,
+  attemptId: number,
+  body: Record<string, unknown>
+): Promise<void> {
+  for (const q of content.reading.questions as any[]) {
+    const val = body[`q_${q.id}`];
+    if (typeof val === 'string' && val.trim()) {
       const [existing] = await db
         .select()
         .from(answers)
@@ -120,13 +126,52 @@ reading.post('/exams/:id/reading/save', authMiddleware(), async (c) => {
       }
     }
   }
+}
+
+async function countSavedAnswers(db: ReturnType<typeof getDb>, attemptId: number): Promise<number> {
+  const saved = await db.select().from(answers).where(eq(answers.attemptId, attemptId));
+  return saved.filter((a) => a.userAnswer && a.userAnswer.trim()).length;
+}
+
+reading.post('/exams/:id/reading/save', authMiddleware(), async (c) => {
+  const user = c.get('user');
+  const examId = Number(c.req.param('id'));
+  const attemptId = Number(c.req.query('attempt'));
+
+  const db = getDb(c.env.DB);
+  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
+  if (!attempt || attempt.userId !== user.id) return c.notFound();
+
+  const [exam] = await db.select().from(exams).where(eq(exams.id, examId));
+  if (!exam) return c.notFound();
+
+  const body = await c.req.parseBody();
+  await saveReadingAnswers(db, exam.generatedContent, attemptId, body);
 
   return c.redirect(`/exams/${examId}/reading?attempt=${attemptId}`);
 });
 
 reading.post('/exams/:id/reading/submit', authMiddleware(), async (c) => {
+  const user = c.get('user');
+  const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
+
   const db = getDb(c.env.DB);
+  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
+  if (!attempt || attempt.userId !== user.id) return c.notFound();
+
+  const [exam] = await db.select().from(exams).where(eq(exams.id, examId));
+  if (!exam) return c.notFound();
+
+  // The submit button posts the full answer form (formaction), so persist
+  // everything first — answers entered since the last manual save must not be lost.
+  const body = await c.req.parseBody();
+  await saveReadingAnswers(db, exam.generatedContent, attemptId, body);
+
+  if ((await countSavedAnswers(db, attemptId)) === 0) {
+    return c.redirect(`/exams/${examId}/reading?attempt=${attemptId}&error=empty`);
+  }
+
   await db
     .update(attempts)
     .set({ status: 'pending_marking', submittedAt: new Date() })

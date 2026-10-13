@@ -45,6 +45,12 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
       <h1>Writing Production — {exam.title.replace(/^\[static:[^\]]+\]\s*/, '').replace(/^\[static\]\s*/, '')}</h1>
       <p style="color:var(--muted);margin-bottom:var(--space-6);">Recommended time: 2h30</p>
 
+      {c.req.query('error') === 'empty' && (
+        <div class="alert alert-danger">
+          Nothing to mark yet. Please write your synthèse and/or essai before submitting for marking.
+        </div>
+      )}
+
       <div class="card">
         <h2>Dossier</h2>
         {content.writing.dossier.map((doc: any, idx: number) => (
@@ -87,30 +93,34 @@ writing.get('/exams/:id/writing', authMiddleware(), async (c) => {
           </div>
         </div>
 
-        <button type="submit" class="btn btn-secondary">Save</button>
-      </form>
-
-      <form method="post" action={`/exams/${examId}/writing/submit?attempt=${attempt.id}`} class="exam-actions">
-        <button type="submit" class="btn btn-success">Submit for Marking</button>
+        <div class="exam-actions" style="display:flex;gap:var(--space-4);justify-content:flex-end;flex-wrap:wrap;">
+          <button type="submit" class="btn btn-secondary">Save</button>
+          <button
+            type="submit"
+            class="btn btn-success"
+            formaction={`/exams/${examId}/writing/submit?attempt=${attempt.id}`}
+          >
+            Submit for Marking
+          </button>
+        </div>
       </form>
       </div>
     </Layout>
   );
 });
 
-writing.post('/exams/:id/writing/save', authMiddleware(), async (c) => {
-  const examId = Number(c.req.param('id'));
-  const attemptId = Number(c.req.query('attempt'));
-  const body = await c.req.parseBody();
-
-  const db = getDb(c.env.DB);
+async function saveWritingAnswers(
+  db: ReturnType<typeof getDb>,
+  attemptId: number,
+  body: Record<string, unknown>
+): Promise<void> {
   const fields = [
-    { id: 'synthese', val: body.q_synthese as string },
-    { id: 'essai', val: body.q_essai as string },
+    { id: 'synthese', val: body.q_synthese },
+    { id: 'essai', val: body.q_essai },
   ];
 
   for (const f of fields) {
-    if (f.val) {
+    if (typeof f.val === 'string' && f.val.trim()) {
       const [existing] = await db
         .select()
         .from(answers)
@@ -123,13 +133,46 @@ writing.post('/exams/:id/writing/save', authMiddleware(), async (c) => {
       }
     }
   }
+}
+
+async function countSavedAnswers(db: ReturnType<typeof getDb>, attemptId: number): Promise<number> {
+  const saved = await db.select().from(answers).where(eq(answers.attemptId, attemptId));
+  return saved.filter((a) => a.userAnswer && a.userAnswer.trim()).length;
+}
+
+writing.post('/exams/:id/writing/save', authMiddleware(), async (c) => {
+  const user = c.get('user');
+  const examId = Number(c.req.param('id'));
+  const attemptId = Number(c.req.query('attempt'));
+
+  const db = getDb(c.env.DB);
+  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
+  if (!attempt || attempt.userId !== user.id) return c.notFound();
+
+  const body = await c.req.parseBody();
+  await saveWritingAnswers(db, attemptId, body);
 
   return c.redirect(`/exams/${examId}/writing?attempt=${attemptId}`);
 });
 
 writing.post('/exams/:id/writing/submit', authMiddleware(), async (c) => {
+  const user = c.get('user');
+  const examId = Number(c.req.param('id'));
   const attemptId = Number(c.req.query('attempt'));
+
   const db = getDb(c.env.DB);
+  const [attempt] = await db.select().from(attempts).where(eq(attempts.id, attemptId));
+  if (!attempt || attempt.userId !== user.id) return c.notFound();
+
+  // The submit button posts the full answer form (formaction), so persist
+  // everything first — text written since the last manual save must not be lost.
+  const body = await c.req.parseBody();
+  await saveWritingAnswers(db, attemptId, body);
+
+  if ((await countSavedAnswers(db, attemptId)) === 0) {
+    return c.redirect(`/exams/${examId}/writing?attempt=${attemptId}&error=empty`);
+  }
+
   await db
     .update(attempts)
     .set({ status: 'pending_marking', submittedAt: new Date() })

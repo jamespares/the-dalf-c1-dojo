@@ -16,9 +16,47 @@ import { Navbar } from '../components/Navbar';
 
 const marking = new Hono<{ Bindings: CloudflareBindings }>();
 
+function sectionRoute(section: string): string {
+  switch (section) {
+    case 'CO':
+      return 'listening';
+    case 'CE':
+      return 'reading';
+    case 'PE':
+      return 'writing';
+    case 'PO':
+      return 'speaking';
+    default:
+      return section.toLowerCase();
+  }
+}
+
 function clamp(num: any, min: number, max: number): number {
   const n = typeof num === 'number' && Number.isFinite(num) ? num : 0;
   return Math.max(min, Math.min(max, n));
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Retry a marking call once on transient Workers AI failures before giving up. */
+async function chatCompletionWithRetry(
+  c: any,
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
+  opts: Parameters<typeof chatCompletion>[2]
+): Promise<string> {
+  let lastErr: any;
+  for (let i = 0; i < 2; i++) {
+    try {
+      return await chatCompletion(c, messages, opts);
+    } catch (err) {
+      lastErr = err;
+      console.error(`Marking AI call failed (attempt ${i + 1}/2):`, err);
+      if (i === 0) await sleep(1000);
+    }
+  }
+  throw lastErr;
 }
 
 function clampSyntheseScores(s: any) {
@@ -70,8 +108,23 @@ async function runMarking(c: any, attemptId: number, userId: number) {
   if (!attempt || attempt.userId !== userId) return;
   if (attempt.status !== 'pending_marking') return;
 
+  // Atomically claim the attempt so concurrent /marking page reloads don't
+  // start duplicate marking runs against Workers AI.
+  const claimed = await db
+    .update(attempts)
+    .set({ status: 'marking' })
+    .where(and(eq(attempts.id, attemptId), eq(attempts.status, 'pending_marking')))
+    .returning({ id: attempts.id });
+  if (claimed.length === 0) return;
+
   const [exam] = await db.select().from(exams).where(eq(exams.id, attempt.examId));
-  if (!exam) return;
+  if (!exam) {
+    await db
+      .update(attempts)
+      .set({ status: 'marking_failed', aiFeedback: { error: 'Exam not found' } as any })
+      .where(eq(attempts.id, attemptId));
+    return;
+  }
 
   const content = exam.generatedContent as any;
   const userAnswers = await db.select().from(answers).where(eq(answers.attemptId, attemptId));
@@ -114,14 +167,27 @@ async function runMarking(c: any, attemptId: number, userId: number) {
             content.reading.questions.map((q: any) => [q.id, content.reading.text])
           );
 
-      for (const ans of userAnswers) {
+      // Only mark rows that actually contain an answer; unanswered questions
+      // score 0 (as in the real exam) without burning an AI call.
+      const answeredRows = userAnswers.filter((a) => a.userAnswer && a.userAnswer.trim());
+      if (answeredRows.length === 0) {
+        throw new Error('No answers found for this attempt — nothing to mark.');
+      }
+
+      const unmatchedIds: string[] = [];
+      for (const ans of answeredRows) {
         const q = allQuestions.find((qq: any) => qq.id === ans.questionId);
         const ak = answerKeyMap.get(ans.questionId);
-        if (!q || !ak) continue;
+        if (!q || !ak) {
+          // A saved answer that doesn't match the paper's questions/answer key is
+          // data corruption — fail loudly rather than silently dropping the score.
+          unmatchedIds.push(ans.questionId);
+          continue;
+        }
 
         const sourceText = sourceTextMap.get(ans.questionId) ?? '';
 
-        const resultJson = await chatCompletion(
+        const resultJson = await chatCompletionWithRetry(
           c,
           [
             { role: 'system', content: MARKING_COMPREHENSION_PROMPT },
@@ -155,12 +221,21 @@ async function runMarking(c: any, attemptId: number, userId: number) {
         }
       }
 
+      if (unmatchedIds.length > 0) {
+        throw new Error(
+          `Could not mark ${unmatchedIds.length} answer(s): unknown question id(s) ${unmatchedIds.join(', ')}`
+        );
+      }
+
       const maxScore = allQuestions.reduce((sum: number, q: any) => sum + q.points, 0);
       scores = { raw: totalScore, max: maxScore, scaled: (totalScore / maxScore) * 25 };
       totalScore = scores.scaled;
     } else if (attempt.section === 'PE') {
       const synthese = userAnswers.find((a) => a.questionId === 'synthese')?.userAnswer || '';
       const essai = userAnswers.find((a) => a.questionId === 'essai')?.userAnswer || '';
+      if (!synthese.trim() && !essai.trim()) {
+        throw new Error('No writing answers found for this attempt — nothing to mark.');
+      }
       const dossier = content.writing.dossier.map((d: any) => d.text).join('\n\n');
 
       const synResultJson = await chatCompletion(
@@ -322,7 +397,7 @@ marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
         <div class="container">
           <div class="card">
             <div class="alert alert-danger">Marking failed. Please try submitting again.</div>
-            <a href={`/exams/${attempt.examId}/${attempt.section.toLowerCase()}?attempt=${attemptId}`} class="btn btn-secondary">
+            <a href={`/exams/${attempt.examId}/${sectionRoute(attempt.section)}?attempt=${attemptId}`} class="btn btn-secondary">
               Back to exam
             </a>
           </div>
@@ -331,14 +406,38 @@ marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
     );
   }
 
+  if (attempt.status === 'marking') {
+    // A marking run is already in progress (started by an earlier page load), so
+    // don't start a duplicate. If it's stale — the worker died mid-run — reset it
+    // to pending so a fresh run can pick it up below.
+    const submittedAtMs = attempt.submittedAt ? new Date(attempt.submittedAt).getTime() : 0;
+    const isStale = submittedAtMs > 0 && Date.now() - submittedAtMs > 5 * 60 * 1000;
+    if (isStale) {
+      await db
+        .update(attempts)
+        .set({ status: 'pending_marking' })
+        .where(and(eq(attempts.id, attemptId), eq(attempts.status, 'marking')));
+      attempt.status = 'pending_marking';
+    }
+  }
+
+  if (attempt.status === 'marking') {
+    // Fresh run in progress elsewhere — just show the spinner.
+    return markingSpinner(c, user);
+  }
+
   if (attempt.status !== 'pending_marking') {
-    return c.redirect(`/exams/${attempt.examId}/${attempt.section.toLowerCase()}?attempt=${attemptId}`);
+    return c.redirect(`/exams/${attempt.examId}/${sectionRoute(attempt.section)}?attempt=${attemptId}`);
   }
 
   // Kick off background marking
   c.executionCtx.waitUntil(runMarking(c, attemptId, user.id));
 
   // Return loading page immediately
+  return markingSpinner(c, user);
+});
+
+function markingSpinner(c: any, user: any) {
   return c.html(
     <Layout title="Marking…">
       <Navbar user={user} />
@@ -354,6 +453,6 @@ marking.get('/marking/:attemptId', authMiddleware(), async (c) => {
       </div>
     </Layout>
   );
-});
+}
 
 export default marking;

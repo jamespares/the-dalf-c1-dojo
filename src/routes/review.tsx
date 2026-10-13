@@ -92,6 +92,13 @@ review.get('/review/:attemptId', authMiddleware(), async (c) => {
     PE: 'Writing Production',
     PO: 'Oral Production',
   };
+  const sectionRoutes: Record<string, string> = {
+    CO: 'listening',
+    CE: 'reading',
+    PE: 'writing',
+    PO: 'speaking',
+  };
+  const sectionRoute = sectionRoutes[attempt.section] || attempt.section.toLowerCase();
 
   return c.html(
     <Layout title={`Review — ${exam.title}`}>
@@ -99,6 +106,14 @@ review.get('/review/:attemptId', authMiddleware(), async (c) => {
       <div class="container">
         <h1>Review — {exam.title}</h1>
         <p style="color:var(--muted);">{sectionNames[attempt.section] || attempt.section}</p>
+
+        {attempt.status === 'marking_failed' && (
+          <div class="alert alert-danger">
+            Marking didn't complete, so no final score was recorded. Your answers are saved —{' '}
+            <a href={`/exams/${exam.id}/${sectionRoute}?attempt=${attempt.id}`}>go back to the exam</a>{' '}
+            and press "Submit for Marking" to try again.
+          </div>
+        )}
 
         <div class="card">
           <h2>Score</h2>
@@ -130,7 +145,7 @@ review.get('/review/:attemptId', authMiddleware(), async (c) => {
                 <div style="margin-bottom:1rem;padding:1rem;background:#f8f9fa;border-radius:var(--radius-lg);">
                   <p><strong>{q.id}</strong> {q.text}</p>
                   <p><strong>Your answer:</strong> {ans?.userAnswer || '—'}</p>
-                  <p><strong>Score:</strong> {ans?.aiScore != null ? `${ans.aiScore} pt(s)` : '—'}</p>
+                  <p><strong>Score:</strong> {ans?.aiScore != null ? `${ans.aiScore} pt(s)` : ans ? 'Not marked' : 'No answer'}</p>
                   {ans?.aiFeedback && <p><strong>Feedback:</strong> {ans.aiFeedback}</p>}
                 </div>
               );
@@ -144,7 +159,7 @@ review.get('/review/:attemptId', authMiddleware(), async (c) => {
                     <div style="margin-bottom:1rem;padding:1rem;background:#f8f9fa;border-radius:var(--radius-lg);">
                       <p><strong>{q.id}</strong> {q.text}</p>
                       <p><strong>Your answer:</strong> {ans?.userAnswer || '—'}</p>
-                      <p><strong>Score:</strong> {ans?.aiScore != null ? `${ans.aiScore} pt(s)` : '—'}</p>
+                      <p><strong>Score:</strong> {ans?.aiScore != null ? `${ans.aiScore} pt(s)` : ans ? 'Not marked' : 'No answer'}</p>
                       {ans?.aiFeedback && <p><strong>Feedback:</strong> {ans.aiFeedback}</p>}
                     </div>
                   );
@@ -163,7 +178,7 @@ review.get('/review/:attemptId', authMiddleware(), async (c) => {
                 <div style="margin-bottom:1rem;padding:1rem;background:#f8f9fa;border-radius:var(--radius-lg);">
                   <p><strong>{q.id}</strong> {q.text}</p>
                   <p><strong>Your answer:</strong> {ans?.userAnswer || '—'}</p>
-                  <p><strong>Score:</strong> {ans?.aiScore != null ? `${ans.aiScore} pt(s)` : '—'}</p>
+                  <p><strong>Score:</strong> {ans?.aiScore != null ? `${ans.aiScore} pt(s)` : ans ? 'Not marked' : 'No answer'}</p>
                   {ans?.aiFeedback && <p><strong>Feedback:</strong> {ans.aiFeedback}</p>}
                 </div>
               );
