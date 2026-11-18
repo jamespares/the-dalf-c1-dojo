@@ -73,7 +73,7 @@ The application code lives at the repository root. The repository also contains:
         ├── admin.tsx         # Admin-only AI exam generation UI
         ├── listening.tsx     # Comprehension de l'oral exam page
         ├── reading.tsx       # Comprehension des ecrits exam page
-        ├── writing.tsx        # Production ecrite exam page
+        ├── writing.tsx       # Production ecrite exam page
         ├── speaking.tsx      # Production orale exam page (audio recording via MediaRecorder)
         ├── marking.tsx       # AI marking & feedback display
         ├── review.tsx        # Review past attempts with error tracking
