@@ -12,7 +12,7 @@
     "BETTER_AUTH_URL": "https://thedalfdojo.com",
     "CF_ACCOUNT_ID": "",
     "DEFAULT_FROM_EMAIL": "noreply@thedalfdojo.com",
-    "MARKING_MODEL": "@cf/moonshotai/kimi-k2.7-code"
+    "MARKING_MODEL": "@cf/zai-org/glm-5.3"
   },
   "d1_databases": [
     {

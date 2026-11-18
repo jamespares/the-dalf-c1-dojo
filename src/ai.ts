@@ -1,10 +1,9 @@
 import { Context } from 'hono';
 import { z } from 'zod';
 
-// Default marking model. kimi-k2.6 is deprecated on Workers AI; k2.7-code is
-// the drop-in successor (identical API per Cloudflare changelog). Override with
-// the MARKING_MODEL var in wrangler.jsonc if needed.
-export const DEFAULT_MARKING_MODEL = '@cf/moonshotai/kimi-k2.7-code';
+// Default marking model. GLM-5.3 on Workers AI. Override with the
+// MARKING_MODEL var in wrangler.jsonc if needed.
+export const DEFAULT_MARKING_MODEL = '@cf/zai-org/glm-5.3';
 export const WHISPER_MODEL = '@cf/openai/whisper-large-v3-turbo';
 
 export interface AiBindings {
@@ -21,7 +20,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Run a chat completion via Cloudflare Workers AI (Kimi K2.6 by default). */
+/** Run a chat completion via Cloudflare Workers AI (GLM-5.3 by default). */
 export async function chatCompletion(
   c: Context,
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
@@ -48,8 +47,14 @@ export async function chatCompletion(
     input.response_format = { type: 'json_object' };
   }
 
-  // Disable thinking mode for faster, cheaper structured marking
-  input.chat_template_kwargs = { thinking: false };
+  // Disable thinking mode for faster, cheaper structured marking.
+  // GLM-5.x cannot disable thinking (reasoning is always on); request the
+  // lowest effort instead so the token budget goes to the JSON answer.
+  if (/glm-5/i.test(model)) {
+    input.reasoning_effort = 'low';
+  } else {
+    input.chat_template_kwargs = { thinking: false };
+  }
 
   const result = (await ai.run(model as any, input as any)) as any;
 
