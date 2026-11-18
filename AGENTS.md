@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-**The DALF Dojo** is a web application that helps users prepare for the DALF C1 French language exam. It uses AI (OpenAI GPT-4o) to generate complete mock exams on demand, marks user answers against official DALF rubrics, stores attempts over time, and accumulates personalised feedback (grammar, vocabulary, register, structure, pronunciation) to help users iteratively improve.
+**The DALF Dojo** is a web application that helps users prepare for the DALF C1 French language exam. It uses AI (GLM-5.3 on Cloudflare Workers AI) to generate complete mock exams on demand, marks user answers against official DALF rubrics, stores attempts over time, and accumulates personalised feedback (grammar, vocabulary, register, structure, pronunciation) to help users iteratively improve.
 
 The application code lives at the repository root. The repository also contains:
 
@@ -23,7 +23,7 @@ The application code lives at the repository root. The repository also contains:
 | **Framework** | [Hono](https://hono.dev/) — lightweight web framework with built-in JSX support |
 | **Database** | Cloudflare D1 (SQLite) via [Drizzle ORM](https://orm.drizzle.team/) |
 | **Object Storage** | Cloudflare R2 — stores AI-generated audio files (TTS) and user speaking recordings |
-| **AI / LLM** | OpenAI GPT-4o, TTS-1, Whisper-1 — routed through Cloudflare AI Gateway for unified billing |
+| **AI / LLM** | Z.ai GLM-5.3 (chat/marking/generation) and Whisper large-v3-turbo (transcription) via the Workers AI binding; OpenAI TTS-1 via Cloudflare AI Gateway |
 | **Auth** | Custom session-based auth (bcryptjs + jose JWT) with cookie sessions |
 | **Payments** | Stripe Checkout + subscriptions |
 | **Language** | TypeScript (ES modules) |
@@ -159,7 +159,7 @@ The auth module augments Hono's `ContextVariableMap` so `c.get('user')` is typed
 
 All AI calls go through `src/ai.ts`:
 
-- **`chatCompletion(c, messages, opts)`** — calls GPT-4o via the Cloudflare AI Gateway (or direct OpenAI API). Supports `jsonMode` for structured output.
+- **`chatCompletion(c, messages, opts)`** — calls GLM-5.3 via the Workers AI binding (`env.AI`). Supports `jsonMode` for structured output.
 - **`generateTTS(c, text, voice)`** — converts text to MP3 using OpenAI TTS-1, returns `ArrayBuffer`.
 - **`splitTextForTTS(text)`** — splits long transcripts into chunks under 3,500 chars for TTS.
 - **`transcribeAudio(c, buffer, filename)`** — sends MP3 to Whisper-1 with `language: 'fr'`.
@@ -192,7 +192,7 @@ Each DALF section has a detailed system prompt that instructs GPT-4o to generate
 
 ### General
 - **ES modules** only (`"type": "module"` in `package.json`).
-- **Strict TypeScript** (`"strict": true`).
+- **Strict TypeScript** (`"strict": "true"`).
 - **JSX pragma:** `jsx: "react-jsx"` with `jsxImportSource: "hono/jsx"`.
 - No trailing semicolons enforced; follow existing file style.
 
