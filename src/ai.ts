@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import { z } from 'zod';
 
-export const MARKING_MODEL = '@cf/moonshotai/kimi-k2.6';
+export const MARKING_MODEL = '@cf/zai-org/glm-5.3';
 export const WHISPER_MODEL = '@cf/openai/whisper-large-v3-turbo';
 
 export interface AiBindings {
@@ -17,7 +17,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Run a chat completion via Cloudflare Workers AI (Kimi K2.6 by default). */
+/** Run a chat completion via Cloudflare Workers AI (GLM-5.3 by default). */
 export async function chatCompletion(
   c: Context,
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
@@ -44,8 +44,8 @@ export async function chatCompletion(
     input.response_format = { type: 'json_object' };
   }
 
-  // Disable thinking mode for faster, cheaper structured marking
-  input.chat_template_kwargs = { thinking: false };
+  // GLM-5.3 cannot disable reasoning; use the lowest effort for faster, cheaper structured marking
+  input.reasoning_effort = 'low';
 
   const result = (await ai.run(model as any, input as any)) as any;
 
